@@ -2,38 +2,31 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Event;
 
+use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Event\PendingEvent;
 use Mautic\LeadBundle\Model\LeadModel;
-use MauticPlugin\LeuchtfeuerAPICallsBundle\EventSubscriber\CampaignActionSubscriber;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class ApiRequestExecutor implements EventSubscriberInterface
 {
+    public function __construct(private HttpClientInterface $httpClient, private LeadModel $leadModel){}
 
-    private HttpClientInterface $httpClient;
-    private LeadModel $leadModel;
-
-    public function __construct(HttpClientInterface $httpClient, LeadModel $leadModel)
-    {
-        $this->httpClient = $httpClient;
-        $this->leadModel = $leadModel;
-    }
 
     public static function getSubscribedEvents(): array
     {
         return [
-            CampaignActionSubscriber::class => ['onExecuteApiRequest', 0],
+            CampaignEvents::CAMPAIGN_ON_BUILD => ['onCampaignBuild', 0],
+            ApiRequestExecutor::class => ['onExecuteApiRequest', 0],
         ];
     }
-
     public function onExecuteApiRequest(PendingEvent $event): void
     {
         $config = $event->getConfig();
         $method = strtoupper($config['method'] ?? 'POST');
         $body   = $config['body'] ?? '';
 
-        foreach ($event->getLeadIds() as $leadId) {
+/*        foreach ($event->getLeadIds() as $leadId) {
             $lead = $this->leadModel->getEntity($leadId);
 
             if (!$lead) {
@@ -63,6 +56,6 @@ class ApiRequestExecutor implements EventSubscriberInterface
                     $event->fail($log);
                 }
             }
-        }
+        }*/
     }
 }

@@ -12,10 +12,12 @@ class CampaignActionSubscriber implements EventSubscriberInterface
 {
     public const ACTION_TYPE = 'apicalls.api_request_action';
 
+
     public static function getSubscribedEvents(): array
     {
         return [
             CampaignEvents::CAMPAIGN_ON_BUILD => ['onCampaignBuild', 0],
+            ApiRequestExecutor::class => ['onExecuteApiRequest', 0],
         ];
     }
 
@@ -27,7 +29,7 @@ class CampaignActionSubscriber implements EventSubscriberInterface
                 'label'          => 'API Request Action',
                 'description'    => 'Send API request with tokens',
                 'batchEventName' => ApiRequestExecutor::class,
-                'formType'       => ApiRequestActionType::class,
+                'formType'  => ApiRequestActionType::class,
             ]
         );
     }
