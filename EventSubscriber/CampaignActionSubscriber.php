@@ -4,33 +4,41 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\EventSubscriber;
 
 use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
-use MauticPlugin\LeuchtfeuerAPICallsBundle\Event\ApiRequestExecutor;
+use Mautic\CampaignBundle\Event\PendingEvent;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type\ApiRequestActionType;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\LeuchtfeuerApiCallsEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class CampaignActionSubscriber implements EventSubscriberInterface
 {
-    public const ACTION_TYPE = 'apicalls.api_request_action';
-
+    public const ACTION_TYPE = 'mautic.leuchtfeuer_apicalls.api_request_executor.on_execute_api_request';
 
     public static function getSubscribedEvents(): array
     {
         return [
-            CampaignEvents::CAMPAIGN_ON_BUILD => ['onCampaignBuild', 0],
-            ApiRequestExecutor::class => ['onExecuteApiRequest', 0],
+            CampaignEvents::CAMPAIGN_ON_BUILD            => ['onCampaignBuild', 0],
+            LeuchtfeuerApiCallsEvent::API_REQUEST_EVENT  => ['onExecuteCampaignAction', 0],
         ];
     }
 
     public function onCampaignBuild(CampaignBuilderEvent $event): void
     {
+        $test = $event;
         $event->addAction(
             self::ACTION_TYPE,
             [
                 'label'          => 'API Request Action',
                 'description'    => 'Send API request with tokens',
-                'batchEventName' => ApiRequestExecutor::class,
-                'formType'  => ApiRequestActionType::class,
+                'batchEventName' => LeuchtfeuerApiCallsEvent::API_REQUEST_EVENT,
+                'formType'       => ApiRequestActionType::class,
             ]
         );
+    }
+
+
+    public function onExecuteCampaignAction(PendingEvent $pendingEvent): void
+    {
+       $test = $pendingEvent;
+        $pendingEvent->passRemaining();
     }
 }
