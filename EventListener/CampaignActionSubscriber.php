@@ -50,8 +50,8 @@ class CampaignActionSubscriber implements EventSubscriberInterface
         foreach ($contacts as $contact) {
 
                 $tokenizedValue = TokenHelper::findLeadTokens($properties['body'], $contact->getProfileFields(), true);
-                $this->apiCallsService->buildBodyValueArrayForApiRequest($tokenizedValue, $properties['body'],$properties['methode'],$properties['url']);
-             }
+                $this->apiCallsService->sendRequest($tokenizedValue, $properties['method'], $properties['url']);
+        }
 
             try {
                 $event->pass();
