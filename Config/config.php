@@ -28,12 +28,4 @@ return [
             ],
         ],
     ],
-    'routes' => [
-        'main' => [
-            'apicalls' => [
-                'path'       => '/apicalls',
-                'controller' => 'MauticPlugin\LeuchtfeuerAPICallsBundle\Controller\ApiCallsController::indexAction'
-            ],
-        ],
-    ],
 ];
