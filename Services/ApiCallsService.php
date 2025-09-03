@@ -2,26 +2,23 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
-use http\Env\Response;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 
 class ApiCallsService
 {
-
-
     public function __construct(private HttpClientInterface $client)
     {}
 
     /**
-     * @param string $value
+     * @param array<string, mixed>|string $value
      * @param string $url
      * @param string $method
-     * @return int
+     * @return int HTTP status code
      */
 
-    public function sendRequest(string $value, string $url, string $method): int
+    public function sendRequest(array|string $value, string $url, string $method): int
     {
         $options = [
             'headers' => [

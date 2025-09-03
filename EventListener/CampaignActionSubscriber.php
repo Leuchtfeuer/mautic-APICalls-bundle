@@ -14,7 +14,6 @@ class CampaignActionSubscriber implements EventSubscriberInterface
 {
     public const ACTION_TYPE = 'mautic.leuchtfeuer.api_request';
 
-
     public function __construct(private ContactProcessorService $contactProcessorService){}
     public static function getSubscribedEvents(): array
     {

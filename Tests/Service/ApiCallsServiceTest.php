@@ -33,6 +33,10 @@ class ApiCallsServiceTest extends TestCase
         $service->checkStatusCode($mockResponse);
     }
 
+
+    /**
+     * @return array<mixed>
+     */
     public function errorStatusCodes(): array
     {
         return [
