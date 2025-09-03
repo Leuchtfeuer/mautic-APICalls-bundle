@@ -8,6 +8,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints as Assert;
 
 class ApiRequestActionType extends AbstractType
 {
@@ -17,6 +18,10 @@ class ApiRequestActionType extends AbstractType
             ->add('url', TextType::class, [
                 'label' => 'Url',
                 'required' => true,
+                'constraints' => [
+                    new Assert\NotBlank(['message' => 'URL ist erforderlich']),
+                    new Assert\Url(['message' => 'Bitte geben Sie eine gültige URL ein'])
+                ]
             ])
             ->add('method', ChoiceType::class, [
                 'choices' => [
