@@ -2,7 +2,10 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
+use http\Env\Response;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
+
 
 class ApiCallsService
 {
@@ -15,36 +18,34 @@ class ApiCallsService
      * @param string $value
      * @param string $url
      * @param string $method
+     * @return int
      */
 
-    public function sendRequest(string $value, string $url, string $method = 'POST'): int
+    public function sendRequest(string $value, string $url, string $method): int
     {
-        $normalizedUrl = $this->normalizeUrl($url);
-
-        if (!filter_var($normalizedUrl, FILTER_VALIDATE_URL)) {
-            throw new \InvalidArgumentException("Die URL '$url' ist ungültig.");
-        }
-
         $options = [
             'headers' => [
                 'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
-                'Content-Type' => 'text/plain',
             ],
-            'body' => $value,
+            'json' => $value,
+            'verify_peer' => false,
+            'verify_host' => true,
         ];
 
-        $response = $this->client->request($method, $normalizedUrl, $options);
+        $response = $this->client->request($method, $url, $options);
+        $this->checkStatusCode($response);
 
         return $response->getStatusCode();
     }
 
-    public function normalizeUrl(string $url): string
-    {
-        if (!preg_match('#^https?://#i', $url)) {
-            $url = 'https://' . $url;
-        }
 
-        return $url;
+    /**
+     * @param ResponseInterface $response
+     */
+    public function checkStatusCode($response):void
+    {
+        $response->getContent();
     }
+
 
 }
