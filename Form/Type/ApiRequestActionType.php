@@ -38,12 +38,13 @@ class ApiRequestActionType extends AbstractType
             ])
             ->add('body', TextareaType::class, [
                 'label' => 'leuchtfeuer.api.body.label',
-                'required' => false,
+                'required' => true,
                 'attr' => [
                     'rows' => 8,
                     'placeholder' => 'leuchtfeuer.api.body.placeholder'
                 ],
                 'constraints' => [
+                    new Assert\NotBlank(['message' => 'leuchtfeuer.api.body.required']),
                     new Assert\Json(['message' => 'leuchtfeuer.api.body.invalid_json'])
                 ]
             ]);
