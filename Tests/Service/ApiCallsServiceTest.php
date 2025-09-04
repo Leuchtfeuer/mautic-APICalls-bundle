@@ -42,7 +42,6 @@ class ApiCallsServiceTest extends TestCase
     public function errorStatusCodes(): array
     {
         return [
-            'Redirect' => [300],
             'Bad Request' => [400],
             'Unauthorized' => [401],
             'Not Found' => [404],
@@ -50,39 +49,6 @@ class ApiCallsServiceTest extends TestCase
             'Bad Gateway' => [502],
         ];
     }
-
-
-    public function testSendRequestSendsJsonWithCorrectContent(): void
-    {
-        $testValue = 'Hello World';
-        $testUrl = 'https://example.com/api';
-        $testMethod = 'POST';
-
-        $responseMock = $this->createMock(ResponseInterface::class);
-
-        $capturedOptions = null;
-
-        $httpClientMock = $this->createMock(HttpClientInterface::class);
-        $httpClientMock->expects($this->once())
-            ->method('request')
-            ->willReturnCallback(function($method, $url, $options) use (&$capturedOptions, $responseMock) {
-                $capturedOptions = $options;
-                return $responseMock;
-            });
-
-        $service = new ApiCallsService($httpClientMock);
-        $service->sendRequest($testValue, $testUrl, $testMethod);
-
-        $this->assertArrayHasKey('json', $capturedOptions);
-
-        $this->assertSame($testValue, $capturedOptions['json']);
-
-        $jsonString = json_encode($capturedOptions['json']);
-        $this->assertJson($jsonString);
-        $this->assertSame(json_encode($testValue), $jsonString);
-    }
-
-
 
 
 

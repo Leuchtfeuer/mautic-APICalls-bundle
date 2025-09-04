@@ -29,18 +29,20 @@ class CampaignActionSubscriber implements EventSubscriberInterface
     {
         $integrationConfiguration = $this->integrationsHelper->getIntegration(ApiCallsIntegration::INTEGRATION_NAME)->getIntegrationConfiguration();
 
-        if($integrationConfiguration->getIsPublished()) {
+            if(!$integrationConfiguration->getIsPublished()) {
+                return;
+            }
 
             $event->addAction(
                 self::ACTION_TYPE,
                 [
-                    'label' => 'API Request Action',
-                    'description' => 'Send API request with tokens',
+                    'label' => 'leuchtfeuer.api.action.label',
+                    'description' => 'leuchtfeuer.api.action.description',
                     'batchEventName' => LeuchtfeuerAPICallsEvents::EXECUTE_CAMPAIGN_ACTION,
                     'formType' => ApiRequestActionType::class,
                 ]
             );
-        }
+
     }
 
     public function onExecuteApiRequest(PendingEvent $event): void

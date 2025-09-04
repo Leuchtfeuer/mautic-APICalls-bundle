@@ -2,6 +2,7 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type;
 
+use Mautic\CoreBundle\Translation\Translator;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -16,12 +17,15 @@ class ApiRequestActionType extends AbstractType
     {
         $builder
             ->add('url', TextType::class, [
-                'label' => 'Url',
+                'label' => 'leuchtfeuer.api.url.label',
                 'required' => true,
                 'constraints' => [
-                    new Assert\NotBlank(['message' => 'URL ist erforderlich']),
-                    new Assert\Url(['message' => 'Bitte geben Sie eine gültige URL ein'])
-                ]
+                    new Assert\NotBlank(['message' => 'leuchtfeuer.api.url.required']),
+                    new Assert\Url(['message' => 'leuchtfeuer.api.url.invalid']),
+                ],
+                'attr' => [
+                    'placeholder' => 'leuchtfeuer.api.url.placeholder'
+                ],
             ])
             ->add('method', ChoiceType::class, [
                 'choices' => [
@@ -29,18 +33,18 @@ class ApiRequestActionType extends AbstractType
                     'PUT'   => 'PUT',
                     'PATCH' => 'PATCH',
                 ],
-                'label' => 'HTTP Method',
+                'label' => 'leuchtfeuer.api.method.label',
                 'required' => true,
             ])
             ->add('body', TextareaType::class, [
-                'label' => 'Request Body',
+                'label' => 'leuchtfeuer.api.body.label',
                 'required' => false,
                 'attr' => [
                     'rows' => 8,
-                    'placeholder' => '{contactfield=firstname}, {contactfield=email}, ...'
+                    'placeholder' => 'leuchtfeuer.api.body.placeholder'
                 ],
                 'constraints' => [
-                    new Assert\Json(['message' => 'Der Request Body muss gültiges JSON sein'])
+                    new Assert\Json(['message' => 'leuchtfeuer.api.body.invalid_json'])
                 ]
             ]);
     }
