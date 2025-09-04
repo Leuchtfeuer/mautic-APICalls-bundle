@@ -23,8 +23,9 @@ class ApiCallsService
         $options = [
             'headers' => [
                 'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
+                'Content-Type' => 'application/json',
             ],
-            'json' => $value,
+            'body' => $value,
             'verify_peer' => false,
             'verify_host' => true,
         ];

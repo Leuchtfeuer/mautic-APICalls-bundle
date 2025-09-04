@@ -16,6 +16,7 @@ class ContactProcessorService
      */
     public function processContacts(ArrayCollection|Lead $contacts, array $properties): void
     {
+        //if contact ignore of
         // @phpstan-ignore-next-line
         foreach ($contacts as $contact) {
             // @phpstan-ignore-next-line

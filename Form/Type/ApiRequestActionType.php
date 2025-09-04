@@ -38,6 +38,9 @@ class ApiRequestActionType extends AbstractType
                 'attr' => [
                     'rows' => 8,
                     'placeholder' => '{contactfield=firstname}, {contactfield=email}, ...'
+                ],
+                'constraints' => [
+                    new Assert\Json(['message' => 'Der Request Body muss gültiges JSON sein'])
                 ]
             ]);
     }
