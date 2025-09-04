@@ -2,6 +2,7 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
+use kamermans\OAuth2\Signer\ClientCredentials\Json;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -12,13 +13,12 @@ class ApiCallsService
     {}
 
     /**
-     * @param array<string, mixed>|string $value
+     * @param string $value
      * @param string $url
      * @param string $method
-     * @return int HTTP status code
      */
 
-    public function sendRequest(array|string $value, string $url, string $method): int
+    public function sendRequest(string $value, string $url, string $method): void
     {
         $options = [
             'headers' => [
@@ -32,8 +32,6 @@ class ApiCallsService
 
         $response = $this->client->request($method, $url, $options);
         $this->checkStatusCode($response);
-
-        return $response->getStatusCode();
     }
 
 
