@@ -1,13 +1,14 @@
 # Plugin: API Calls by Leuchtfeuer
 
 ## Overview / Purpose / Features
-This plugin allows Mautic administrators to send generic outbound API calls as a campaign action. You can configure API requests to be triggered automatically as part of your campaign workflows.
+This feature introduces a new campaign action in Mautic that allows campaigns to send outbound API requests.
 
 ### Key Features:
-- Add a custom campaign action to send API requests
-- Configure API endpoint, method, headers, and payload
-- Use tokens to personalize requests
-- Works with Mautic 5.x (minimum 5.2)
+- New campaign action: Send API request
+
+- Configurable method: Choose between POST, PUT, or PATCH.
+
+- Custom body: Define the raw request body in a textarea.
 
 ## Requirements / Version Support
 - Mautic 5.x (minimum 5.2)
