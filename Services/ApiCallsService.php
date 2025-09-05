@@ -2,7 +2,6 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
-use kamermans\OAuth2\Signer\ClientCredentials\Json;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 

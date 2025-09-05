@@ -45,7 +45,6 @@ class ApiRequestActionType extends AbstractType
                 ],
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'leuchtfeuer.api.body.required']),
-                    new Assert\Json(['message' => 'leuchtfeuer.api.body.invalid_json'])
                 ]
             ]);
     }

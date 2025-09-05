@@ -6,8 +6,6 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\ApiCallsService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Symfony\Contracts\HttpClient\ResponseInterface;
 
 
 class ApiCallsServiceTest extends TestCase
