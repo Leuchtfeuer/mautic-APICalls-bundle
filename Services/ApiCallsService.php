@@ -15,14 +15,15 @@ class ApiCallsService
      * @param string $value
      * @param string $url
      * @param string $method
+     * @param string $contentType
      */
 
-    public function sendRequest(string $value, string $url, string $method): void
+    public function sendRequest(string $value, string $url, string $method, string $contentType): void
     {
         $options = [
             'headers' => [
                 'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
-                'Content-Type' => 'application/json',
+                'Content-Type' => $contentType,
             ],
             'body' => $value,
             'verify_peer' => false,

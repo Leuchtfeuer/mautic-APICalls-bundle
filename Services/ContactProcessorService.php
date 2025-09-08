@@ -28,7 +28,8 @@ class ContactProcessorService
                 $this->apiCallsService->sendRequest(
                     $tokenizedValue,
                     $properties['url'],
-                    $properties['method']
+                    $properties['method'],
+                    $properties['contentType'],
                 );
             }
         }
