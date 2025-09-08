@@ -56,6 +56,4 @@ class CampaignActionSubscriber implements EventSubscriberInterface
     }
 
 
-
-
 }

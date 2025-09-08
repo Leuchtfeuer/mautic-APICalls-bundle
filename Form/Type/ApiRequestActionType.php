@@ -2,6 +2,7 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type;
 
+use MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener\ApiCallsPreSubmitFormListener;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -58,8 +59,10 @@ class ApiRequestActionType extends AbstractType
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'leuchtfeuer.api.body.required']),
                     new Assert\Callback([$this, 'validateBodyByContentType']),
-                ]
+                ],
             ]);
+
+        $builder->addEventSubscriber(new ApiCallsPreSubmitFormListener());
     }
 
     public function validateBodyByContentType(string $body, ExecutionContextInterface $context): void
