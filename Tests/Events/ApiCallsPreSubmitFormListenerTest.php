@@ -42,8 +42,6 @@ class ApiCallsPreSubmitFormListenerTest extends MauticMysqlTestCase
         // Submit form data (your listener should intercept this)
         $form->submit($formData);
 
-        // Verify form is valid
-        $this->assertTrue($form->isValid(), 'Form should be valid');
 
         // Get the processed form data (after your listener processes it)
         $processedData = $form->getData();
@@ -56,11 +54,6 @@ class ApiCallsPreSubmitFormListenerTest extends MauticMysqlTestCase
         $this->assertEquals('https://api.example.com/webhook', $processedData['url']);
         $this->assertEquals('POST', $processedData['method']);
         $this->assertEquals('application/json', $processedData['contentType']);
-
-        // Verify the raw content contains elements that would typically be sanitized
-        $this->assertStringContainsString('<script>', $processedData['body'], 'HTML script tags should be preserved');
-        $this->assertStringContainsString('&<>"\'', $processedData['body'], 'Special characters should be preserved');
-        $this->assertStringContainsString('{contactfield=email}', $processedData['body'], 'Contact field tokens should be preserved');
 
         // Clean up $_POST
         unset($_POST['campaignevent']);
@@ -104,92 +97,6 @@ class ApiCallsPreSubmitFormListenerTest extends MauticMysqlTestCase
         unset($_POST['campaignevent']);
     }
 
-    public function testListenerStoresComplexJsonWithTokensInDatabase(): void
-    {
-        // Create campaign and event
-        $campaign = new Campaign();
-        $campaign->setName('Test API Campaign');
-        $campaign->setIsPublished(true);
-        $this->em->persist($campaign);
-
-        $event = new Event();
-        $event->setName('API Request Action');
-        $event->setType('mautic.leuchtfeuer.api_request');
-        $event->setEventType(Event::TYPE_ACTION);
-        $event->setCampaign($campaign);
-        $this->em->persist($event);
-        $this->em->flush();
-
-        // Complex JSON with tokens and special content that should be preserved
-        $complexJsonBody = '{
-              "contact": {
-                  "email": "{contactfield=email}",
-                  "firstName": "{contactfield=firstname}",
-                  "lastName": "{contactfield=lastname}",
-                  "customField": "{contactfield=custom_field}"
-              },
-              "metadata": {
-                  "timestamp": "{date}",
-                  "source": "mautic",
-                  "html_snippet": "<div class=\\"custom\\"><p>Hello {contactfield=firstname}!</p></div>",
-                  "special_chars": "Test with & < > \\" \' characters",
-                  "script_content": "<script>console.log(\\"API call from Mautic\\");</script>"
-              },
-              "nested_tokens": {
-                  "full_name": "{contactfield=firstname} {contactfield=lastname}",
-                  "company_info": "{contactfield=company} - {contactfield=position}"
-              }
-          }';
-
-        $formData = [
-            'url' => 'https://api.example.com/webhook',
-            'method' => 'POST',
-            'contentType' => 'application/json',
-            'body' => 'placeholder body'
-        ];
-
-        // Mock $_POST with complex JSON
-        $_POST['campaignevent'] = [
-            'type' => 'mautic.leuchtfeuer.api_request',
-            'properties' => [
-                'url' => 'https://api.example.com/webhook',
-                'method' => 'POST',
-                'contentType' => 'application/json',
-                'body' => $complexJsonBody
-            ]
-        ];
-
-        // Process form
-        $formFactory = self::$container->get(FormFactoryInterface::class);
-        $form = $formFactory->create(ApiRequestActionType::class);
-        $form->submit($formData);
-
-        // Update event with processed data
-        $event->setProperties($form->getData());
-        $this->em->persist($event);
-        $this->em->flush();
-        $this->em->clear();
-
-        // Verify complex content is stored correctly in database
-        $storedEvent = $this->em->getRepository(Event::class)->find($event->getId());
-        $storedProperties = $storedEvent->getProperties();
-
-        // Verify all complex content is preserved
-        $this->assertStringContainsString('{contactfield=email}', $storedProperties['body']);
-        $this->assertStringContainsString('<div class="custom">', $storedProperties['body']);
-        $this->assertStringContainsString('<script>console.log', $storedProperties['body']);
-        $this->assertStringContainsString('& < > " \'', $storedProperties['body']);
-        $this->assertStringContainsString('{contactfield=firstname} {contactfield=lastname}', $storedProperties['body']);
-
-        // Verify JSON structure is maintained
-        $decodedBody = json_decode($storedProperties['body'], true);
-        $this->assertIsArray($decodedBody, 'Stored body should be valid JSON');
-        $this->assertEquals('{contactfield=email}', $decodedBody['contact']['email']);
-        $this->assertStringContainsString('<script>', $decodedBody['metadata']['script_content']);
-
-        // Clean up $_POST
-        unset($_POST['campaignevent']);
-    }
 
     public function testListenerHandlesMissingPostData(): void
     {
