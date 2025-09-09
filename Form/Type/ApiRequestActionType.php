@@ -39,12 +39,12 @@ class ApiRequestActionType extends AbstractType
             ])
             ->add('contentType', ChoiceType::class, [
                 'choices' => [
-                    'JSON' => 'application/json',
-                    'XML' => 'application/xml',
-                    'Text XML' => 'text/xml',
-                    'SOAP XML' => 'application/soap+xml',
-                    'JSON:API' => 'application/vnd.api+json',
-                    'Form URL Encoded' => 'application/x-www-form-urlencoded',
+                    'application/json' => 'application/json',
+                    'application/xml' => 'application/xml',
+                    'text/xml' => 'text/xml',
+                    'application/soap+xml' => 'application/soap+xml',
+                    'application/vnd.api+json' => 'application/vnd.api+json',
+                    'application/x-www-form-urlencoded' => 'application/x-www-form-urlencoded',
                 ],
                 'label' => 'leuchtfeuer.api.content_type.label',
                 'required' => true,
