@@ -28,17 +28,41 @@ class ApiCallsService
             'body' => $value,
             'verify_peer' => false,
             'verify_host' => true,
+            'max_redirects' => 0,
         ];
 
-        $response = $this->client->request($method, $url, $options);
-        $this->checkStatusCode($response);
-    }
+        $currentUrl = $url;
+        $maxRedirects = 5;
+        $redirectCount = 0;
 
+        while ($redirectCount < $maxRedirects) {
+
+            $response = $this->client->request($method, $currentUrl, $options);
+
+            $statusCode = $response->getStatusCode();
+
+            if (!in_array($statusCode, [301, 302, 303, 307, 308])) {
+                break;
+            }
+
+            $locationHeader = $response->getHeaders(false)['location'][0] ?? null;
+            if (!$locationHeader) {
+                break;
+            }
+
+            $currentUrl = $locationHeader;
+            $redirectCount++;
+        }
+
+        if ($response !== null) {
+            $this->checkIfResponseValid($response);
+        }
+    }
 
     /**
      * @param ResponseInterface $response
      */
-    public function checkStatusCode($response):void
+    public function checkIfResponseValid($response):void
     {
         $response->getContent();
     }

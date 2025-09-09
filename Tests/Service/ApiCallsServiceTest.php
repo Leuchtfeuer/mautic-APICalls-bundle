@@ -20,7 +20,7 @@ class ApiCallsServiceTest extends TestCase
     /**
      * @dataProvider errorStatusCodes
      */
-    public function testCheckStatusCodeThrowsExceptionForErrorCodes(int $statusCode): void
+    public function testCheckIfResponseValidThrowsExceptionForErrorCodes(int $statusCode): void
     {
         $mockResponse = new MockResponse('Error', [
             'http_code' => $statusCode,
@@ -30,7 +30,7 @@ class ApiCallsServiceTest extends TestCase
 
         $this->expectException(\Exception::class);
 
-        $service->checkStatusCode($mockResponse);
+        $service->checkIfResponseValid($mockResponse);
     }
 
 
