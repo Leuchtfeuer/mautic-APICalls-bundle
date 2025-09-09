@@ -54,7 +54,6 @@ class ApiRequestActionType extends AbstractType
                 'required' => true,
                 'attr' => [
                     'rows' => 8,
-                    'placeholder' => 'leuchtfeuer.api.body.placeholder'
                 ],
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'leuchtfeuer.api.body.required']),
