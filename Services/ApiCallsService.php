@@ -16,9 +16,11 @@ class ApiCallsService
      * @param string $url
      * @param string $method
      * @param string $contentType
+     * @param string $username
+     * @param string $password
      */
 
-    public function sendRequest(string $value, string $url, string $method, string $contentType): void
+    public function sendRequest(string $value, string $url, string $method, string $contentType, string $username, string $password): void
     {
         $options = [
             'headers' => [
@@ -30,6 +32,11 @@ class ApiCallsService
             'verify_host' => true,
             'max_redirects' => 0,
         ];
+
+        if (!empty($username) && !empty($password)) {
+            $options['auth_basic'] = [$username, $password];
+        }
+
 
         $currentUrl = $url;
         $maxRedirects = 5;

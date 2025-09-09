@@ -5,6 +5,7 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener\ApiCallsPreSubmitFormListener;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -26,6 +27,20 @@ class ApiRequestActionType extends AbstractType
                 ],
                 'attr' => [
                     'placeholder' => 'leuchtfeuer.api.url.placeholder'
+                ],
+            ])
+            ->add('username', TextType::class, [
+                'label' => 'leuchtfeuer.api.username.label',
+                'required' => false,
+                'attr' => [
+                    'class' => 'col-md-6'
+                ],
+            ])
+            ->add('password', PasswordType::class, [
+                'label' => 'leuchtfeuer.api.password.label',
+                'required' => false,
+                'attr' => [
+                    'class' => 'col-md-6'
                 ],
             ])
             ->add('method', ChoiceType::class, [
