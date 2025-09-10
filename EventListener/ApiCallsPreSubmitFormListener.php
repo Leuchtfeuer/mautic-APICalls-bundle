@@ -18,18 +18,23 @@ class ApiCallsPreSubmitFormListener implements EventSubscriberInterface
     public function preSubmitData(FormEvent $event): void
     {
         $data = $event->getData();
-
         $data = is_array($data) ? $data : [];
-
         $postCampaignEvent = $_POST['campaignevent'] ?? [];
 
         if (($postCampaignEvent['type'] ?? '') === 'mautic.leuchtfeuer.api_request') {
-            $body = $postCampaignEvent['properties']['body'] ?? null;
+            $properties = $postCampaignEvent['properties'] ?? [];
 
-            $data = array_merge($data, ['body' => $body]);
+            if (empty($properties['password'])) {
+                $originalData = $event->getForm()->getRoot()->getData();
+                if (isset($originalData['properties']['password'])) {
+                    $properties['password'] = $originalData['properties']['password'];
+                }
+            }
 
+            $data = array_merge($data, $properties);
             $event->setData($data);
         }
     }
+
 }
 
