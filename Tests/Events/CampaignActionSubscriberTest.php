@@ -18,8 +18,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 
   class CampaignActionSubscriberTest extends MauticMysqlTestCase
   {
-      private ContactProcessorService|MockObject $contactProcessorService;
-      private IntegrationsHelper|MockObject $integrationsHelper;
+      private MockObject $contactProcessorService;
+      private MockObject $integrationsHelper;
       private CampaignActionSubscriber $subscriber;
 
       protected function setUp(): void
