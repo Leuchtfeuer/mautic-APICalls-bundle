@@ -28,13 +28,11 @@ class ApiCallsPreSubmitFormListener implements EventSubscriberInterface
                 $data['body'] = $properties['body'];
             }
 
-            if (empty($properties['password'])) {
+            if (empty($data['password'])) {
                 $originalData = $event->getForm()->getRoot()->getData();
                 if (isset($originalData['properties']['password'])) {
                     $data['password'] = $originalData['properties']['password'];
                 }
-            } else {
-                $data['password'] = $properties['password'];
             }
 
             $event->setData($data);
