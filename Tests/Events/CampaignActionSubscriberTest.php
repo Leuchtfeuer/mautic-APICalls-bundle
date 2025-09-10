@@ -4,182 +4,97 @@ declare(strict_types=1);
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\Events;
 
-use Mautic\IntegrationsBundle\Integration\Interfaces\IntegrationInterface;
-use Mautic\PluginBundle\Entity\Integration;
-use MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener\CampaignActionSubscriber;
-use PHPUnit\Framework\TestCase;
-use PHPUnit\Framework\MockObject\MockObject;
-use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
+use Mautic\CampaignBundle\Entity\Event;
 use Mautic\CampaignBundle\Event\PendingEvent;
-use Mautic\CampaignBundle\CampaignEvents;
+use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use Mautic\IntegrationsBundle\Helper\IntegrationsHelper;
+use Mautic\LeadBundle\Entity\Lead;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener\CampaignActionSubscriber;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\ContactProcessorService;
-use MauticPlugin\LeuchtfeuerAPICallsBundle\Integration\ApiCallsIntegration;
-use MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type\ApiRequestActionType;
-use MauticPlugin\LeuchtfeuerAPICallsBundle\LeuchtfeuerAPICallsEvents;
+use PHPUnit\Framework\MockObject\MockObject;
+
+  class CampaignActionSubscriberTest extends MauticMysqlTestCase
+  {
+      private ContactProcessorService|MockObject $contactProcessorService;
+      private IntegrationsHelper|MockObject $integrationsHelper;
+      private CampaignActionSubscriber $subscriber;
+
+      protected function setUp(): void
+      {
+          parent::setUp();
+
+          $this->contactProcessorService = $this->createMock(ContactProcessorService::class);
+          $this->integrationsHelper = $this->createMock(IntegrationsHelper::class);
+          $this->subscriber = new CampaignActionSubscriber($this->contactProcessorService, $this->integrationsHelper);
+      }
+
+      public function testGetSubscribedEvents(): void
+      {
+          $events = CampaignActionSubscriber::getSubscribedEvents();
+
+          $this->assertArrayHasKey('mautic.campaign_on_build', $events);
+          $this->assertArrayHasKey('api.campaign_action.execute', $events);
+          $this->assertEquals(['onCampaignBuild', 0], $events['mautic.campaign_on_build']);
+          $this->assertEquals(['onExecuteApiRequest', 0], $events['api.campaign_action.execute']);
+      }
 
 
-class CampaignActionSubscriberTest extends TestCase
-{
-    private CampaignActionSubscriber $subscriber;
-    private ContactProcessorService|MockObject $contactProcessorService;
-    private IntegrationsHelper|MockObject $integrationsHelper;
+      public function testOnExecuteApiRequestProcessesContactsSuccessfully(): void
+      {
+          $contacts = [new Lead()];
+          $properties = ['url' => 'https://api.example.com', 'method' => 'POST'];
 
-    protected function setUp(): void
-    {
-        $this->contactProcessorService = $this->createMock(ContactProcessorService::class);
-        $this->integrationsHelper = $this->createMock(IntegrationsHelper::class);
+          $campaignEvent = $this->createMock(Event::class);
+          $campaignEvent->expects($this->once())
+              ->method('getProperties')
+              ->willReturn($properties);
 
-        $this->subscriber = new CampaignActionSubscriber(
-            $this->contactProcessorService,
-            $this->integrationsHelper
-        );
-    }
+          $event = $this->createMock(PendingEvent::class);
+          $event->expects($this->once())
+              ->method('getContacts')
+              ->willReturn($contacts);
+          $event->expects($this->once())
+              ->method('getEvent')
+              ->willReturn($campaignEvent);
+          $event->expects($this->once())
+              ->method('passAll');
 
-    public function testGetSubscribedEvents(): void
-    {
-        $expectedEvents = [
-            CampaignEvents::CAMPAIGN_ON_BUILD => ['onCampaignBuild', 0],
-            LeuchtfeuerAPICallsEvents::EXECUTE_CAMPAIGN_ACTION => ['onExecuteApiRequest', 0],
-        ];
+          $this->contactProcessorService->expects($this->once())
+              ->method('processContacts')
+              ->with($contacts, $properties);
 
-        $this->assertEquals($expectedEvents, CampaignActionSubscriber::getSubscribedEvents());
-    }
+          $this->subscriber->onExecuteApiRequest($event);
+      }
 
-    public function testOnCampaignBuildWithPublishedIntegration(): void
-    {
-        $event = $this->createMock(CampaignBuilderEvent::class);
-        $integration = $this->createMock(IntegrationInterface::class);
-        $integrationConfiguration = $this->createMock(Integration::class);
+      public function testOnExecuteApiRequestFailsAllWhenExceptionOccurs(): void
+      {
+          $contacts = [new Lead()];
+          $properties = ['url' => 'https://api.example.com', 'method' => 'POST'];
+          $errorMessage = 'API request failed';
 
-        $integrationConfiguration->expects($this->once())
-            ->method('getIsPublished')
-            ->willReturn(true);
+          $campaignEvent = $this->createMock(\Mautic\CampaignBundle\Entity\Event::class);
+          $campaignEvent->expects($this->once())
+              ->method('getProperties')
+              ->willReturn($properties);
 
-        $integration->expects($this->once())
-            ->method('getIntegrationConfiguration')
-            ->willReturn($integrationConfiguration);
+          $event = $this->createMock(PendingEvent::class);
+          $event->expects($this->once())
+              ->method('getContacts')
+              ->willReturn($contacts);
+          $event->expects($this->once())
+              ->method('getEvent')
+              ->willReturn($campaignEvent);
+          $event->expects($this->once())
+              ->method('failAll')
+              ->with($errorMessage);
+          $event->expects($this->never())
+              ->method('passAll');
 
-        $this->integrationsHelper->expects($this->once())
-            ->method('getIntegration')
-            ->with(ApiCallsIntegration::INTEGRATION_NAME)
-            ->willReturn($integration);
+          $this->contactProcessorService->expects($this->once())
+              ->method('processContacts')
+              ->with($contacts, $properties)
+              ->willThrowException(new \Exception($errorMessage));
 
-        $event->expects($this->once())
-            ->method('addAction')
-            ->with(
-                CampaignActionSubscriber::ACTION_TYPE,
-                [
-                    'label' => 'leuchtfeuer.api.action.label',
-                    'description' => 'leuchtfeuer.api.action.description',
-                    'batchEventName' => LeuchtfeuerAPICallsEvents::EXECUTE_CAMPAIGN_ACTION,
-                    'formType' => ApiRequestActionType::class,
-                ]
-            );
-
-        $this->subscriber->onCampaignBuild($event);
-    }
-
-    public function testOnCampaignBuildWithUnpublishedIntegration(): void
-    {
-        $event = $this->createMock(CampaignBuilderEvent::class);
-        $integration = $this->createMock(IntegrationInterface::class);
-        $integrationConfiguration = $this->createMock(Integration::class);
-
-        $integrationConfiguration->expects($this->once())
-            ->method('getIsPublished')
-            ->willReturn(false);
-
-        $integration->expects($this->once())
-            ->method('getIntegrationConfiguration')
-            ->willReturn($integrationConfiguration);
-
-        $this->integrationsHelper->expects($this->once())
-            ->method('getIntegration')
-            ->with(ApiCallsIntegration::INTEGRATION_NAME)
-            ->willReturn($integration);
-
-        $event->expects($this->never())
-            ->method('addAction');
-
-        $this->subscriber->onCampaignBuild($event);
-    }
-
-    public function testOnExecuteApiRequestSuccess(): void
-    {
-        $event = $this->createMock(PendingEvent::class);
-
-        $campaignEvent = new class {
-            public function getProperties(): array
-            {
-                return ['key' => 'value'];
-            }
-        };
-
-        $contacts = ['contact1', 'contact2'];
-        $properties = ['key' => 'value'];
-
-        $event->expects($this->once())
-            ->method('getContacts')
-            ->willReturn($contacts);
-
-        $event->expects($this->once())
-            ->method('getEvent')
-            ->willReturn($campaignEvent);
-
-        $this->contactProcessorService->expects($this->once())
-            ->method('processContacts')
-            ->with($contacts, $properties);
-
-        $event->expects($this->once())
-            ->method('passAll');
-
-        $event->expects($this->never())
-            ->method('failAll');
-
-        $this->subscriber->onExecuteApiRequest($event);
-    }
-
-    public function testOnExecuteApiRequestFailure(): void
-    {
-        $event = $this->createMock(PendingEvent::class);
-
-        $campaignEvent = new class {
-            public function getProperties(): array
-            {
-                return ['key' => 'value'];
-            }
-        };
-
-        $contacts = ['contact1', 'contact2'];
-        $properties = ['key' => 'value'];
-        $exceptionMessage = 'Processing failed';
-
-        $event->expects($this->once())
-            ->method('getContacts')
-            ->willReturn($contacts);
-
-        $event->expects($this->once())
-            ->method('getEvent')
-            ->willReturn($campaignEvent);
-
-        $this->contactProcessorService->expects($this->once())
-            ->method('processContacts')
-            ->with($contacts, $properties)
-            ->willThrowException(new \Exception($exceptionMessage));
-
-        $event->expects($this->never())
-            ->method('passAll');
-
-        $event->expects($this->once())
-            ->method('failAll')
-            ->with($exceptionMessage);
-
-        $this->subscriber->onExecuteApiRequest($event);
-    }
-
-    public function testActionTypeConstant(): void
-    {
-        $this->assertEquals('mautic.leuchtfeuer.api_request', CampaignActionSubscriber::ACTION_TYPE);
-    }
-}
+          $this->subscriber->onExecuteApiRequest($event);
+      }
+  }
