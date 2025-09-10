@@ -24,14 +24,19 @@ class ApiCallsPreSubmitFormListener implements EventSubscriberInterface
         if (($postCampaignEvent['type'] ?? '') === 'mautic.leuchtfeuer.api_request') {
             $properties = $postCampaignEvent['properties'] ?? [];
 
+            if (isset($properties['body'])) {
+                $data['body'] = $properties['body'];
+            }
+
             if (empty($properties['password'])) {
                 $originalData = $event->getForm()->getRoot()->getData();
                 if (isset($originalData['properties']['password'])) {
-                    $properties['password'] = $originalData['properties']['password'];
+                    $data['password'] = $originalData['properties']['password'];
                 }
+            } else {
+                $data['password'] = $properties['password'];
             }
 
-            $data = array_merge($data, $properties);
             $event->setData($data);
         }
     }
