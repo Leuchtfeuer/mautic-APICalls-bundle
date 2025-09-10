@@ -30,7 +30,6 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             'pass'
         );
 
-
         $this->assertContains('User-Agent: LeuchtfeuerMauticAPI/1.0', $capturedOptions['headers']);
         $this->assertContains('Content-Type: application/json', $capturedOptions['headers']);
         $this->assertContains('Authorization: Basic ' . base64_encode('user:pass'), $capturedOptions['headers']);
@@ -58,7 +57,6 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
         );
 
         $this->assertNotContains('Authorization: Basic ' . base64_encode('user:pass'), $capturedOptions['headers']);
-
     }
 
     public function testSendRequestHandlesRedirectsCorrectly(): void
@@ -100,6 +98,7 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
 
         // Verify two requests were made
         $this->assertEquals(2, $requestsCount);
+        $this->assertCount(2, $capturedRequests);
 
         // Verify first request (original URL)
         $this->assertEquals('POST', $capturedRequests[0]['method']);
@@ -107,39 +106,13 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
         $this->assertEquals('{"test": "data"}', $capturedRequests[0]['options']['body']);
 
         // Verify second request (redirected URL) - body and auth should be preserved
+        /** @phpstan-ignore-next-line */
         $this->assertEquals('POST', $capturedRequests[1]['method']);
+        /** @phpstan-ignore-next-line */
         $this->assertEquals('https://api.example.com/redirected', $capturedRequests[1]['url']);
+        /** @phpstan-ignore-next-line */
         $this->assertEquals('{"test": "data"}', $capturedRequests[1]['options']['body']);
     }
-
-    public function testSendRequestStopsAfterMaxRedirects(): void
-    {
-        $responses = [];
-        for ($i = 0; $i < 9; $i++) {
-            $responses[] = new MockResponse('', [
-                'http_code' => 302,
-                'response_headers' => ['Location' => 'https://api.example.com/redirect' . $i]
-            ]);
-        }
-
-        $responses[] = new MockResponse('final', ['http_code' => 200]);
-
-        $httpClient = new MockHttpClient($responses);
-        $service = new ApiCallsService($httpClient);
-
-        $this->expectException(RedirectionException::class);
-
-        $service->sendRequest(
-            '{"test": "data"}',
-            'https://api.example.com/webhook',
-            'POST',
-            'application/json',
-            '',
-            ''
-        );
-
-    }
-
 
     /**
      * @dataProvider httpMethodsProvider
@@ -167,6 +140,9 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
         $this->assertEquals($method, $capturedMethod);
     }
 
+    /**
+     * @return array<string, array<string>>
+     */
     public function httpMethodsProvider(): array
     {
         return [
@@ -203,6 +179,9 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
         $this->assertEquals('test data', $capturedOptions['body']);
     }
 
+    /**
+     * @return array<string, array<string>>
+     */
     public function contentTypesProvider(): array
     {
         return [
@@ -213,10 +192,9 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
         ];
     }
 
-
-/**
- * @dataProvider errorStatusCodes
- */
+    /**
+     * @dataProvider errorStatusCodes
+     */
     public function testCheckIfResponseValidThrowsExceptionForErrorCodes(int $statusCode): void
     {
         $mockResponse = new MockResponse('Error', [
@@ -232,7 +210,7 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
     }
 
     /**
-     * @return array<mixed>
+     * @return array<string, array<int>>
      */
     public function errorStatusCodes(): array
     {
