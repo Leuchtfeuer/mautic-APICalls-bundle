@@ -12,8 +12,13 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
 {
     public function testSendRequestWithBasicAuth(): void
     {
-        $mockResponse = new MockResponse('success', ['http_code' => 200]);
-        $httpClient = new MockHttpClient($mockResponse);
+        $capturedOptions = null;
+
+        $httpClient = new MockHttpClient(function ($method, $url, $options) use (&$capturedOptions) {
+            $capturedOptions = $options;
+            return new MockResponse('success', ['http_code' => 200]);
+        });
+
         $service = new ApiCallsService($httpClient);
 
         $service->sendRequest(
@@ -25,39 +30,22 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             'pass'
         );
 
-        $this->assertTrue(true);
+
+        $this->assertContains('User-Agent: LeuchtfeuerMauticAPI/1.0', $capturedOptions['headers']);
+        $this->assertContains('Content-Type: application/json', $capturedOptions['headers']);
+        $this->assertContains('Authorization: Basic ' . base64_encode('user:pass'), $capturedOptions['headers']);
+        $this->assertEquals('{"test": "data"}', $capturedOptions['body']);
     }
 
     public function testSendRequestWithoutAuth(): void
     {
-        $mockResponse = new MockResponse('success', ['http_code' => 200]);
-        $httpClient = new MockHttpClient($mockResponse);
-        $service = new ApiCallsService($httpClient);
+        $capturedOptions = null;
 
-        $service->sendRequest(
-            '<xml>test</xml>',
-            'https://api.example.com/data',
-            'GET',
-            'application/xml',
-            '',
-            ''
-        );
+        $httpClient = new MockHttpClient(function ($method, $url, $options) use (&$capturedOptions) {
+            $capturedOptions = $options;
+            return new MockResponse('success', ['http_code' => 200]);
+        });
 
-        $this->assertTrue(true);
-    }
-
-    public function testSendRequestHandlesRedirectsCorrectly(): void
-    {
-        $redirectResponse = new MockResponse('', [
-            'http_code' => 302,
-            'response_headers' => ['Location' =>
-                'https://api.example.com/redirected']
-        ]);
-        $finalResponse = new MockResponse('success', ['http_code' =>
-            200]);
-
-        $httpClient = new MockHttpClient([$redirectResponse,
-            $finalResponse]);
         $service = new ApiCallsService($httpClient);
 
         $service->sendRequest(
@@ -69,13 +57,65 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             ''
         );
 
-        $this->assertTrue(true);
+        $this->assertNotContains('Authorization: Basic ' . base64_encode('user:pass'), $capturedOptions['headers']);
+
+    }
+
+    public function testSendRequestHandlesRedirectsCorrectly(): void
+    {
+        $redirectResponse = new MockResponse('', [
+            'http_code' => 302,
+            'response_headers' => ['Location' => 'https://api.example.com/redirected']
+        ]);
+        $finalResponse = new MockResponse('success', ['http_code' => 200]);
+
+        $requestsCount = 0;
+        $capturedRequests = [];
+
+        $httpClient = new MockHttpClient(function ($method, $url, $options) use (&$requestsCount, &$capturedRequests, $redirectResponse,
+            $finalResponse) {
+            $capturedRequests[] = [
+                'method' => $method,
+                'url' => $url,
+                'options' => $options
+            ];
+            $requestsCount++;
+
+            if ($requestsCount === 1) {
+                return $redirectResponse;
+            }
+            return $finalResponse;
+        });
+
+        $service = new ApiCallsService($httpClient);
+
+        $service->sendRequest(
+            '{"test": "data"}',
+            'https://api.example.com/webhook',
+            'POST',
+            'application/json',
+            'user',
+            'pass'
+        );
+
+        // Verify two requests were made
+        $this->assertEquals(2, $requestsCount);
+
+        // Verify first request (original URL)
+        $this->assertEquals('POST', $capturedRequests[0]['method']);
+        $this->assertEquals('https://api.example.com/webhook', $capturedRequests[0]['url']);
+        $this->assertEquals('{"test": "data"}', $capturedRequests[0]['options']['body']);
+
+        // Verify second request (redirected URL) - body and auth should be preserved
+        $this->assertEquals('POST', $capturedRequests[1]['method']);
+        $this->assertEquals('https://api.example.com/redirected', $capturedRequests[1]['url']);
+        $this->assertEquals('{"test": "data"}', $capturedRequests[1]['options']['body']);
     }
 
     public function testSendRequestStopsAfterMaxRedirects(): void
     {
         $responses = [];
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 9; $i++) {
             $responses[] = new MockResponse('', [
                 'http_code' => 302,
                 'response_headers' => ['Location' => 'https://api.example.com/redirect' . $i]
@@ -97,6 +137,7 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             '',
             ''
         );
+
     }
 
 
@@ -105,8 +146,13 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
      */
     public function testSendRequestWithDifferentHttpMethods(string $method): void
     {
-        $mockResponse = new MockResponse('success', ['http_code' => 200]);
-        $httpClient = new MockHttpClient($mockResponse);
+        $capturedMethod = null;
+
+        $httpClient = new MockHttpClient(function ($requestMethod, $url, $options) use (&$capturedMethod) {
+            $capturedMethod = $requestMethod;
+            return new MockResponse('success', ['http_code' => 200]);
+        });
+
         $service = new ApiCallsService($httpClient);
 
         $service->sendRequest(
@@ -118,15 +164,15 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             ''
         );
 
-        $this->assertTrue(true);
+        $this->assertEquals($method, $capturedMethod);
     }
 
     public function httpMethodsProvider(): array
     {
         return [
-            'POST' => ['POST'],
-            'PUT' => ['PUT'],
-            'PATCH' => ['PATCH'],
+            'POST method' => ['POST'],
+            'PUT method' => ['PUT'],
+            'PATCH method' => ['PATCH'],
         ];
     }
 
@@ -135,8 +181,13 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
      */
     public function testSendRequestWithDifferentContentTypes(string $contentType): void
     {
-        $mockResponse = new MockResponse('success', ['http_code' => 200]);
-        $httpClient = new MockHttpClient($mockResponse);
+        $capturedOptions = null;
+
+        $httpClient = new MockHttpClient(function ($method, $url, $options) use (&$capturedOptions) {
+            $capturedOptions = $options;
+            return new MockResponse('success', ['http_code' => 200]);
+        });
+
         $service = new ApiCallsService($httpClient);
 
         $service->sendRequest(
@@ -148,55 +199,19 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             ''
         );
 
-        $this->assertTrue(true);
+        $this->assertContains('Content-Type: ' . $contentType, $capturedOptions['headers']);
+        $this->assertEquals('test data', $capturedOptions['body']);
     }
 
     public function contentTypesProvider(): array
     {
         return [
-            'JSON' => ['application/json'],
-            'XML' => ['application/xml'],
-            'Form URL Encoded' => ['application/x-www-form-urlencoded'],
+            'JSON content type' => ['application/json'],
+            'XML content type' => ['application/xml'],
+            'Form URL Encoded content type' => ['application/x-www-form-urlencoded'],
+            'Plain text content type' => ['text/plain'],
         ];
     }
-
-    public function testSendRequestExecutesSuccessfully(): void
-    {
-        $mockResponse = new MockResponse('success', ['http_code' => 200]);
-        $httpClient = new MockHttpClient($mockResponse);
-        $service = new ApiCallsService($httpClient);
-
-        $service->sendRequest(
-            '{"test": "data"}',
-            'https://api.example.com/webhook',
-            'POST',
-            'application/json',
-            'user',
-            'pass'
-        );
-
-        $this->assertTrue(true);
-    }
-
-    public function testCheckIfResponseValidDoesNotThrowException(): void
-    {
-        $mockResponse = new MockResponse('test content', ['http_code' =>
-            200]);
-        $httpClient = new MockHttpClient($mockResponse);
-        $service = new ApiCallsService($httpClient);
-
-        $service->sendRequest(
-            '{"test": "data"}',
-            'https://api.example.com/webhook',
-            'POST',
-            'application/json',
-            '',
-            ''
-        );
-
-        $this->assertTrue(true);
-    }
-
 
 
 /**
