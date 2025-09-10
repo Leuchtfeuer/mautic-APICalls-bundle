@@ -79,7 +79,7 @@ class ApiRequestActionType extends AbstractType
         $builder->addEventSubscriber(new ApiCallsPreSubmitFormListener());
     }
 
-    public function validateBodyByContentType(string $body, ExecutionContextInterface $context): void
+    public function validateBodyByContentType(string|null $body, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
         $data = $context->getRoot()->getData();

@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\Events;
 
 use Mautic\CampaignBundle\Entity\Event;
+use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\PendingEvent;
 use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use Mautic\IntegrationsBundle\Helper\IntegrationsHelper;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener\CampaignActionSubscriber;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type\ApiRequestActionType;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Integration\ApiCallsIntegration;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\ContactProcessorService;
 use PHPUnit\Framework\MockObject\MockObject;
 
@@ -26,6 +29,12 @@ use PHPUnit\Framework\MockObject\MockObject;
           $this->contactProcessorService = $this->createMock(ContactProcessorService::class);
           $this->integrationsHelper = $this->createMock(IntegrationsHelper::class);
           $this->subscriber = new CampaignActionSubscriber($this->contactProcessorService, $this->integrationsHelper);
+          $this->contactProcessorService = $this->createMock(ContactProcessorService::class);
+          $this->integrationsHelper = $this->createMock(IntegrationsHelper::class);
+          $this->subscriber = new CampaignActionSubscriber(
+              $this->contactProcessorService,
+              $this->integrationsHelper
+          );
       }
 
       public function testGetSubscribedEvents(): void
@@ -96,5 +105,65 @@ use PHPUnit\Framework\MockObject\MockObject;
               ->willThrowException(new \Exception($errorMessage));
 
           $this->subscriber->onExecuteApiRequest($event);
+      }
+
+
+      public function testOnCampaignBuildAddsActionWhenIntegrationIsPublished(): void
+      {
+          $event = $this->createMock(CampaignBuilderEvent::class);
+          $integration = $this->createMock(ApiCallsIntegration::class);
+          $integrationConfiguration = $this->createMock(\Mautic\PluginBundle\Entity\Integration::class);
+
+          $integrationConfiguration->expects($this->once())
+              ->method('getIsPublished')
+              ->willReturn(true);
+
+          $integration->expects($this->once())
+              ->method('getIntegrationConfiguration')
+              ->willReturn($integrationConfiguration);
+
+          $this->integrationsHelper->expects($this->once())
+              ->method('getIntegration')
+              ->with(ApiCallsIntegration::INTEGRATION_NAME)
+              ->willReturn($integration);
+
+          $event->expects($this->once())
+              ->method('addAction')
+              ->with(
+                  CampaignActionSubscriber::ACTION_TYPE,
+                  [
+                      'label' => 'leuchtfeuer.api.action.label',
+                      'description' => 'leuchtfeuer.api.action.description',
+                      'batchEventName' => 'api.campaign_action.execute',
+                      'formType' => ApiRequestActionType::class,
+                  ]
+              );
+
+          $this->subscriber->onCampaignBuild($event);
+      }
+
+      public function testOnCampaignBuildDoesNotAddActionWhenIntegrationIsNotPublished(): void
+      {
+          $event = $this->createMock(CampaignBuilderEvent::class);
+          $integration = $this->createMock(ApiCallsIntegration::class);
+          $integrationConfiguration = $this->createMock(\Mautic\PluginBundle\Entity\Integration::class);
+
+          $integrationConfiguration->expects($this->once())
+              ->method('getIsPublished')
+              ->willReturn(false);
+
+          $integration->expects($this->once())
+              ->method('getIntegrationConfiguration')
+              ->willReturn($integrationConfiguration);
+
+          $this->integrationsHelper->expects($this->once())
+              ->method('getIntegration')
+              ->with(ApiCallsIntegration::INTEGRATION_NAME)
+              ->willReturn($integration);
+
+          $event->expects($this->never())
+              ->method('addAction');
+
+          $this->subscriber->onCampaignBuild($event);
       }
   }
