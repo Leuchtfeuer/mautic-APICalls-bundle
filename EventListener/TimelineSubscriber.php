@@ -2,6 +2,7 @@
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\LeadBundle\Entity\LeadEventLogRepository;
 use Mautic\LeadBundle\Event\LeadTimelineEvent;
 use Mautic\LeadBundle\EventListener\TimelineEventLogTrait;
@@ -29,54 +30,65 @@ final class TimelineSubscriber implements EventSubscriberInterface
         $eventType = 'leuchtfeuer.api_call';
         $eventTypeName = 'API Request';
 
-        // Add the event type to timeline
-        $event->addEventType($eventType, $eventTypeName);
+       $event->addEventType($eventType, $eventTypeName);
 
-        // Check if this event type should be included
-        if (!$event->isApplicable($eventType)) {
-            return;
-        }
+                if (!$event->isApplicable($eventType)) {
+                    return;
+                }
 
-        /** @var LeadEventLogRepository $leadEventLogRepo */
-        $leadEventLogRepo = $this->entityManager->getRepository(\Mautic\LeadBundle\Entity\LeadEventLog::class);
+                      $campaignLeadEventLogRepo = $this->entityManager->getRepository(LeadEventLog::class);
 
-        // Query for your API call logs
-        $options = $event->getQueryOptions();
-        $logs = $leadEventLogRepo->getEvents(
-            $event->getLead(),
-            'LeuchtfeuerAPICallsBundle',
-            'api_call',
-            'executed',
-            $options
-        );
+                    $options = $event->getQueryOptions();
 
-        // Add to counter for pagination
-        $event->addToCounter($eventType, $logs);
+                  // Get campaign event logs with metadata for this lead
+                  $qb = $campaignLeadEventLogRepo->createQueryBuilder('log')
+                      ->where('log.lead = :lead')
+                      ->andWhere('log.metadata IS NOT NULL')
+                      ->setParameter('lead', $event->getLead())
+                      ->orderBy('log.dateTriggered', 'DESC');
 
-        if (!$event->isEngagementCount()) {
-            // Add each log entry to the timeline
-            foreach ($logs['results'] as $log) {
+                     // Apply pagination if needed
+                     if (isset($options['limit'])) {
+                         $qb->setMaxResults($options['limit']);
+                     }
 
-                $properties = $log['properties'] ? json_decode($log['properties'], true) : [];
-                $event->addEvent([
-                    'event'      => $eventType,
-                    'eventId'    => $eventType . $log['id'],
-                    'eventLabel' => $properties['message'] ?? 'API Request executed',
-                    'eventType'  => $eventTypeName,
-                    'timestamp'  => $log['date_added'],
-                    'icon'       => 'ri-share-box-line',
-                    'contactId'  => $log['lead_id'],
-                    'extra'      => [
-                        'properties' => $properties,
-                        'details' => 'Test details',
-                        'bundle' => $log['bundle'],
-                        'object' => $log['object'],
-                        'action' => $log['action']
-                    ],
-                    'contentTemplate' => '@LeuchtfeuerAPICalls/SubscribedEvents/Timeline/index.html.twig',
-                ]);
+                    $logs = $qb->getQuery()->getResult();
 
-            }
-        }
+                    // Add to counter
+                    $event->addToCounter($eventType, count($logs));
+
+                    if (!$event->isEngagementCount()) {
+
+                        /** @var LeadEventLog $log */
+                        foreach ($logs as $log) {
+                            $metadata = $log->getMetadata();
+
+                            if(isset($metadata['event'])) {
+
+                                if ($metadata['event'] == 'api_calls') {
+
+                                    $event->addEvent([
+                                        'event'      => $eventType,
+                                        'eventId'    => $eventType . $log->getId(),
+                                        'eventLabel' => $metadata['object_description'] ?? 'API Request executed',
+                                        'eventType'  => $eventTypeName,
+                                        'timestamp'  => $log->getDateTriggered(),
+                                        'icon'       => 'ri-share-box-line',
+                                        'contactId'  => $log->getLead()->getId(),
+                                        'extra'      => [
+                                            'properties' => $metadata,
+                                            'details' => 'Test details',
+                                            'bundle' => $metadata['bundle'] ?? null,
+                                            'object' => $metadata['object'] ?? null,
+                                            'action' => $metadata['action'] ?? null
+                                        ],
+                                        'contentTemplate' => '@LeuchtfeuerAPICalls/SubscribedEvents/Timeline/index.html.twig',
+                                    ]);
+                                }
+
+                            }
+
+                        }
+                    }
     }
 }

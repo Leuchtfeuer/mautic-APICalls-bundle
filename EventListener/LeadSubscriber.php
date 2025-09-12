@@ -3,9 +3,9 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener;
 
 
 use Doctrine\ORM\EntityManagerInterface;
+use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\CampaignBundle\Event\PendingEvent;
 
-use Mautic\LeadBundle\Entity\LeadEventLog;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\LeuchtfeuerAPICallsEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -28,34 +28,17 @@ final class LeadSubscriber implements EventSubscriberInterface
 
     public function onCampaignActionExecute(PendingEvent $event): void
     {
-        $contacts = $event->getContacts();
+        $logs = $event->getPending();
 
-        foreach ($contacts as $contact) {
+        foreach ($logs as $log) {
 
-            $logEntry = new LeadEventLog();
-            $logEntry->setLead($contact);
-            $logEntry->setUserId(null);
-            $logEntry->setUserName(null);
-            $logEntry->setBundle('LeuchtfeuerAPICallsBundle');
-            $logEntry->setObject('api_call');
-            $logEntry->setObjectId($event->getEvent()->getId()); // Campaign event ID
-            $logEntry->setAction('executed');
-            $logEntry->setProperties([
-                'message' => 'Hallo world',
-                'campaign_id' => $event->getEvent()->getCampaign()->getId(),
-                'campaign_name' => $event->getEvent()->getCampaign()->getName(),
-                'object_description' => 'Test details',
-                'event_name' => $event->getEvent()->getName(),
+            $log->setMetadata([
+                'event' => 'api_calls',
+                'object_description' => 'Peter test'
             ]);
-            $logEntry->setDateAdded(new \DateTime());
 
-
-            $this->entityManager->persist($logEntry);
         }
-
-        $this->entityManager->flush();
-
-        $event->passAll();
+        $event->passLogs($logs);
     }
 
 

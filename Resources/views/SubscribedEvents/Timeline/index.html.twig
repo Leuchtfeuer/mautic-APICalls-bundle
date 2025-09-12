@@ -1,14 +1,4 @@
 {% set properties = event.extra.properties %}
 <div class="timeline-content">
-    <h5>API Request Details</h5>
-    <p><strong>Message:</strong> {{ properties.message ?? 'No message' }}</p>
-    {% if properties.campaign_name %}
-        <p><strong>Campaign:</strong> {{ properties.campaign_name }}</p>
-    {% endif %}
-    {% if properties.event_name %}
-        <p><strong>Event:</strong> {{ properties.event_name }}</p>
-    {% endif %}
-    <div class="small text-muted mt-2">
-        Executed on {{ dateToText(event.timestamp, 'local', 'Y-m-d H:i:s') }}
-    </div>
+    <h3>{{ properties.object_description ?? 'API Request executed' }}</h3>
 </div>
