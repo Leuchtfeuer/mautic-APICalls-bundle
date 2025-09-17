@@ -48,7 +48,7 @@ class CampaignActionSubscriber implements EventSubscriberInterface
     public function onExecuteApiRequest(PendingEvent $event): void
     {
         try {
-            $this->contactProcessorService->processContacts($event->getContacts(), $event->getEvent()->getProperties());
+            $this->contactProcessorService->processContacts($event->getEvent()->getProperties(), $event->getPending()->toArray());
             $event->passAll();
         } catch (\Throwable $e) {
             $event->failAll($e->getMessage());

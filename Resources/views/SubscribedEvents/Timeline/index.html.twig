@@ -1,4 +1,12 @@
 {% set properties = event.extra.properties %}
+
 <div class="timeline-content">
-    <h3>{{ properties.object_description ?? 'API Request executed' }}</h3>
+    <h4 class="mb-8">Response Headers</h4>
+
+    <pre>{% for key, values in properties.response_header %}
+{{ key }}: {{ values|join(', ') }}
+{% endfor %}
+    </pre>
+    <h4 class="mb-8">Response Body</h4>
+    <pre>{{ properties.response_body }}</pre>
 </div>

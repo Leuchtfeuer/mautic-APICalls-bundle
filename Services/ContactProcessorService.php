@@ -4,28 +4,32 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
 use Doctrine\Common\Collections\ArrayCollection;
 
+use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Helper\TokenHelper;
+use Mautic\LeadBundle\Model\LeadModel;
 
 class ContactProcessorService
 {
     public function __construct(private ApiCallsService $apiCallsService){}
 
     /**
-     * @param array<int, Lead>|ArrayCollection<int, Lead> $contacts
      * @param array<string, string> $properties
      */
-    public function processContacts(array|ArrayCollection $contacts, array $properties): void
+    public function processContacts(array $properties,  array $leads): void
     {
-        foreach ($contacts as $contact) {
+        /** @var LeadEventLog $lead */
+        foreach ($leads as $lead) {
+
             $tokenizedValue = TokenHelper::findLeadTokens(
                 $properties['body'],
-                $contact->getProfileFields(),
+                $lead->getLead()->getProfileFields(),
                 true
             );
 
             if (is_string($tokenizedValue)) {
                 $this->apiCallsService->sendRequest(
+                    $lead,
                     $tokenizedValue,
                     $properties['url'],
                     $properties['method'],

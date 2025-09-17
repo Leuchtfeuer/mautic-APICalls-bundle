@@ -17,7 +17,7 @@
       "responses": [
         {
           "uuid": "99bf7d77-e5bd-47ea-94f6-da956ca5265a",
-          "body": "{}",
+          "body": "{\n  \"status\": \"success\",\n  \"message\": \"POST request processed\",\n  \"data\": {\n    \"id\": 123,\n    \"method\": \"POST\"\n  }\n}",
           "latency": 0,
           "statusCode": 200,
           "label": "",
@@ -48,7 +48,7 @@
       "responses": [
         {
           "uuid": "3b5e7165-eb98-4845-8b9f-f59e5eda2fc6",
-          "body": "{}",
+          "body": "{\n  \"status\": \"success\",\n  \"message\": \"PUT request processed\",\n  \"data\": {\n    \"id\": 123,\n    \"method\": \"PUT\"\n  }\n}",
           "latency": 0,
           "statusCode": 200,
           "label": "",
@@ -79,16 +79,47 @@
       "responses": [
         {
           "uuid": "a2d0ce64-4691-4adf-ae94-fab0877ad087",
-          "body": "{}",
+          "body": "{\n  \"status\": \"success\",\n  \"message\": \"PATCH request processed\",\n  \"data\": {\n    \"id\": 123,\n    \"method\": \"PATCH\"\n  }\n}",
           "latency": 0,
           "statusCode": 200,
           "label": "",
           "headers": [
             {
               "key": "Location",
-              "value": ""
+              "value": "http://host.docker.internal:3001/api/test/123"
             }
           ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "f1a2b3c4-5678-9def-0123-456789abcdef",
+      "type": "http",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "api/test",
+      "responses": [
+        {
+          "uuid": "e2d3c4b5-6789-0abc-def1-23456789cdef",
+          "body": "{\n  \"status\": \"success\",\n  \"message\": \"GET request processed\",\n  \"data\": {\n    \"id\": 123,\n    \"method\": \"GET\"\n  }\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
           "bodyType": "INLINE",
           "filePath": "",
           "databucketID": "",
@@ -215,6 +246,42 @@
       "streamingInterval": 0
     },
     {
+      "uuid": "212724b9-dea4-42b8-84fb-a1a7dfe89bd3",
+      "type": "http",
+      "documentation": "301 Redirect GET endpoint",
+      "method": "get",
+      "endpoint": "api/redirect-example",
+      "responses": [
+        {
+          "uuid": "dcbab87c-a24d-4556-b732-dfef54fd43c4",
+          "body": "",
+          "latency": 0,
+          "statusCode": 301,
+          "label": "301 Redirect",
+          "headers": [
+            {
+              "key": "Location",
+              "value": "http://host.docker.internal:3001/redirect"
+            }
+          ],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
       "uuid": "801dd352-b1f6-47a6-9817-1f639876a5de",
       "type": "http",
       "documentation": "Redirect destination POST endpoint",
@@ -223,7 +290,7 @@
       "responses": [
         {
           "uuid": "5372fd02-b5bf-4284-ac2d-d8d736b8e146",
-          "body": "{\"message\": \"Successfully redirected\", \"status\": \"ok\", \"receivedBody\": \"{{body}}\", \"receivedHeaders\": {\"user-agent\": \"{{header 'User-Agent'}}\", \"content-type\": \"{{header 'Content-Type'}}\"}}",
+          "body": "{\n  \"message\": \"Successfully redirected\",\n  \"status\": \"ok\",\n  \"method\": \"POST\"\n}",
           "latency": 0,
           "statusCode": 200,
           "label": "Success after redirect",
@@ -254,7 +321,7 @@
       "responses": [
         {
           "uuid": "d84bbb85-fe60-4cd0-a125-8a1c7e543038",
-          "body": "{\"message\": \"Successfully redirected\", \"status\": \"ok\", \"receivedBody\": \"{{body}}\", \"receivedHeaders\": {\"user-agent\": \"{{header 'User-Agent'}}\", \"content-type\": \"{{header 'Content-Type'}}\"}}",
+          "body": "{\n  \"message\": \"Successfully redirected\",\n  \"status\": \"ok\",\n  \"method\": \"PATCH\"\n}",
           "latency": 0,
           "statusCode": 200,
           "label": "Success after redirect",
@@ -285,7 +352,38 @@
       "responses": [
         {
           "uuid": "f3cf0df6-b9d9-45be-ace5-0470d60c7b61",
-          "body": "{\"message\": \"Successfully redirected\", \"status\": \"ok\", \"receivedBody\": \"{{body}}\", \"receivedHeaders\": {\"user-agent\": \"{{header 'User-Agent'}}\", \"content-type\": \"{{header 'Content-Type'}}\"}}",
+          "body": "{\n  \"message\": \"Successfully redirected\",\n  \"status\": \"ok\",\n  \"method\": \"PUT\"\n}",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "Success after redirect",
+          "headers": [],
+          "bodyType": "INLINE",
+          "filePath": "",
+          "databucketID": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false,
+          "default": true,
+          "crudKey": "id",
+          "callbacks": []
+        }
+      ],
+      "responseMode": null,
+      "streamingMode": null,
+      "streamingInterval": 0
+    },
+    {
+      "uuid": "1d1f62ae-07d6-4e3d-946b-28d057126e95",
+      "type": "http",
+      "documentation": "Redirect destination GET endpoint",
+      "method": "get",
+      "endpoint": "redirect",
+      "responses": [
+        {
+          "uuid": "cafdce15-9862-422c-a82e-0b555eb9fd6e",
+          "body": "{\n  \"message\": \"Successfully redirected\",\n  \"status\": \"ok\",\n  \"method\": \"GET\"\n}",
           "latency": 0,
           "statusCode": 200,
           "label": "Success after redirect",
@@ -323,6 +421,10 @@
     },
     {
       "type": "route",
+      "uuid": "f1a2b3c4-5678-9def-0123-456789abcdef"
+    },
+    {
+      "type": "route",
       "uuid": "411e87f8-2448-41c2-a141-329a5e3d9720"
     },
     {
@@ -344,6 +446,14 @@
     {
       "type": "route",
       "uuid": "020e7675-cb53-444f-aac7-2bd43e510ed2"
+    },
+    {
+      "type": "route",
+      "uuid": "212724b9-dea4-42b8-84fb-a1a7dfe89bd3"
+    },
+    {
+      "type": "route",
+      "uuid": "1d1f62ae-07d6-4e3d-946b-28d057126e95"
     }
   ],
   "proxyMode": false,
@@ -374,21 +484,11 @@
     },
     {
       "key": "Access-Control-Allow-Headers",
-      "value": "Content-Type, Origin, Accept, Authorization, Content-Length, X-Requested-With"
+      "value": "Content-Type, Authorization"
     }
   ],
-  "proxyReqHeaders": [
-    {
-      "key": "",
-      "value": ""
-    }
-  ],
-  "proxyResHeaders": [
-    {
-      "key": "",
-      "value": ""
-    }
-  ],
+  "proxyReqHeaders": [],
+  "proxyResHeaders": [],
   "data": [],
   "callbacks": []
 }

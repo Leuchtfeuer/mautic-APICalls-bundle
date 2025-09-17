@@ -2,13 +2,15 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
+use Mautic\CampaignBundle\Entity\LeadEventLog;
+use Mautic\LeadBundle\Model\LeadModel;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 
 class ApiCallsService
 {
-    public function __construct(private HttpClientInterface $client)
+    public function __construct(private HttpClientInterface $client, private LeadModel $leadModel)
     {}
 
     /**
@@ -20,8 +22,9 @@ class ApiCallsService
      * @param string $password
      */
 
-    public function sendRequest(string $value, string $url, string $method, string $contentType, string $username, string $password): void
+    public function sendRequest(LeadEventLog $lead, string $value, string $url, string $method, string $contentType, string $username, string $password): void
     {
+
         $options = [
             'headers' => [
                 'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
@@ -62,9 +65,16 @@ class ApiCallsService
         }
 
         if ($response !== null) {
+
             $this->checkIfResponseValid($response);
+
+            $this->updateField($lead);
+
+            $this->setMetadata($lead, $response);
+
         }
     }
+
 
     /**
      * @param ResponseInterface $response
@@ -73,6 +83,26 @@ class ApiCallsService
     {
         $response->getContent();
     }
+
+
+    public function updateField(LeadEventLog $lead):void
+    {
+        $lead->getLead()->addUpdatedField('test_field', 'bl bla 2');
+        $this->leadModel->saveEntity($lead->getLead());
+    }
+
+    public function setMetadata(LeadEventLog $lead, ResponseInterface $response):void
+    {
+        $lead->setMetadata([
+            'event' => 'api_calls',
+            'object_description' => 'API-Request Response',
+            'response_header' => $response->getHeaders(false),
+            'response_body' => $response->getContent(false),
+        ]);
+    }
+
+
+
 
 
 }
