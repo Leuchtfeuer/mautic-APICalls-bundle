@@ -174,7 +174,6 @@ class ApiRequestActionType extends AbstractType
         // @phpstan-ignore-next-line
         $data = $context->getRoot()->getData();
         $method = $data['properties']['method'] ?? null;
-        $url = $data['properties']['url'] ?? null;
 
         if (empty($parameters)) {
             return;
@@ -202,17 +201,6 @@ class ApiRequestActionType extends AbstractType
             }
         }
 
-        $url = $url . '?' . $parameters;
-
-        $validator = $context->getValidator();
-
-        $violations = $validator->validate($url, new Assert\Url(['message' =>
-            'Get parameters are invalid']));
-
-        foreach ($violations as $violation) {
-            $context->buildViolation($violation->getMessage())
-                ->addViolation();
-        }
     }
 
 

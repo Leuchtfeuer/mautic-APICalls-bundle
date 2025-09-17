@@ -22,12 +22,14 @@ class ApiCallsService
      * @param string $password
      */
 
-    public function sendRequest(LeadEventLog $lead, string $value, string $url, string $method, string $contentType, string $username, string $password, string $urlParameters = ''): void
+    public function sendRequest(LeadEventLog $lead, string $value, string $url, string $method, string $contentType, string $username, string $password, string $contactField = ''): void
     {
+        $originalParameters = '';
 
-        if ($method === 'GET' && !empty($urlParameters)) {
+        if ($method === 'GET' && !empty($value)) {
+            $originalParameters = $value;
             $separator = str_contains($url, '?') ? '&' : '?';
-            $url = $url . $separator . $urlParameters;
+            $url = $url . $separator . $value;
         }
 
         $options = [
@@ -35,7 +37,6 @@ class ApiCallsService
                 'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                 'Content-Type' => $contentType,
             ],
-            'body' => $value,
             'verify_peer' => false,
             'verify_host' => true,
             'max_redirects' => 0,
@@ -49,15 +50,12 @@ class ApiCallsService
             $options['auth_basic'] = [$username, $password];
         }
 
-
         $currentUrl = $url;
         $maxRedirects = 5;
         $redirectCount = 0;
 
         while ($redirectCount < $maxRedirects) {
-
             $response = $this->client->request($method, $currentUrl, $options);
-
             $statusCode = $response->getStatusCode();
 
             if (!in_array($statusCode, [301, 302, 303, 307, 308])) {
@@ -69,18 +67,20 @@ class ApiCallsService
                 break;
             }
 
-            $currentUrl = $locationHeader;
+            if ($method === 'GET' && !empty($originalParameters)) {
+                $separator = str_contains($locationHeader, '?') ? '&' : '?';
+                $currentUrl = $locationHeader . $separator . $originalParameters;
+            } else {
+                $currentUrl = $locationHeader;
+            }
+
             $redirectCount++;
         }
 
         if ($response !== null) {
-
             $this->checkIfResponseValid($response);
-
-            $this->updateField($lead, $response);
-
+            $this->updateField($lead, $contactField, $response);
             $this->setMetadata($lead, $response, $method);
-
         }
     }
 
@@ -94,10 +94,12 @@ class ApiCallsService
     }
 
 
-    public function updateField(LeadEventLog $lead,  ResponseInterface $response):void
+    public function updateField(LeadEventLog $lead,  string $contactField, ResponseInterface $response):void
     {
-        $lead->getLead()->addUpdatedField('test_field', $response->getContent(false));
-        $this->leadModel->saveEntity($lead->getLead());
+        if (!empty($contactField)){
+            $lead->getLead()->addUpdatedField($contactField, $response->getContent(false));
+            $this->leadModel->saveEntity($lead->getLead());
+        }
     }
 
     public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method):void

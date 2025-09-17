@@ -2,12 +2,11 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
-use Doctrine\Common\Collections\ArrayCollection;
+
 
 use Mautic\CampaignBundle\Entity\LeadEventLog;
-use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Helper\TokenHelper;
-use Mautic\LeadBundle\Model\LeadModel;
+
 
 class ContactProcessorService
 {
@@ -21,11 +20,20 @@ class ContactProcessorService
         /** @var LeadEventLog $lead */
         foreach ($leads as $lead) {
 
-            $tokenizedValue = TokenHelper::findLeadTokens(
+            if (empty($properties['url_parameters']))
+            {
+                $tokenizedValue = TokenHelper::findLeadTokens(
                 $properties['body'],
                 $lead->getLead()->getProfileFields(),
                 true
-            );
+                );
+            } else {
+                $tokenizedValue = TokenHelper::findLeadTokens(
+                $properties['url_parameters'],
+                $lead->getLead()->getProfileFields(),
+                true
+                );
+            }
 
             if (is_string($tokenizedValue)) {
                 $this->apiCallsService->sendRequest(
@@ -36,7 +44,7 @@ class ContactProcessorService
                     $properties['contentType'],
                     $properties['username'] ?? '',
                     $properties['password'] ?? '',
-                    $properties['url_parameters'] ?? ''
+                    $properties['contact_field']
                 );
             }
         }

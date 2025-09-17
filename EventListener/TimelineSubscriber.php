@@ -3,9 +3,7 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Mautic\CampaignBundle\Entity\LeadEventLog;
-use Mautic\LeadBundle\Entity\LeadEventLogRepository;
 use Mautic\LeadBundle\Event\LeadTimelineEvent;
-use Mautic\LeadBundle\EventListener\TimelineEventLogTrait;
 use Mautic\LeadBundle\LeadEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -39,14 +37,12 @@ final class TimelineSubscriber implements EventSubscriberInterface
         $campaignLeadEventLogRepo = $this->entityManager->getRepository(LeadEventLog::class);
         $options = $event->getQueryOptions();
 
-          // Get campaign event logs with metadata for this lead
         $qb = $campaignLeadEventLogRepo->createQueryBuilder('log')
           ->where('log.lead = :lead')
           ->andWhere('log.metadata IS NOT NULL')
           ->setParameter('lead', $event->getLead())
           ->orderBy('log.dateTriggered', 'DESC');
 
-         // Apply pagination if needed
          if (isset($options['limit'])) {
              $qb->setMaxResults($options['limit']);
          }
@@ -63,7 +59,7 @@ final class TimelineSubscriber implements EventSubscriberInterface
                 $metadata = $log->getMetadata();
                 if (isset($metadata['event']) && $metadata['event'] === 'api_calls' && isset($metadata['method'])) {
                     $event->addEvent([
-                        'event'      => $eventType . $metadata['method'],
+                        'event'      => $eventType,
                         'eventId'    => $eventType . $log->getId(),
                         'eventLabel' => $metadata['object_description'] . '/' . $metadata['method'],
                         'eventType'  => $eventTypeName,
