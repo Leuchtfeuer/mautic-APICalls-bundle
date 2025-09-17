@@ -61,11 +61,11 @@ final class TimelineSubscriber implements EventSubscriberInterface
             /** @var LeadEventLog $log */
             foreach ($logs as $log) {
                 $metadata = $log->getMetadata();
-                if (isset($metadata['event']) && $metadata['event'] === 'api_calls') {
+                if (isset($metadata['event']) && $metadata['event'] === 'api_calls' && isset($metadata['method'])) {
                     $event->addEvent([
-                        'event'      => $eventType,
+                        'event'      => $eventType . $metadata['method'],
                         'eventId'    => $eventType . $log->getId(),
-                        'eventLabel' => $metadata['object_description'] ?? 'API Request executed',
+                        'eventLabel' => $metadata['object_description'] . '/' . $metadata['method'],
                         'eventType'  => $eventTypeName,
                         'timestamp'  => $log->getDateTriggered(),
                         'icon'       => 'ri-share-box-line',

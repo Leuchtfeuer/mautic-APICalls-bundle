@@ -22,8 +22,14 @@ class ApiCallsService
      * @param string $password
      */
 
-    public function sendRequest(LeadEventLog $lead, string $value, string $url, string $method, string $contentType, string $username, string $password): void
+    public function sendRequest(LeadEventLog $lead, string $value, string $url, string $method, string $contentType, string $username, string $password, string $urlParameters = ''): void
     {
+
+        if ($method === 'GET' && !empty($urlParameters)) {
+            $separator = str_contains($url, '?') ? '&' : '?';
+            $url = $url . $separator . $urlParameters;
+        }
+
         $options = [
             'headers' => [
                 'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
@@ -34,6 +40,10 @@ class ApiCallsService
             'verify_host' => true,
             'max_redirects' => 0,
         ];
+
+        if ($method !== 'GET') {
+            $options['body'] = $value;
+        }
 
         if (!empty($username) && !empty($password)) {
             $options['auth_basic'] = [$username, $password];
@@ -69,7 +79,7 @@ class ApiCallsService
 
             $this->updateField($lead, $response);
 
-            $this->setMetadata($lead, $response);
+            $this->setMetadata($lead, $response, $method);
 
         }
     }
@@ -90,13 +100,14 @@ class ApiCallsService
         $this->leadModel->saveEntity($lead->getLead());
     }
 
-    public function setMetadata(LeadEventLog $lead, ResponseInterface $response):void
+    public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method):void
     {
         $lead->setMetadata([
             'event' => 'api_calls',
             'object_description' => 'API-Request Response',
             'response_header' => $response->getHeaders(false),
             'response_body' => $response->getContent(false),
+            'method' => $method
         ]);
     }
 

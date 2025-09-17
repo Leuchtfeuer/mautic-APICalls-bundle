@@ -36,6 +36,7 @@ class ContactProcessorService
                     $properties['contentType'],
                     $properties['username'] ?? '',
                     $properties['password'] ?? '',
+                    $properties['url_parameters'] ?? ''
                 );
             }
         }
