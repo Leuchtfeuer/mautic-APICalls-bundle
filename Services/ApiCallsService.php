@@ -24,7 +24,6 @@ class ApiCallsService
 
     public function sendRequest(LeadEventLog $lead, string $value, string $url, string $method, string $contentType, string $username, string $password): void
     {
-
         $options = [
             'headers' => [
                 'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
@@ -68,7 +67,7 @@ class ApiCallsService
 
             $this->checkIfResponseValid($response);
 
-            $this->updateField($lead);
+            $this->updateField($lead, $response);
 
             $this->setMetadata($lead, $response);
 
@@ -85,9 +84,9 @@ class ApiCallsService
     }
 
 
-    public function updateField(LeadEventLog $lead):void
+    public function updateField(LeadEventLog $lead,  ResponseInterface $response):void
     {
-        $lead->getLead()->addUpdatedField('test_field', 'bl bla 2');
+        $lead->getLead()->addUpdatedField('test_field', $response->getContent(false));
         $this->leadModel->saveEntity($lead->getLead());
     }
 
@@ -100,8 +99,6 @@ class ApiCallsService
             'response_body' => $response->getContent(false),
         ]);
     }
-
-
 
 
 
