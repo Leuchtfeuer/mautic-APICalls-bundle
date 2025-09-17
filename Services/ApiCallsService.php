@@ -78,8 +78,13 @@ class ApiCallsService
         }
 
         if ($response !== null) {
+
             $this->checkIfResponseValid($response);
-            $this->updateField($lead, $contactField, $response);
+
+            if (!empty($contactField)){
+                 $this->updateField($lead, $contactField, $response);
+            }
+
             $this->setMetadata($lead, $response, $method);
         }
     }
@@ -96,10 +101,8 @@ class ApiCallsService
 
     public function updateField(LeadEventLog $lead,  string $contactField, ResponseInterface $response):void
     {
-        if (!empty($contactField)){
-            $lead->getLead()->addUpdatedField($contactField, $response->getContent(false));
-            $this->leadModel->saveEntity($lead->getLead());
-        }
+        $lead->getLead()->addUpdatedField($contactField, $response->getContent(false));
+        $this->leadModel->saveEntity($lead->getLead());
     }
 
     public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method):void

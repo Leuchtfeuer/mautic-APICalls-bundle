@@ -44,7 +44,7 @@ class ContactProcessorService
                     $properties['contentType'],
                     $properties['username'] ?? '',
                     $properties['password'] ?? '',
-                    $properties['contact_field']
+                    $properties['contact_field'] ?? ''
                 );
             }
         }
