@@ -139,10 +139,7 @@ class ApiRequestActionType extends AbstractType
                 'label_attr' => ['class' => 'control-label'],
                 'required' => false,
                 'constraints' => [
-                    new Assert\Regex([
-                        'pattern' => '/^[\/~#!@%|+\-{}\[\]<>].*[\/~#!@%|+\-{}\[\]<>][gimxsu]*$/',
-                        'message' => 'Please enter a valid regex pattern (e.g., /pattern/flags)'
-                    ])
+                    new Assert\Callback([$this, 'validateRegexByContentType']),
                 ],
                 'attr' => [
                     'class' => 'form-control',
@@ -217,6 +214,23 @@ class ApiRequestActionType extends AbstractType
             }
         }
 
+    }
+
+
+    public function validateRegexByContentType(string|null $parameters, ExecutionContextInterface $context): void
+    {
+        // @phpstan-ignore-next-line
+        $data = $context->getRoot()->getData();
+        $method = $data['properties']['method'] ?? null;
+
+        if (empty($parameters)) {
+            return;
+        }
+
+        if (!empty($parameters) && $method !== 'GET') {
+            $context->buildViolation('Regex rules can only be used with GET method. Please select GET method or remove regex rules.')
+                ->addViolation();
+        }
     }
 
 
