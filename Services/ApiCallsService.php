@@ -24,11 +24,12 @@ class ApiCallsService
 
     public function sendRequest(LeadEventLog $lead, string $value, string $url, string $method, string $contentType, string $username, string $password, string $contactField, string $regex): void
     {
+        //build url with GET parameters
         if ($method === 'GET' && !empty($value)) {
             $separator = str_contains($url, '?') ? '&' : '?';
             $url = $url . $separator . $value;
         }
-
+        //options for sending request
         $options = [
             'headers' => [
                 'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
@@ -39,10 +40,11 @@ class ApiCallsService
             'max_redirects' => 0,
         ];
 
+        //if not GET method then set body
         if ($method !== 'GET') {
             $options['body'] = $value;
         }
-
+        //if there are uer and password then auth_basic
         if (!empty($username) && !empty($password)) {
             $options['auth_basic'] = [$username, $password];
         }
@@ -78,7 +80,7 @@ class ApiCallsService
 
             $this->checkIfResponseValid($response);
 
-            if (!empty($contactField && $method === 'GET')){
+            if (!empty($contactField) && $method === 'GET'){
                  $this->updateField($lead, $contactField, $response, $regex);
             }
 
