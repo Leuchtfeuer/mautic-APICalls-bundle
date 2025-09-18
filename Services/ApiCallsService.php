@@ -78,7 +78,7 @@ class ApiCallsService
 
             $this->checkIfResponseValid($response);
 
-            if (!empty($contactField)){
+            if (!empty($contactField && $method === 'GET')){
                  $this->updateField($lead, $contactField, $response, $regex);
             }
 
