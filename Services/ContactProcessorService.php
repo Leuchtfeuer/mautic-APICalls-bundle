@@ -6,6 +6,7 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
 use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\LeadBundle\Helper\TokenHelper;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 
 
 class ContactProcessorService
@@ -20,34 +21,19 @@ class ContactProcessorService
         /** @var LeadEventLog $lead */
         foreach ($leads as $lead) {
 
-            if (empty($properties['url_parameters']))
-            {
-                $tokenizedValue = TokenHelper::findLeadTokens(
-                $properties['body'],
-                $lead->getLead()->getProfileFields(),
-                true
-                );
-            } else {
-                $tokenizedValue = TokenHelper::findLeadTokens(
-                $properties['url_parameters'],
-                $lead->getLead()->getProfileFields(),
-                true
-                );
-            }
+            $dto = new ApiCallPropertiesDTO(
+                url: $properties['url'],
+                method: $properties['method'],
+                contentType: $properties['contentType'],
+                body: $properties['body'] ?? null,
+                urlParameters: $properties['url_parameters'] ?? null,
+                username: $properties['username'] ?? null,
+                password: $properties['password'] ?? null,
+                contactField: $properties['contact_field'] ?? null,
+                regex: $properties['regex'] ?? null
+            );
 
-            if (is_string($tokenizedValue)) {
-                $this->apiCallsService->sendRequest(
-                    $lead,
-                    $tokenizedValue,
-                    $properties['url'],
-                    $properties['method'],
-                    $properties['contentType'],
-                    $properties['username'] ?? '',
-                    $properties['password'] ?? '',
-                    $properties['contact_field'] ?? '',
-                    $properties['regex'] ?? ''
-                );
-            }
+            $this->apiCallsService->sendRequest($lead, $dto);
         }
     }
 }

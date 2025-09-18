@@ -4,91 +4,48 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
 use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\LeadBundle\Model\LeadModel;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 
 class ApiCallsService
 {
+
+    private  const MAX_REDIRECTS = 5;
     public function __construct(private HttpClientInterface $client, private LeadModel $leadModel)
     {}
 
     /**
-     * @param string $value
-     * @param string $url
-     * @param string $method
-     * @param string $contentType
-     * @param string $username
-     * @param string $password
+     * @param ApiCallPropertiesDTO $dto
+     * @param LeadEventLog $lead
      */
-
-    public function sendRequest(LeadEventLog $lead, string $value, string $url, string $method, string $contentType, string $username, string $password, string $contactField, string $regex): void
+    public function sendRequest(LeadEventLog $lead, ApiCallPropertiesDTO $dto): void
     {
-        //build url with GET parameters
-        if ($method === 'GET' && !empty($value)) {
-            $separator = str_contains($url, '?') ? '&' : '?';
-            $url = $url . $separator . $value;
-        }
-        //options for sending request
-        $options = [
-            'headers' => [
-                'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
-                'Content-Type' => $contentType,
-            ],
-            'verify_peer' => false,
-            'verify_host' => true,
-            'max_redirects' => 0,
-        ];
+        $tokenizedValue = $dto->getTokenizedValue($lead);
 
-        //if not GET method then set body
-        if ($method !== 'GET') {
-            $options['body'] = $value;
-        }
-        //if there are uer and password then auth_basic
-        if (!empty($username) && !empty($password)) {
-            $options['auth_basic'] = [$username, $password];
+        if ($tokenizedValue === null) {
+            return;
         }
 
-        $currentUrl = $url;
-        $maxRedirects = 5;
-        $redirectCount = 0;
+        $urlAndOptions = $dto->buildUrlAndOptions($tokenizedValue);
 
-        while ($redirectCount < $maxRedirects) {
-            $response = $this->client->request($method, $currentUrl, $options);
-            $statusCode = $response->getStatusCode();
+        $currentUrl = $urlAndOptions['url'];
+        $options = $urlAndOptions['options'];
 
-            if (!in_array($statusCode, [301, 302, 303, 307, 308])) {
-                break;
-            }
-
-            $locationHeader = $response->getHeaders(false)['location'][0] ?? null;
-            if (!$locationHeader) {
-                break;
-            }
-
-            if ($method === 'GET' && !empty($value)) {
-                $separator = str_contains($locationHeader, '?') ? '&' : '?';
-                $currentUrl = $locationHeader . $separator . $value;
-            } else {
-                $currentUrl = $locationHeader;
-            }
-
-            $redirectCount++;
-        }
+        $response = $this->handleRedirects($dto, $currentUrl, $options, $tokenizedValue);
 
         if ($response !== null) {
-
             $this->checkIfResponseValid($response);
 
-            if (!empty($contactField) && $method === 'GET'){
-                 $this->updateField($lead, $contactField, $response, $regex);
+            if (!empty($dto->contactField) && $dto->method === 'GET') {
+                $this->updateField($lead, $dto->contactField, $response, $dto->regex);
             }
 
-            $this->setMetadata($lead, $response, $method);
+            $this->setMetadata($lead, $response, $dto->method);
         }
+
     }
-
-
     /**
      * @param ResponseInterface $response
      */
@@ -122,6 +79,53 @@ class ApiCallsService
         ]);
     }
 
+
+    private function handleRedirects(ApiCallPropertiesDTO $dto, string $currentUrl, array $options, string $tokenizedValue): ?ResponseInterface
+    {
+        $redirectCount = 0;
+        $response = null;
+
+        while ($redirectCount < self::MAX_REDIRECTS) {
+
+            $response = $this->client->request($dto->method, $currentUrl, $options);
+
+            if (!$this->isRedirectResponse($response)) {
+                break;
+            }
+
+            $locationHeader = $this->getLocationHeader($response);
+
+            if (!$locationHeader) {
+                break;
+            }
+
+            $currentUrl = $this->buildRedirectUrl($dto, $locationHeader, $tokenizedValue);
+
+            $redirectCount++;
+        }
+
+        return $response;
+    }
+
+    private function isRedirectResponse(ResponseInterface $response): bool
+    {
+        return in_array($response->getStatusCode(), [301, 302, 303, 307, 308]);
+    }
+
+    private function getLocationHeader(ResponseInterface $response): ?string
+    {
+        return $response->getHeaders(false)['location'][0] ?? null;
+    }
+
+    private function buildRedirectUrl(ApiCallPropertiesDTO $dto, string $locationHeader, string $tokenizedValue): string
+    {
+        if ($dto->method === 'GET' && !empty($tokenizedValue)) {
+            $separator = str_contains($locationHeader, '?') ? '&' : '?';
+            return $locationHeader . $separator . $tokenizedValue;
+        }
+
+        return $locationHeader;
+    }
 
 
 }
