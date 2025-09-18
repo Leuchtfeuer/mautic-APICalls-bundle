@@ -24,10 +24,7 @@ class ApiCallsService
 
     public function sendRequest(LeadEventLog $lead, string $value, string $url, string $method, string $contentType, string $username, string $password, string $contactField = ''): void
     {
-        $originalParameters = '';
-
         if ($method === 'GET' && !empty($value)) {
-            $originalParameters = $value;
             $separator = str_contains($url, '?') ? '&' : '?';
             $url = $url . $separator . $value;
         }
@@ -67,9 +64,9 @@ class ApiCallsService
                 break;
             }
 
-            if ($method === 'GET' && !empty($originalParameters)) {
+            if ($method === 'GET' && !empty($value)) {
                 $separator = str_contains($locationHeader, '?') ? '&' : '?';
-                $currentUrl = $locationHeader . $separator . $originalParameters;
+                $currentUrl = $locationHeader . $separator . $value;
             } else {
                 $currentUrl = $locationHeader;
             }
@@ -110,8 +107,8 @@ class ApiCallsService
         $lead->setMetadata([
             'event' => 'api_calls',
             'object_description' => 'API-Request Response',
-            'response_header' => $response->getHeaders(false),
-            'response_body' => $response->getContent(false),
+            'response_header' => $response->getHeaders(false) ?? 'No Headers',
+            'response_body' => $response->getContent(false) ?? 'No Body',
             'method' => $method
         ]);
     }
