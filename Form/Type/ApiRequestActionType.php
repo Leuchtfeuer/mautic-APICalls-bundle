@@ -133,6 +133,22 @@ class ApiRequestActionType extends AbstractType
                 'constraints' => [
                     new Assert\Callback([$this, 'validateBodyByContentType']),
                 ],
+            ])
+            ->add('regex', TextType::class, [
+                'label' => 'Pre-Store Regex for Contact Field',
+                'label_attr' => ['class' => 'control-label'],
+                'required' => false,
+                'constraints' => [
+                    new Assert\Regex([
+                        'pattern' => '/^[\/~#!@%|+\-{}\[\]<>].*[\/~#!@%|+\-{}\[\]<>][gimxsu]*$/',
+                        'message' => 'Please enter a valid regex pattern (e.g., /pattern/flags)'
+                    ])
+                ],
+                'attr' => [
+                    'class' => 'form-control',
+                    'placeholder' => '/[a-zA-Z]+/',
+                    'tooltip' => 'PHP regex with delimiters. Examples: /\d+/i (numbers), #email.*@.*#g (email pattern), ~price: \$\d+~(price match)'
+                ],
             ]);
 
         $builder->addEventSubscriber(new ApiCallsPreSubmitFormListener());

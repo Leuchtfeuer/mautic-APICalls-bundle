@@ -22,7 +22,7 @@ class ApiCallsService
      * @param string $password
      */
 
-    public function sendRequest(LeadEventLog $lead, string $value, string $url, string $method, string $contentType, string $username, string $password, string $contactField = ''): void
+    public function sendRequest(LeadEventLog $lead, string $value, string $url, string $method, string $contentType, string $username, string $password, string $contactField, string $regex): void
     {
         if ($method === 'GET' && !empty($value)) {
             $separator = str_contains($url, '?') ? '&' : '?';
@@ -79,7 +79,7 @@ class ApiCallsService
             $this->checkIfResponseValid($response);
 
             if (!empty($contactField)){
-                 $this->updateField($lead, $contactField, $response);
+                 $this->updateField($lead, $contactField, $response, $regex);
             }
 
             $this->setMetadata($lead, $response, $method);
@@ -95,10 +95,17 @@ class ApiCallsService
         $response->getContent();
     }
 
-
-    public function updateField(LeadEventLog $lead,  string $contactField, ResponseInterface $response):void
+    public function updateField(LeadEventLog $lead, string $contactField, ResponseInterface $response, string $regex): void
     {
-        $lead->getLead()->addUpdatedField($contactField, $response->getContent(false));
+        $content = $response->getContent(false);
+
+        if (!empty($regex)) {
+            if (preg_match_all($regex, $content, $matches)) {
+                $content = implode(' ', $matches[0]);
+            }
+        }
+
+        $lead->getLead()->addUpdatedField($contactField, $content);
         $this->leadModel->saveEntity($lead->getLead());
     }
 
