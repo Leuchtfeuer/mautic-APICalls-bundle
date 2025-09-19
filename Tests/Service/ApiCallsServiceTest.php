@@ -41,11 +41,11 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             method: 'POST',
             contentType: 'application/json',
             body: '{"test": "data"}',
-            urlParameters: null,
+            urlParameters: '',
             username: 'user',
             password: 'pass',
-            contactField: null,
-            regex: null
+            contactField: '',
+            regex: ''
         );
 
         $lead = $this->createMockLeadEventLog();
@@ -75,11 +75,11 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             method: 'POST',
             contentType: 'application/json',
             body: '{"test": "data"}',
-            urlParameters: null,
-            username: null,
-            password: null,
-            contactField: null,
-            regex: null
+            urlParameters: '',
+            username: '',
+            password: '',
+            contactField: '',
+            regex: ''
         );
 
         $lead = $this->createMockLeadEventLog();
@@ -122,11 +122,11 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             method: 'POST',
             contentType: 'application/json',
             body: '{"test": "data"}',
-            urlParameters: null,
+            urlParameters: '',
             username: 'user',
             password: 'pass',
-            contactField: null,
-            regex: null
+            contactField: '',
+            regex: ''
         );
 
         $lead = $this->createMockLeadEventLog();
@@ -150,7 +150,7 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
      */
     public function testSendRequestWithDifferentHttpMethods(string $method): void
     {
-        $capturedMethod = null;
+        $capturedMethod = '';
 
         $httpClient = new MockHttpClient(function ($requestMethod, $url, $options) use (&$capturedMethod) {
             $capturedMethod = $requestMethod;
@@ -165,11 +165,11 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             method: $method,
             contentType: 'application/json',
             body: '{"test": "data"}',
-            urlParameters: null,
-            username: null,
-            password: null,
-            contactField: null,
-            regex: null
+            urlParameters: '',
+            username: '',
+            password: '',
+            contactField: '',
+            regex: ''
         );
 
         $lead = $this->createMockLeadEventLog();
@@ -211,11 +211,11 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             method: 'POST',
             contentType: $contentType,
             body: 'test data',
-            urlParameters: null,
-            username: null,
-            password: null,
-            contactField: null,
-            regex: null
+            urlParameters: '',
+            username: '',
+            password: '',
+            contactField: '',
+            regex: ''
         );
 
         $lead = $this->createMockLeadEventLog();
@@ -258,12 +258,12 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             url: 'https://api.example.com/webhook',
             method: 'GET',
             contentType: 'application/json',
-            body: null,
+            body: '',
             urlParameters: 'param1=value1&param2=value2',
-            username: null,
-            password: null,
-            contactField: null,
-            regex: null
+            username: '',
+            password: '',
+            contactField: '',
+            regex: ''
         );
 
         $lead = $this->createMockLeadEventLog();

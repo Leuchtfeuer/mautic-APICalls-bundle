@@ -6,14 +6,12 @@ use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\LeadBundle\Event\LeadTimelineEvent;
 use Mautic\LeadBundle\LeadEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 final class TimelineSubscriber implements EventSubscriberInterface
 {
 
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private TranslatorInterface $translator
+        private EntityManagerInterface $entityManager
     ) {}
 
     public static function getSubscribedEvents(): array
@@ -56,8 +54,16 @@ final class TimelineSubscriber implements EventSubscriberInterface
 
             /** @var LeadEventLog $log */
             foreach ($logs as $log) {
+
                 $metadata = $log->getMetadata();
                 if (isset($metadata['event']) && $metadata['event'] === 'api_calls' && isset($metadata['method'])) {
+
+                    $lead = $log->getLead();
+
+                    if ($lead === null) {
+                        continue;
+                    }
+
                     $event->addEvent([
                         'event'      => $eventType,
                         'eventId'    => $eventType . $log->getId(),
@@ -65,10 +71,9 @@ final class TimelineSubscriber implements EventSubscriberInterface
                         'eventType'  => $eventTypeName,
                         'timestamp'  => $log->getDateTriggered(),
                         'icon'       => 'ri-share-box-line',
-                        'contactId'  => $log->getLead()->getId(),
+                        'contactId'  => $lead->getId(),
                         'extra'      => [
                             'properties' => $metadata,
-                            'details' => 'Test details',
                             'bundle' => $metadata['bundle'] ?? null,
                             'object' => $metadata['object'] ?? null,
                             'action' => $metadata['action'] ?? null

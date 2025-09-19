@@ -24,10 +24,6 @@ class ApiCallsService
     {
         $tokenizedValue = $dto->getTokenizedValue($lead);
 
-        if ($tokenizedValue === null) {
-            return;
-        }
-
         $urlAndOptions = $dto->buildUrlAndOptions($tokenizedValue);
 
         $currentUrl = $urlAndOptions['url'];

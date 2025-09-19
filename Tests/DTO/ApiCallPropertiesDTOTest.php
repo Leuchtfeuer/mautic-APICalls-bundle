@@ -45,12 +45,12 @@ class ApiCallPropertiesDTOTest extends TestCase
         $this->assertEquals('https://example.com/api', $dto->url);
         $this->assertEquals('GET', $dto->method);
         $this->assertEquals('application/xml', $dto->contentType);
-        $this->assertNull($dto->body);
-        $this->assertNull($dto->urlParameters);
-        $this->assertNull($dto->username);
-        $this->assertNull($dto->password);
-        $this->assertNull($dto->contactField);
-        $this->assertNull($dto->regex);
+        $this->assertEmpty($dto->body);
+        $this->assertEmpty($dto->urlParameters);
+        $this->assertEmpty($dto->username);
+        $this->assertEmpty($dto->password);
+        $this->assertEmpty($dto->contactField);
+        $this->assertEmpty($dto->regex);
     }
 
     public function testBuildUrlAndOptionsForGetRequest(): void

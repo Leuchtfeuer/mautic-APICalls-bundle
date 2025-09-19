@@ -11,33 +11,35 @@ use Mautic\LeadBundle\Helper\TokenHelper;
         public readonly string $url,
         public readonly string $method,
         public readonly string $contentType,
-        public readonly ?string $body = null,
-        public readonly ?string $urlParameters = null,
-        public readonly ?string $username = null,
-        public readonly ?string $password = null,
-        public readonly ?string $contactField = null,
-        public readonly ?string $regex = null
+        public readonly string $body = '',
+        public readonly string $urlParameters = '',
+        public readonly string $username = '',
+        public readonly string $password = '',
+        public readonly string $contactField = '',
+        public readonly string $regex = ''
     ) {}
 
-    public function getTokenizedValue(LeadEventLog $lead): ?string
+    public function getTokenizedValue(LeadEventLog $lead): string
     {
-        if (empty($this->urlParameters)) {
+        $tokenizedValue = '';
+
+        if ($lead->getLead()) {
+
+            $sourceText = !empty($this->body) ? $this->body : $this->urlParameters;
+
             $tokenizedValue = TokenHelper::findLeadTokens(
-                $this->body,
-                $lead->getLead()->getProfileFields(),
-                true
-            );
-        } else {
-            $tokenizedValue = TokenHelper::findLeadTokens(
-                $this->urlParameters,
+                $sourceText,
                 $lead->getLead()->getProfileFields(),
                 true
             );
         }
 
-        return is_string($tokenizedValue) ? $tokenizedValue : null;
+        return !is_array($tokenizedValue) ? $tokenizedValue : '';
     }
 
+     /**
+      * @return array{url: string, options: array<string, mixed>}
+      */
     public function buildUrlAndOptions(string $value): array
     {
         $url = $this->url;

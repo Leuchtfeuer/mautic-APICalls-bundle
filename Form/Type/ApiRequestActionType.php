@@ -29,13 +29,15 @@ class ApiRequestActionType extends AbstractType
         ]);
 
         $textTypeFields = array_filter($textFields, function($field) {
-            return in_array($field['type'], ['text', 'textarea']);
+            return is_array($field) && isset($field['type']) && in_array($field['type'], ['text', 'textarea']);
         });
 
         $fieldChoices = [];
 
         foreach ($textTypeFields as $alias => $field) {
-            $fieldChoices[$field['label']] = $alias;
+            if(is_array($field)){
+                $fieldChoices[$field['label']] = $alias;
+            }
         }
 
         $builder
@@ -192,7 +194,7 @@ class ApiRequestActionType extends AbstractType
             return;
         }
 
-        if (!empty($parameters) && $method !== 'GET') {
+        if ($method !== 'GET') {
             $context->buildViolation('URL parameters can only be used with GET method. Please select GET method or remove parameters.')
                 ->addViolation();
             return;
@@ -227,7 +229,7 @@ class ApiRequestActionType extends AbstractType
             return;
         }
 
-        if (!empty($parameters) && $method !== 'GET') {
+        if ($method !== 'GET') {
             $context->buildViolation('Regex rules can only be used with GET method. Please select GET method or remove regex rules.')
                 ->addViolation();
         }
