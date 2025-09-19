@@ -52,10 +52,9 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
 
         $service->sendRequest($lead, $dto);
 
-        $this->assertArrayHasKey('auth_basic', $capturedOptions);
-        $this->assertEquals(['user', 'pass'], $capturedOptions['auth_basic']);
-        $this->assertEquals('LeuchtfeuerMauticAPI/1.0', $capturedOptions['headers']['User-Agent']);
-        $this->assertEquals('application/json', $capturedOptions['headers']['Content-Type']);
+        $this->assertEquals('Authorization: Basic dXNlcjpwYXNz', $capturedOptions['headers'][4]);
+        $this->assertEquals('User-Agent: LeuchtfeuerMauticAPI/1.0', $capturedOptions['headers'][0]);
+        $this->assertEquals('Content-Type: application/json', $capturedOptions['headers'][1]);
         $this->assertEquals('{"test": "data"}', $capturedOptions['body']);
     }
 
@@ -87,7 +86,7 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
 
         $service->sendRequest($lead, $dto);
 
-        $this->assertArrayNotHasKey('auth_basic', $capturedOptions);
+        $this->assertNotContains('Authorization: Basic dXNlcjpwYXNz', $capturedOptions['headers']);
     }
 
     public function testSendRequestHandlesRedirectsCorrectly(): void
@@ -224,8 +223,7 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
         $service->sendRequest($lead, $dto);
 
         $this->assertArrayHasKey('headers', $capturedOptions);
-        $this->assertArrayHasKey('Content-Type', $capturedOptions['headers']);
-        $this->assertEquals($contentType, $capturedOptions['headers']['Content-Type']);
+        $this->assertContains('Content-Type: ' . $contentType, $capturedOptions['headers']);
         $this->assertEquals('test data', $capturedOptions['body']);
     }
 
@@ -298,7 +296,9 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
         $service = new ApiCallsService($httpClient, $leadModel);
 
         $response = $httpClient->request('GET', 'http://example.com');
-        $service->updateField($leadEventLog, 'email', $response, '');
+        $result = $service->updateField($leadEventLog, 'email', $response, '');
+
+        $this->assertNull($result);
     }
 
     public function testUpdateFieldWithRegex(): void
