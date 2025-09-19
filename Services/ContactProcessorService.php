@@ -5,13 +5,12 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
 
 use Mautic\CampaignBundle\Entity\LeadEventLog;
-use Mautic\LeadBundle\Helper\TokenHelper;
-use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Factory\ApiCallPropertiesDTOFactory;
 
 
 class ContactProcessorService
 {
-    public function __construct(private ApiCallsService $apiCallsService){}
+    public function __construct(private ApiCallsService $apiCallsService, private ApiCallPropertiesDTOFactory $dtoFactory){}
 
     /**
      * @param array<string, string> $properties
@@ -20,19 +19,7 @@ class ContactProcessorService
     {
         /** @var LeadEventLog $lead */
         foreach ($leads as $lead) {
-
-            $dto = new ApiCallPropertiesDTO(
-                url: $properties['url'],
-                method: $properties['method'],
-                contentType: $properties['contentType'],
-                body: $properties['body'] ?? null,
-                urlParameters: $properties['url_parameters'] ?? null,
-                username: $properties['username'] ?? null,
-                password: $properties['password'] ?? null,
-                contactField: $properties['contact_field'] ?? null,
-                regex: $properties['regex'] ?? null
-            );
-
+            $dto = $this->dtoFactory->createFromProperties($properties);
             $this->apiCallsService->sendRequest($lead, $dto);
         }
     }

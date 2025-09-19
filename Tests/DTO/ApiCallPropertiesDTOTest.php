@@ -1,6 +1,6 @@
 <?php
 
-namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\Service;
+namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\DTO;
 
 use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\LeadBundle\Entity\Lead;
