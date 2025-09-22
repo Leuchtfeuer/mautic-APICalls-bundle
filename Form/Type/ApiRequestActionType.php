@@ -25,11 +25,14 @@ class ApiRequestActionType extends AbstractType
                 'choices' => $this->getTextFields(),
                 'label' => 'leuchtfeuer.api.contact.field.stored',
                 'label_attr' => ['class' => 'control-label'],
-                'placeholder' => 'Choose a text field...',
+                'placeholder' => 'leuchtfeuer.api.contact.field.placeholder',
                 'required' => false,
                 'attr' => [
                     'class' => 'form-control',
                     'tooltip' => 'leuchtfeuer.api.select.text.field'
+                ],
+                'constraints' => [
+                    new Assert\Callback([$this, 'validateByContentType']),
                 ],
             ])
             ->add('url', TextType::class, [
@@ -121,7 +124,7 @@ class ApiRequestActionType extends AbstractType
                 'label_attr' => ['class' => 'control-label'],
                 'required' => false,
                 'constraints' => [
-                    new Assert\Callback([$this, 'validateRegexByContentType']),
+                    new Assert\Callback([$this, 'validateByContentType']),
                 ],
                 'attr' => [
                     'class' => 'form-control',
@@ -199,7 +202,7 @@ class ApiRequestActionType extends AbstractType
     }
 
 
-    public function validateRegexByContentType(string|null $parameters, ExecutionContextInterface $context): void
+    public function validateByContentType(string|null $parameters, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
         $data = $context->getRoot()->getData();
@@ -210,7 +213,7 @@ class ApiRequestActionType extends AbstractType
         }
 
         if ($method !== 'GET') {
-            $context->buildViolation('leuchtfeuer.api.get.method.regex')
+            $context->buildViolation('leuchtfeuer.api.get.content.type.validation')
                 ->addViolation();
         }
     }
