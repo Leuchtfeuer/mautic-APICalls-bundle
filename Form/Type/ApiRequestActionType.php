@@ -17,32 +17,12 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 class ApiRequestActionType extends AbstractType
 {
 
-    public function __construct(private FieldModel $fieldModel)
-    {
-    }
+    public function __construct(private FieldModel $fieldModel){}
     public function buildForm(FormBuilderInterface $builder, array $options):void
     {
-
-        $textFields = $this->fieldModel->getFieldsProperties([
-            'isPublished' => true,
-            'object' => 'lead'
-        ]);
-
-        $textTypeFields = array_filter($textFields, function($field) {
-            return is_array($field) && isset($field['type']) && in_array($field['type'], ['text', 'textarea']);
-        });
-
-        $fieldChoices = [];
-
-        foreach ($textTypeFields as $alias => $field) {
-            if(is_array($field)){
-                $fieldChoices[$field['label']] = $alias;
-            }
-        }
-
         $builder
             ->add('contact_field', ChoiceType::class, [
-                'choices' => $fieldChoices,
+                'choices' => $this->getTextFields(),
                 'label' => 'Select Contact Text Field To Be Stored',
                 'label_attr' => ['class' => 'control-label'],
                 'placeholder' => 'Choose a text field...',
@@ -233,6 +213,29 @@ class ApiRequestActionType extends AbstractType
             $context->buildViolation('Regex rules can only be used with GET method. Please select GET method or remove regex rules.')
                 ->addViolation();
         }
+    }
+
+
+    public function getTextFields(): array {
+
+        $fieldChoices = [];
+
+        $textFields = $this->fieldModel->getFieldsProperties([
+            'isPublished' => true,
+            'object' => 'lead'
+        ]);
+
+        $textTypeFields = array_filter($textFields, function($field) {
+            return is_array($field) && isset($field['type']) && in_array($field['type'], ['text', 'textarea']);
+        });
+
+        foreach ($textTypeFields as $alias => $field) {
+            if(is_array($field)){
+                $fieldChoices[$field['label']] = $alias;
+            }
+        }
+
+        return  $fieldChoices;
     }
 
 

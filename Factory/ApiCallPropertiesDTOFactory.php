@@ -15,12 +15,12 @@ class ApiCallPropertiesDTOFactory
             url: $properties['url'],
             method: $properties['method'],
             contentType: $properties['contentType'],
-            body: $properties['body'],
-            urlParameters: $properties['url_parameters'],
-            username: $properties['username'],
-            password: $properties['password'],
-            contactField: $properties['contact_field'],
-            regex: $properties['regex']
+            body: $properties['body'] ?? '',
+            urlParameters: $properties['url_parameters'] ?? '',
+            username: $properties['username'] ?? '',
+            password: $properties['password'] ?? '',
+            contactField: $properties['contact_field'] ?? '',
+            regex: $properties['regex'] ?? ''
         );
     }
 }

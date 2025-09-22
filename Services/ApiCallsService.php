@@ -13,7 +13,7 @@ class ApiCallsService
 {
 
     private  const MAX_REDIRECTS = 5;
-    public function __construct(private HttpClientInterface $client, private LeadModel $leadModel)
+    public function __construct(private HttpClientInterface $client, private LeadModel $leadModel, private HttpRequestBuilderService $httpRequestBuilderService, private TokenReplacementService $tokenReplacementService)
     {}
 
     /**
@@ -22,9 +22,8 @@ class ApiCallsService
      */
     public function sendRequest(LeadEventLog $lead, ApiCallPropertiesDTO $dto): void
     {
-        $tokenizedValue = $dto->getTokenizedValue($lead);
-
-        $urlAndOptions = $dto->buildUrlAndOptions($tokenizedValue);
+        $tokenizedValue = $this->tokenReplacementService->getTokenizedValue($lead, $dto);
+        $urlAndOptions = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $dto);
 
         $currentUrl = $urlAndOptions['url'];
         $options = $urlAndOptions['options'];
