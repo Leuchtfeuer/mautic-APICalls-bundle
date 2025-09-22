@@ -18,7 +18,7 @@ class HttpRequestBuilderService
         // Build url with GET parameters
         if ($dto->method === 'GET' && !empty($value)) {
 
-            $url = $this->urlBuilderService->appendQueryString($dto->url, $value);
+            $url = $this->urlBuilderService->appendQueryString($dto, $dto->url, $value);
         }
 
         // Options for sending request

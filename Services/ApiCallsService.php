@@ -102,7 +102,7 @@ class ApiCallsService
                 break;
             }
 
-            $currentUrl = $this->buildRedirectUrl($dto, $locationHeader, $tokenizedValue);
+            $currentUrl = $this->urlBuilderService->appendQueryString($dto, $locationHeader, $tokenizedValue);
 
             $redirectCount++;
         }
@@ -120,13 +120,5 @@ class ApiCallsService
         return $response->getHeaders(false)['location'][0] ?? null;
     }
 
-    private function buildRedirectUrl(ApiCallPropertiesDTO $dto, string $locationHeader, string $tokenizedValue): string
-    {
-        if ($dto->method !== 'GET' || empty($tokenizedValue)) {
-            return $locationHeader;
-        }
-
-        return $this->urlBuilderService->appendQueryString($locationHeader, $tokenizedValue);
-    }
 
 }
