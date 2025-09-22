@@ -23,7 +23,7 @@ class ApiRequestActionType extends AbstractType
         $builder
             ->add('contact_field', ChoiceType::class, [
                 'choices' => $this->getTextFields(),
-                'label' => 'Select Contact Text Field To Be Stored',
+                'label' => 'leuchtfeuer.api.contact.field.stored',
                 'label_attr' => ['class' => 'control-label'],
                 'placeholder' => 'Choose a text field...',
                 'required' => false,
