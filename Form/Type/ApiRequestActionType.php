@@ -216,8 +216,10 @@ class ApiRequestActionType extends AbstractType
     }
 
 
-    public function getTextFields(): array {
+    /** @return array<string> */
 
+    public function getTextFields(): array
+    {
         $fieldChoices = [];
 
         $textFields = $this->fieldModel->getFieldsProperties([

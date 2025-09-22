@@ -2,8 +2,6 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\DTO;
 
-use Mautic\CampaignBundle\Entity\LeadEventLog;
-use Mautic\LeadBundle\Helper\TokenHelper;
 
  class ApiCallPropertiesDTO
 {

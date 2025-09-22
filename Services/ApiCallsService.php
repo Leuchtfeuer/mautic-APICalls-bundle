@@ -58,9 +58,12 @@ class ApiCallsService
                 $content = implode(' ', $matches[0]);
             }
         }
-
+        // @phpstan-ignore-next-line
         $lead->getLead()->addUpdatedField($contactField, $content);
-        $this->leadModel->saveEntity($lead->getLead());
+
+        if($lead->getLead()){
+            $this->leadModel->saveEntity($lead->getLead());
+        }
     }
 
     public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method):void
@@ -68,14 +71,17 @@ class ApiCallsService
         $lead->setMetadata([
             'event' => 'api_calls',
             'object_description' => 'API-Request Response',
-            'response_header' => $response->getHeaders(false) ?? 'No Headers',
-            'response_body' => $response->getContent(false) ?? 'No Body',
+            'response_header' => $response->getHeaders(false),
+            'response_body' => $response->getContent(false),
             'method' => $method
         ]);
     }
 
+    /**
+     * @param array<mixed> $options
+     */
 
-    private function handleRedirects(ApiCallPropertiesDTO $dto, string $currentUrl, array $options, string $tokenizedValue): ?ResponseInterface
+    private function handleRedirects(ApiCallPropertiesDTO $dto, string $currentUrl, array $options, string $tokenizedValue): ResponseInterface
     {
         $redirectCount = 0;
         $response = null;

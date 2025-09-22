@@ -14,10 +14,10 @@ class ContactProcessorService
 
     /**
      * @param array<string, string> $properties
+     * @param array<LeadEventLog> $leads
      */
     public function processContacts(array $properties,  array $leads): void
     {
-        /** @var LeadEventLog $lead */
         foreach ($leads as $lead) {
             $dto = $this->dtoFactory->createFromProperties($properties);
             $this->apiCallsService->sendRequest($lead, $dto);
