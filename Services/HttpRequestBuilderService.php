@@ -36,8 +36,8 @@ class HttpRequestBuilderService
         }
 
         // If there are user and password then auth_basic
-        if (!empty($this->username) && !empty($this->password)) {
-            $options['auth_basic'] = [$this->username, $this->password];
+        if (!empty($dto->username) && !empty($dto->password)) {
+            $options['auth_basic'] = [$dto->username, $dto->password];
         }
 
         return [
