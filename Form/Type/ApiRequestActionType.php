@@ -29,7 +29,7 @@ class ApiRequestActionType extends AbstractType
                 'required' => false,
                 'attr' => [
                     'class' => 'form-control',
-                    'tooltip' => 'Select which contact field to store the API response in'
+                    'tooltip' => 'leuchtfeuer.api.select.text.field'
                 ],
             ])
             ->add('url', TextType::class, [
@@ -57,7 +57,7 @@ class ApiRequestActionType extends AbstractType
                 'required' => true,
                 'attr' => [
                     'class' => 'form-control',
-                    'tooltip' => 'Select HTTP method for the API request'
+                    'tooltip' => 'leuchtfeuer.api.http.request.method'
                 ],
             ])
             ->add('url_parameters', TextType::class, [
@@ -67,7 +67,7 @@ class ApiRequestActionType extends AbstractType
                 'attr' => [
                     'class' => 'form-control',
                     'placeholder' => 'email={contactfield=email}&category=7',
-                    'tooltip' => 'URL parameters for GET requests. Format: key=value&key2=value2'
+                    'tooltip' => 'leuchtfeuer.api.get.request.format'
                 ],
                 'constraints' => [
                     new Assert\Callback([$this, 'validateUrlParameters']),
@@ -126,7 +126,7 @@ class ApiRequestActionType extends AbstractType
                 'attr' => [
                     'class' => 'form-control',
                     'placeholder' => '/[a-zA-Z]+/',
-                    'tooltip' => 'PHP regex with delimiters. Examples: /\d+/i (numbers), #email.*@.*#g (email pattern), ~price: \$\d+~(price match)'
+                    'tooltip' => 'leuchtfeuer.api.regex.example'
                 ],
             ]);
 
@@ -141,13 +141,13 @@ class ApiRequestActionType extends AbstractType
         $method = $data['properties']['method'] ?? null;
 
         if (in_array($method, ['POST', 'PUT', 'PATCH']) && empty($body)) {
-            $context->buildViolation('Request body is required for POST, PUT, and PATCH methods.')
+            $context->buildViolation('leuchtfeuer.api.get.method.body.required')
                 ->addViolation();
             return;
         }
 
         if ($method === 'GET' && !empty($body)) {
-            $context->buildViolation('Request body must be empty for GET method. Please remove body content or select a different method.')
+            $context->buildViolation('leuchtfeuer.api.get.method.body.empty')
                 ->addViolation();
             return;
         }
@@ -175,13 +175,13 @@ class ApiRequestActionType extends AbstractType
         }
 
         if ($method !== 'GET') {
-            $context->buildViolation('URL parameters can only be used with GET method. Please select GET method or remove parameters.')
+            $context->buildViolation('leuchtfeuer.api.get.method')
                 ->addViolation();
             return;
         }
 
         if (str_starts_with($parameters, '?')) {
-            $context->buildViolation('URL parameters should not start with "?". Remove the leading question mark.')
+            $context->buildViolation('leuchtfeuer.api.get.format.question.mark')
                 ->addViolation();
             return;
         }
@@ -190,7 +190,7 @@ class ApiRequestActionType extends AbstractType
 
         foreach ($pairs as $pair) {
             if (!str_contains($pair, '=')) {
-                $context->buildViolation('Each parameter must be in format key=value')
+                $context->buildViolation('leuchtfeuer.api.get.format')
                     ->addViolation();
                 return;
             }
@@ -210,7 +210,7 @@ class ApiRequestActionType extends AbstractType
         }
 
         if ($method !== 'GET') {
-            $context->buildViolation('Regex rules can only be used with GET method. Please select GET method or remove regex rules.')
+            $context->buildViolation('leuchtfeuer.api.get.method.regex')
                 ->addViolation();
         }
     }
