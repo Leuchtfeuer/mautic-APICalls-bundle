@@ -10,6 +10,7 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\ApiCallsService;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\HttpRequestBuilderService;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\TokenReplacementService;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\UrlBuilderService;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
@@ -35,6 +36,7 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
         $leadModel = $this->createMock(LeadModel::class);
         $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
         $tokenReplacementService = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService = $this->createMock(UrlBuilderService::class);
 
         $dto = new ApiCallPropertiesDTO(
             url: 'https://api.example.com/webhook',
@@ -64,7 +66,7 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
                 ]
             ]);
 
-        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService);
+        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService);
         $lead = $this->createMockLeadEventLog();
 
         $service->sendRequest($lead, $dto);
@@ -98,6 +100,7 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
         $leadModel = $this->createMock(LeadModel::class);
         $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
         $tokenReplacementService = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService = $this->createMock(UrlBuilderService::class);
 
         $dto = new ApiCallPropertiesDTO(
             url: 'https://api.example.com/webhook',
@@ -118,7 +121,9 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             ]
         ]);
 
-        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService);
+        $urlBuilderService->method('appendQueryString')->willReturn('https://api.example.com/redirected');
+
+        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService);
         $lead = $this->createMockLeadEventLog();
 
         $service->sendRequest($lead, $dto);
@@ -149,8 +154,9 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
 
         $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
         $tokenReplacementService = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService = $this->createMock(UrlBuilderService::class);
 
-        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService);
+        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService);
 
         $response = $httpClient->request('GET', 'http://example.com');
         $service->updateField($leadEventLog, 'email', $response, '');
@@ -177,8 +183,9 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
 
         $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
         $tokenReplacementService = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService = $this->createMock(UrlBuilderService::class);
 
-        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService);
+        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService);
 
         $response = $httpClient->request('GET', 'http://example.com');
         $service->updateField($leadEventLog, 'email', $response, '/[\w\.-]+@[\w\.-]+\.\w+/');
@@ -196,8 +203,9 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
         $leadModel = $this->createMock(LeadModel::class);
         $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
         $tokenReplacementService = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService = $this->createMock(UrlBuilderService::class);
 
-        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService);
+        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService);
 
         $mockResponse = $httpClient->request('GET', 'http://example.com');
 
