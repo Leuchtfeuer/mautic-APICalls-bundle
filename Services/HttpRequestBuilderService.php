@@ -6,17 +6,19 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 
 class HttpRequestBuilderService
 {
+
+
+    public function __construct(private UrlBuilderService $urlBuilderService)
+    {}
     /**
      * @return array{url: string, options: array<string, mixed>}
      */
     public function buildUrlAndOptions(string $value, ApiCallPropertiesDTO $dto): array
     {
-        $url = $dto->url;
-
         // Build url with GET parameters
         if ($dto->method === 'GET' && !empty($value)) {
-            $separator = str_contains($url, '?') ? '&' : '?';
-            $url = $url . $separator . $value;
+
+            $url = $this->urlBuilderService->appendQueryString($dto->url, $value);
         }
 
         // Options for sending request

@@ -13,7 +13,11 @@ class ApiCallsService
 {
 
     private  const MAX_REDIRECTS = 5;
-    public function __construct(private HttpClientInterface $client, private LeadModel $leadModel, private HttpRequestBuilderService $httpRequestBuilderService, private TokenReplacementService $tokenReplacementService)
+    public function __construct(private HttpClientInterface $client,
+                                private LeadModel $leadModel,
+                                private HttpRequestBuilderService $httpRequestBuilderService,
+                                private TokenReplacementService $tokenReplacementService,
+                                private UrlBuilderService $urlBuilderService)
     {}
 
     /**
@@ -30,21 +34,19 @@ class ApiCallsService
 
         $response = $this->handleRedirects($dto, $currentUrl, $options, $tokenizedValue);
 
-        if ($response !== null) {
-            $this->checkIfResponseValid($response);
+        $this->checkIfResponseValid($response);
 
-            if (!empty($dto->contactField) && $dto->method === 'GET') {
-                $this->updateField($lead, $dto->contactField, $response, $dto->regex);
-            }
-
-            $this->setMetadata($lead, $response, $dto->method);
+        if (!empty($dto->contactField) && $dto->method === 'GET') {
+            $this->updateField($lead, $dto->contactField, $response, $dto->regex);
         }
 
+        $this->setMetadata($lead, $response, $dto->method);
     }
+
     /**
      * @param ResponseInterface $response
      */
-    public function checkIfResponseValid($response):void
+    public function checkIfResponseValid(ResponseInterface $response):void
     {
         $response->getContent();
     }
@@ -120,13 +122,11 @@ class ApiCallsService
 
     private function buildRedirectUrl(ApiCallPropertiesDTO $dto, string $locationHeader, string $tokenizedValue): string
     {
-        if ($dto->method === 'GET' && !empty($tokenizedValue)) {
-            $separator = str_contains($locationHeader, '?') ? '&' : '?';
-            return $locationHeader . $separator . $tokenizedValue;
+        if ($dto->method !== 'GET' || empty($tokenizedValue)) {
+            return $locationHeader;
         }
 
-        return $locationHeader;
+        return $this->urlBuilderService->appendQueryString($locationHeader, $tokenizedValue);
     }
-
 
 }
