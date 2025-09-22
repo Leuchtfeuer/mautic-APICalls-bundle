@@ -15,6 +15,7 @@ class HttpRequestBuilderService
      */
     public function buildUrlAndOptions(string $value, ApiCallPropertiesDTO $dto): array
     {
+        $url = $dto->url;
         // Build url with GET parameters
         if ($dto->method === 'GET' && !empty($value)) {
 
