@@ -49,9 +49,6 @@ class HttpRequestBuilderServiceTest extends TestCase
 
     public function testBuildUrlAndOptionsForPostMethod(): void
     {
-        $this->expectError();
-        $this->expectErrorMessage('Undefined variable $url');
-
         $dto = new ApiCallPropertiesDTO(
             url: 'https://example.com/api',
             method: 'POST',
@@ -61,15 +58,23 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        // This will trigger the undefined variable error
-        $this->service->buildUrlAndOptions('{"data": "test"}', $dto);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto);
+
+        $this->assertEquals('https://example.com/api', $result['url']);
+        $this->assertEquals([
+            'headers' => [
+                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'Content-Type' => 'application/json',
+            ],
+            'verify_peer' => false,
+            'verify_host' => true,
+            'max_redirects' => 0,
+            'body' => '{"data": "test"}',
+        ], $result['options']);
     }
 
     public function testBuildUrlAndOptionsForPutMethod(): void
     {
-        $this->expectError();
-        $this->expectErrorMessage('Undefined variable $url');
-
         $dto = new ApiCallPropertiesDTO(
             url: 'https://example.com/api',
             method: 'PUT',
@@ -79,14 +84,23 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        $this->service->buildUrlAndOptions('{"data": "test"}', $dto);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto);
+
+        $this->assertEquals('https://example.com/api', $result['url']);
+        $this->assertEquals([
+            'headers' => [
+                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'Content-Type' => 'application/json',
+            ],
+            'verify_peer' => false,
+            'verify_host' => true,
+            'max_redirects' => 0,
+            'body' => '{"data": "test"}',
+        ], $result['options']);
     }
 
     public function testBuildUrlAndOptionsForPatchMethod(): void
     {
-        $this->expectError();
-        $this->expectErrorMessage('Undefined variable $url');
-
         $dto = new ApiCallPropertiesDTO(
             url: 'https://example.com/api',
             method: 'PATCH',
@@ -96,7 +110,19 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        $this->service->buildUrlAndOptions('{"data": "test"}', $dto);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto);
+
+        $this->assertEquals('https://example.com/api', $result['url']);
+        $this->assertEquals([
+            'headers' => [
+                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'Content-Type' => 'application/json',
+            ],
+            'verify_peer' => false,
+            'verify_host' => true,
+            'max_redirects' => 0,
+            'body' => '{"data": "test"}',
+        ], $result['options']);
     }
 
     public function testBuildUrlAndOptionsWithAuthentication(): void
@@ -138,15 +164,22 @@ class HttpRequestBuilderServiceTest extends TestCase
             contentType: 'application/json'
         );
 
-        // For GET with empty value, $url will be undefined, so this will error
-        $this->expectError();
-        $this->expectErrorMessage('Undefined variable $url');
-
         // With empty value, appendQueryString should not be called
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        $this->service->buildUrlAndOptions('', $dto);
+        $result = $this->service->buildUrlAndOptions('', $dto);
+
+        $this->assertEquals('https://example.com/api', $result['url']);
+        $this->assertEquals([
+            'headers' => [
+                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'Content-Type' => 'application/json',
+            ],
+            'verify_peer' => false,
+            'verify_host' => true,
+            'max_redirects' => 0,
+        ], $result['options']);
     }
 
     /**
@@ -170,9 +203,17 @@ class HttpRequestBuilderServiceTest extends TestCase
             $headers = $result['options']['headers'];
             $this->assertEquals($contentType, $headers['Content-Type']);
         } else {
-            // Non-GET methods will fail due to undefined $url
-            $this->expectError();
-            $this->service->buildUrlAndOptions('{"data": "test"}', $dto);
+            // Non-GET methods should work now that the service is fixed
+            $this->urlBuilderService->expects($this->never())
+                ->method('appendQueryString');
+
+            $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto);
+
+            $this->assertEquals('https://example.com/api', $result['url']);
+            /** @var array<string, mixed> $headers */
+            $headers = $result['options']['headers'];
+            $this->assertEquals($contentType, $headers['Content-Type']);
+            $this->assertEquals('{"data": "test"}', $result['options']['body']);
         }
     }
 
