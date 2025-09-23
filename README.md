@@ -79,7 +79,6 @@ Store API response data directly in contact fields:
 - Only text-type contact fields are available for response storage
 - If regex processing fails, the original response body will be stored
 - Verify that the selected contact field has sufficient length to store the response data
-- Contact field updates are logged in the contact's activity history
 
 
 For complete version history, see [GitHub](https://github.com/Leuchtfeuer/mautic-APICalls-bundle).
