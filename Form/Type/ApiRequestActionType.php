@@ -22,20 +22,6 @@ class ApiRequestActionType extends AbstractType
     {
 
         $builder
-            ->add('contact_field', ChoiceType::class, [
-                'choices' => $this->getTextFields(),
-                'label' => 'leuchtfeuer.api.contact.field.stored',
-                'label_attr' => ['class' => 'control-label'],
-                'placeholder' => 'leuchtfeuer.api.contact.field.placeholder',
-                'required' => false,
-                'attr' => [
-                    'class' => 'form-control',
-                    'tooltip' => 'leuchtfeuer.api.select.text.field'
-                ],
-                'constraints' => [
-                    new Assert\Callback([$this, 'validateByContentType']),
-                ],
-            ])
             ->add('url', TextType::class, [
                 'label' => 'leuchtfeuer.api.url.label',
                 'label_attr' => ['class' => 'control-label'],
@@ -118,6 +104,20 @@ class ApiRequestActionType extends AbstractType
                 ],
                 'constraints' => [
                     new Assert\Callback([$this, 'validateBodyByContentType']),
+                ],
+            ])
+            ->add('contact_field', ChoiceType::class, [
+                'choices' => $this->getTextFields(),
+                'label' => 'leuchtfeuer.api.contact.field.stored',
+                'label_attr' => ['class' => 'control-label'],
+                'placeholder' => 'leuchtfeuer.api.contact.field.placeholder',
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                    'tooltip' => 'leuchtfeuer.api.select.text.field'
+                ],
+                'constraints' => [
+                    new Assert\Callback([$this, 'validateByContentType']),
                 ],
             ])
             ->add('regex', TextType::class, [
