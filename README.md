@@ -66,6 +66,17 @@ Store API response data directly in contact fields:
    - Use standard regex patterns to filter or transform response data
    - Leave empty to store the entire response body
 
+#### Regex Examples
+Use these placeholders to extract values from a JSON-like string:
+
+**Pattern 1**: Capture a single value from a key
+- Example: `'value_key_to_get': '12345'` → `12345`
+- Placeholder: `1: /"value_key_to_get"\s*:\s*"([^"]+)"/`
+
+**Pattern 2**: Capture multiple values from an array
+- Example: `'value_key_to_get': ['Value1','Value2']` → `'Value1','Value2'`
+- Placeholder: `2: /"value_key_to_get"\s*:\s*\[([^\]]*)\]/`
+
 ## Troubleshooting
 
 ### General Issues
