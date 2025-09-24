@@ -17,8 +17,8 @@ This feature introduces a new campaign action in Mautic that allows campaigns to
 - **GET request parameters**: Support for URL parameters when using GET method (e.g., `email={contactfield=email}&category=7`).
 
 ## Requirements / Version Support
-- Mautic 5.x (minimum 5.2)
-- PHP >= 8.0
+- Mautic 6.0
+- PHP >= 8.1
 
 ## Installation
 ### Composer
