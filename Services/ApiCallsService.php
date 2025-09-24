@@ -57,7 +57,11 @@ class ApiCallsService
 
         if (!empty($regex)) {
             if (preg_match_all($regex, $content, $matches)) {
-                $content = implode(' ', $matches[0]);
+                if (isset($matches[1]) && !empty($matches[1])) {
+                    $content = implode(' ', $matches[1]);
+                } else {
+                    $content = implode(' ', $matches[0]);
+                }
             }
         }
         // @phpstan-ignore-next-line

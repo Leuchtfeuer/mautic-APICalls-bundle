@@ -115,7 +115,7 @@
       "responses": [
         {
           "uuid": "e2d3c4b5-6789-0abc-def1-23456789cdef",
-          "body": "{\n  \"status\": \"success\",\n  \"message\": \"GET request processed\",\n  \"data\": {\n    \"id\": 123,\n    \"method\": \"GET\"\n  }\n}",
+          "body": "{\n  \"orderId\": \"ORD-1001\",\n  \"customer\": {\n    \"id\": 501,\n    \"name\": \"John Doe\"\n  },\n  \"items\": [\n    {\n      \"sku\": \"ABC123\",\n      \"quantity\": 2,\n      \"price\": 19.99\n    },\n    {\n      \"sku\": \"XYZ789\",\n      \"quantity\": 1,\n      \"price\": 49.5\n    }\n  ],\n  \"total\": 89.48\n}",
           "latency": 0,
           "statusCode": 200,
           "label": "",
