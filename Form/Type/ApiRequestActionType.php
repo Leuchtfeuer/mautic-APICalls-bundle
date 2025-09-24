@@ -20,6 +20,7 @@ class ApiRequestActionType extends AbstractType
     public function __construct(private FieldModel $fieldModel){}
     public function buildForm(FormBuilderInterface $builder, array $options):void
     {
+
         $builder
             ->add('contact_field', ChoiceType::class, [
                 'choices' => $this->getTextFields(),
@@ -128,7 +129,7 @@ class ApiRequestActionType extends AbstractType
                 ],
                 'attr' => [
                     'class' => 'form-control',
-                    'placeholder' => '/[a-zA-Z]+/',
+                    'placeholder' => '1: /"value_key_to_get"\s*:\s*"([^"]+)"/'    .  "       "  .     '2: /"value_key_to_get"\s*:\s*\[([^\]]*)\]/"',
                     'tooltip' => 'leuchtfeuer.api.regex.example'
                 ],
             ]);
