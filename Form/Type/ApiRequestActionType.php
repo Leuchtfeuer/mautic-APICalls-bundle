@@ -28,7 +28,7 @@ class ApiRequestActionType extends AbstractType
                 'required' => true,
                 'constraints' => [
                     new Assert\NotBlank(['message' => 'leuchtfeuer.api.url.required']),
-                    new Assert\Url(['message' => 'leuchtfeuer.api.url.invalid']),
+                    new Assert\Callback([$this, 'validateUrlAllowingPlaceholders']),
                 ],
                 'attr' => [
                     'class' => 'form-control',
@@ -242,6 +242,22 @@ class ApiRequestActionType extends AbstractType
         }
 
         return  $fieldChoices;
+    }
+
+
+    public function validateUrlAllowingPlaceholders(?string $url, ExecutionContextInterface $context): void
+    {
+        if (empty($url)) {
+            return;
+        }
+
+        $urlForValidation = preg_replace('/\{[^}]*\}/', 'token', $url);
+
+        $violations = $context->getValidator()->validate($urlForValidation, new Assert\Url());
+
+        foreach ($violations as $violation) {
+            $context->buildViolation('leuchtfeuer.api.url.invalid')->addViolation();
+        }
     }
 
 

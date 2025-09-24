@@ -27,7 +27,7 @@ class ApiCallsService
     public function sendRequest(LeadEventLog $lead, ApiCallPropertiesDTO $dto): void
     {
         $tokenizedValue = $this->tokenReplacementService->getTokenizedValue($lead, $dto);
-        $urlAndOptions = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $dto);
+        $urlAndOptions = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $dto, $lead);
 
         $currentUrl = $urlAndOptions['url'];
         $options = $urlAndOptions['options'];
