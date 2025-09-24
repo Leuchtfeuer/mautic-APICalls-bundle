@@ -2,76 +2,126 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
+use Mautic\CampaignBundle\Entity\LeadEventLog;
+use Mautic\LeadBundle\Model\LeadModel;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 
 class ApiCallsService
 {
-    public function __construct(private HttpClientInterface $client)
+
+    private  const MAX_REDIRECTS = 5;
+    public function __construct(private HttpClientInterface $client,
+                                private LeadModel $leadModel,
+                                private HttpRequestBuilderService $httpRequestBuilderService,
+                                private TokenReplacementService $tokenReplacementService,
+                                private UrlBuilderService $urlBuilderService)
     {}
 
     /**
-     * @param string $value
-     * @param string $url
-     * @param string $method
-     * @param string $contentType
-     * @param string $username
-     * @param string $password
+     * @param ApiCallPropertiesDTO $dto
+     * @param LeadEventLog $lead
      */
-
-    public function sendRequest(string $value, string $url, string $method, string $contentType, string $username, string $password): void
+    public function sendRequest(LeadEventLog $lead, ApiCallPropertiesDTO $dto): void
     {
-        $options = [
-            'headers' => [
-                'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
-                'Content-Type' => $contentType,
-            ],
-            'body' => $value,
-            'verify_peer' => false,
-            'verify_host' => true,
-            'max_redirects' => 0,
-        ];
+        $tokenizedValue = $this->tokenReplacementService->getTokenizedValue($lead, $dto);
+        $urlAndOptions = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $dto);
 
-        if (!empty($username) && !empty($password)) {
-            $options['auth_basic'] = [$username, $password];
+        $currentUrl = $urlAndOptions['url'];
+        $options = $urlAndOptions['options'];
+
+        $response = $this->handleRedirects($dto, $currentUrl, $options, $tokenizedValue);
+
+        $this->checkIfResponseValid($response);
+
+        if (!empty($dto->contactField) && $dto->method === 'GET') {
+            $this->updateField($lead, $dto->contactField, $response, $dto->regex);
         }
 
-
-        $currentUrl = $url;
-        $maxRedirects = 5;
-        $redirectCount = 0;
-
-        while ($redirectCount < $maxRedirects) {
-
-            $response = $this->client->request($method, $currentUrl, $options);
-
-            $statusCode = $response->getStatusCode();
-
-            if (!in_array($statusCode, [301, 302, 303, 307, 308])) {
-                break;
-            }
-
-            $locationHeader = $response->getHeaders(false)['location'][0] ?? null;
-            if (!$locationHeader) {
-                break;
-            }
-
-            $currentUrl = $locationHeader;
-            $redirectCount++;
-        }
-
-        if ($response !== null) {
-            $this->checkIfResponseValid($response);
-        }
+        $this->setMetadata($lead, $response, $dto->method);
     }
 
     /**
      * @param ResponseInterface $response
      */
-    public function checkIfResponseValid($response):void
+    public function checkIfResponseValid(ResponseInterface $response):void
     {
         $response->getContent();
+    }
+
+    public function updateField(LeadEventLog $lead, string $contactField, ResponseInterface $response, string $regex): void
+    {
+        $content = $response->getContent(false);
+
+        if (!empty($regex)) {
+            if (preg_match_all($regex, $content, $matches)) {
+                if (isset($matches[1]) && !empty($matches[1])) {
+                    $content = implode(' ', $matches[1]);
+                } else {
+                    $content = implode(' ', $matches[0]);
+                }
+            }
+        }
+        // @phpstan-ignore-next-line
+        $lead->getLead()->addUpdatedField($contactField, $content);
+
+        if($lead->getLead()){
+            $this->leadModel->saveEntity($lead->getLead());
+        }
+    }
+
+    public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method):void
+    {
+        $lead->setMetadata([
+            'event' => 'api_calls',
+            'object_description' => 'API-Request Response',
+            'response_header' => $response->getHeaders(false),
+            'response_body' => $response->getContent(false),
+            'method' => $method
+        ]);
+    }
+
+    /**
+     * @param array<mixed> $options
+     */
+
+    private function handleRedirects(ApiCallPropertiesDTO $dto, string $currentUrl, array $options, string $tokenizedValue): ResponseInterface
+    {
+        $redirectCount = 0;
+        $response = null;
+
+        while ($redirectCount < self::MAX_REDIRECTS) {
+
+            $response = $this->client->request($dto->method, $currentUrl, $options);
+
+            if (!$this->isRedirectResponse($response)) {
+                break;
+            }
+
+            $locationHeader = $this->getLocationHeader($response);
+
+            if (!$locationHeader) {
+                break;
+            }
+
+            $currentUrl = $this->urlBuilderService->appendQueryString($dto, $locationHeader, $tokenizedValue);
+
+            $redirectCount++;
+        }
+
+        return $response;
+    }
+
+    private function isRedirectResponse(ResponseInterface $response): bool
+    {
+        return in_array($response->getStatusCode(), [301, 302, 303, 307, 308]);
+    }
+
+    private function getLocationHeader(ResponseInterface $response): ?string
+    {
+        return $response->getHeaders(false)['location'][0] ?? null;
     }
 
 

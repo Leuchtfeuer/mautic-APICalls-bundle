@@ -3,6 +3,7 @@
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener;
 
 use Mautic\CampaignBundle\CampaignEvents;
+use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\PendingEvent;
 use Mautic\IntegrationsBundle\Helper\IntegrationsHelper;
@@ -48,7 +49,10 @@ class CampaignActionSubscriber implements EventSubscriberInterface
     public function onExecuteApiRequest(PendingEvent $event): void
     {
         try {
-            $this->contactProcessorService->processContacts($event->getContacts(), $event->getEvent()->getProperties());
+            /** @var LeadEventLog[] $leads */
+            $leads = $event->getPending()->toArray();
+
+            $this->contactProcessorService->processContacts($event->getEvent()->getProperties(), $leads);
             $event->passAll();
         } catch (\Throwable $e) {
             $event->failAll($e->getMessage());
