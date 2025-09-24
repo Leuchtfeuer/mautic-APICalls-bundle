@@ -1,5 +1,5 @@
 {
-  "uuid": "d91e25ae-38f4-47ee-83d8-cac9af8171ef",
+  "uuid": "b67ea13c-fe33-4670-9c5c-cf32659fd15a",
   "lastMigration": 33,
   "name": "Ohne Titel",
   "endpointPrefix": "",
@@ -9,14 +9,14 @@
   "folders": [],
   "routes": [
     {
-      "uuid": "c2d3e4f5-1234-5678-9abc-def012345678",
+      "uuid": "18e39716-f8f2-4fb3-b13e-fc170342229a",
       "type": "http",
       "documentation": "",
       "method": "post",
       "endpoint": "api/test",
       "responses": [
         {
-          "uuid": "99bf7d77-e5bd-47ea-94f6-da956ca5265a",
+          "uuid": "147013a4-5ffa-485d-802b-03b835b8fc91",
           "body": "{\n  \"status\": \"success\",\n  \"message\": \"POST request processed\",\n  \"data\": {\n    \"id\": 123,\n    \"method\": \"POST\"\n  }\n}",
           "latency": 0,
           "statusCode": 200,
@@ -40,14 +40,14 @@
       "streamingInterval": 0
     },
     {
-      "uuid": "2b5f0edd-e617-4c69-9bf7-d899dbb15516",
+      "uuid": "04ac0c01-e82d-457a-8788-added60c04a1",
       "type": "http",
       "documentation": "",
       "method": "put",
       "endpoint": "api/test",
       "responses": [
         {
-          "uuid": "3b5e7165-eb98-4845-8b9f-f59e5eda2fc6",
+          "uuid": "97ad84d0-4361-4515-9913-3c42ef7aa026",
           "body": "{\n  \"status\": \"success\",\n  \"message\": \"PUT request processed\",\n  \"data\": {\n    \"id\": 123,\n    \"method\": \"PUT\"\n  }\n}",
           "latency": 0,
           "statusCode": 200,
@@ -71,14 +71,14 @@
       "streamingInterval": 0
     },
     {
-      "uuid": "a9abb39d-bf2d-464e-8e8c-0411b7cf5f70",
+      "uuid": "a8383682-00b2-4944-bdc6-d9e235d7e6c4",
       "type": "http",
       "documentation": "",
       "method": "patch",
       "endpoint": "api/test",
       "responses": [
         {
-          "uuid": "a2d0ce64-4691-4adf-ae94-fab0877ad087",
+          "uuid": "848eab44-1b27-4c3e-8eb4-a0a5f8ae567b",
           "body": "{\n  \"status\": \"success\",\n  \"message\": \"PATCH request processed\",\n  \"data\": {\n    \"id\": 123,\n    \"method\": \"PATCH\"\n  }\n}",
           "latency": 0,
           "statusCode": 200,
@@ -107,14 +107,14 @@
       "streamingInterval": 0
     },
     {
-      "uuid": "f1a2b3c4-5678-9def-0123-456789abcdef",
+      "uuid": "d3a7ce18-ab02-4f45-ab44-54ee854dc9e8",
       "type": "http",
       "documentation": "",
       "method": "get",
       "endpoint": "api/test",
       "responses": [
         {
-          "uuid": "e2d3c4b5-6789-0abc-def1-23456789cdef",
+          "uuid": "f95a8d8a-67fc-4743-a161-dee25e53f136",
           "body": "{\n  \"orderId\": \"ORD-1001\",\n  \"customer\": {\n    \"id\": 501,\n    \"name\": \"John Doe\"\n  },\n  \"items\": [\n    {\n      \"sku\": \"ABC123\",\n      \"quantity\": 2,\n      \"price\": 19.99\n    },\n    {\n      \"sku\": \"XYZ789\",\n      \"quantity\": 1,\n      \"price\": 49.5\n    }\n  ],\n  \"total\": 89.48\n}",
           "latency": 0,
           "statusCode": 200,
@@ -138,14 +138,14 @@
       "streamingInterval": 0
     },
     {
-      "uuid": "411e87f8-2448-41c2-a141-329a5e3d9720",
+      "uuid": "957773a9-be5b-4d33-bc41-b395728fd9dc",
       "type": "http",
       "documentation": "301 Redirect POST endpoint",
       "method": "post",
       "endpoint": "api/redirect-example",
       "responses": [
         {
-          "uuid": "d0032904-0155-4482-8ca0-5d4126d9eab0",
+          "uuid": "d95fb22f-88ec-4f5f-987c-0cf7e90f0420",
           "body": "",
           "latency": 0,
           "statusCode": 301,
@@ -174,14 +174,14 @@
       "streamingInterval": 0
     },
     {
-      "uuid": "bbbebc00-ecaa-473c-8469-1ecb675c813b",
+      "uuid": "f0ba630b-804b-4f77-a3d4-c91a80f5686d",
       "type": "http",
       "documentation": "301 Redirect PATCH endpoint",
       "method": "patch",
       "endpoint": "api/redirect-example",
       "responses": [
         {
-          "uuid": "6c2baca4-279d-4c83-916c-d900cdc21368",
+          "uuid": "bfe3922e-4ab0-4f5b-99ca-6b1caa960329",
           "body": "",
           "latency": 0,
           "statusCode": 301,
@@ -210,14 +210,14 @@
       "streamingInterval": 0
     },
     {
-      "uuid": "4bd06535-b548-4af2-951a-634501207f6a",
+      "uuid": "44ca99b0-5a44-4984-8ee1-ab6f8b98c93a",
       "type": "http",
       "documentation": "301 Redirect PUT endpoint",
       "method": "put",
       "endpoint": "api/redirect-example",
       "responses": [
         {
-          "uuid": "84a9ae69-9852-43bf-bdcf-9be1d1eb2657",
+          "uuid": "29716d77-ac49-4179-989f-bfbf5ad98133",
           "body": "",
           "latency": 0,
           "statusCode": 301,
@@ -246,15 +246,15 @@
       "streamingInterval": 0
     },
     {
-      "uuid": "212724b9-dea4-42b8-84fb-a1a7dfe89bd3",
+      "uuid": "1c42d20f-f2e4-4dc9-a332-45695ff2355f",
       "type": "http",
       "documentation": "301 Redirect GET endpoint",
       "method": "get",
       "endpoint": "api/redirect-example",
       "responses": [
         {
-          "uuid": "dcbab87c-a24d-4556-b732-dfef54fd43c4",
-          "body": "",
+          "uuid": "076a972e-a485-42b4-aaf1-f3aa85862538",
+          "body": "{\n  \"orderId\": \"ORD-1001\",\n  \"customer\": {\n    \"id\": 501,\n    \"name\": \"John Doe\"\n  },\n  \"items\": [\n    {\n      \"sku\": \"ABC123\",\n      \"quantity\": 2,\n      \"price\": 19.99\n    },\n    {\n      \"sku\": \"XYZ789\",\n      \"quantity\": 1,\n      \"price\": 49.5\n    }\n  ],\n  \"total\": 89.48\n}",
           "latency": 0,
           "statusCode": 301,
           "label": "301 Redirect",
@@ -282,14 +282,14 @@
       "streamingInterval": 0
     },
     {
-      "uuid": "801dd352-b1f6-47a6-9817-1f639876a5de",
+      "uuid": "2d2b8c99-242f-42a8-bde9-7c19914505b2",
       "type": "http",
       "documentation": "Redirect destination POST endpoint",
       "method": "post",
       "endpoint": "redirect",
       "responses": [
         {
-          "uuid": "5372fd02-b5bf-4284-ac2d-d8d736b8e146",
+          "uuid": "b2c5350b-c9b8-46df-b50c-5f661f20c3d7",
           "body": "{\n  \"message\": \"Successfully redirected\",\n  \"status\": \"ok\",\n  \"method\": \"POST\"\n}",
           "latency": 0,
           "statusCode": 200,
@@ -313,14 +313,14 @@
       "streamingInterval": 0
     },
     {
-      "uuid": "244a7e7f-af5d-4dc5-86fa-110664ec9b76",
+      "uuid": "bbec096b-1b4b-423b-9fe4-1b7b0d455d29",
       "type": "http",
       "documentation": "Redirect destination PATCH endpoint",
       "method": "patch",
       "endpoint": "redirect",
       "responses": [
         {
-          "uuid": "d84bbb85-fe60-4cd0-a125-8a1c7e543038",
+          "uuid": "c86279f6-a545-45bc-90e1-ac07a69f496c",
           "body": "{\n  \"message\": \"Successfully redirected\",\n  \"status\": \"ok\",\n  \"method\": \"PATCH\"\n}",
           "latency": 0,
           "statusCode": 200,
@@ -344,14 +344,14 @@
       "streamingInterval": 0
     },
     {
-      "uuid": "020e7675-cb53-444f-aac7-2bd43e510ed2",
+      "uuid": "6a4705f4-e8fa-4a0b-aa2a-986769e57183",
       "type": "http",
       "documentation": "Redirect destination PUT endpoint",
       "method": "put",
       "endpoint": "redirect",
       "responses": [
         {
-          "uuid": "f3cf0df6-b9d9-45be-ace5-0470d60c7b61",
+          "uuid": "a7760ce1-8cb0-458d-828f-2982edd8a434",
           "body": "{\n  \"message\": \"Successfully redirected\",\n  \"status\": \"ok\",\n  \"method\": \"PUT\"\n}",
           "latency": 0,
           "statusCode": 200,
@@ -375,15 +375,15 @@
       "streamingInterval": 0
     },
     {
-      "uuid": "1d1f62ae-07d6-4e3d-946b-28d057126e95",
+      "uuid": "ec99d562-a58d-4003-b105-73117fe53ec3",
       "type": "http",
       "documentation": "Redirect destination GET endpoint",
       "method": "get",
       "endpoint": "redirect",
       "responses": [
         {
-          "uuid": "cafdce15-9862-422c-a82e-0b555eb9fd6e",
-          "body": "{\n  \"message\": \"Successfully redirected\",\n  \"status\": \"ok\",\n  \"method\": \"GET\"\n}",
+          "uuid": "cba64cb6-7da4-4e93-9201-ce9ace73660c",
+          "body": "{\n  \"orderId\": \"ORD-1001\",\n  \"customer\": {\n    \"id\": 501,\n    \"name\": \"John Doe\"\n  },\n  \"items\": [\n    {\n      \"sku\": \"ABC123\",\n      \"quantity\": 2,\n      \"price\": 19.99\n    },\n    {\n      \"sku\": \"XYZ789\",\n      \"quantity\": 1,\n      \"price\": 49.5\n    }\n  ],\n  \"total\": 89.48\n}",
           "latency": 0,
           "statusCode": 200,
           "label": "Success after redirect",
@@ -409,51 +409,51 @@
   "rootChildren": [
     {
       "type": "route",
-      "uuid": "c2d3e4f5-1234-5678-9abc-def012345678"
+      "uuid": "18e39716-f8f2-4fb3-b13e-fc170342229a"
     },
     {
       "type": "route",
-      "uuid": "2b5f0edd-e617-4c69-9bf7-d899dbb15516"
+      "uuid": "04ac0c01-e82d-457a-8788-added60c04a1"
     },
     {
       "type": "route",
-      "uuid": "a9abb39d-bf2d-464e-8e8c-0411b7cf5f70"
+      "uuid": "a8383682-00b2-4944-bdc6-d9e235d7e6c4"
     },
     {
       "type": "route",
-      "uuid": "f1a2b3c4-5678-9def-0123-456789abcdef"
+      "uuid": "d3a7ce18-ab02-4f45-ab44-54ee854dc9e8"
     },
     {
       "type": "route",
-      "uuid": "411e87f8-2448-41c2-a141-329a5e3d9720"
+      "uuid": "957773a9-be5b-4d33-bc41-b395728fd9dc"
     },
     {
       "type": "route",
-      "uuid": "bbbebc00-ecaa-473c-8469-1ecb675c813b"
+      "uuid": "f0ba630b-804b-4f77-a3d4-c91a80f5686d"
     },
     {
       "type": "route",
-      "uuid": "4bd06535-b548-4af2-951a-634501207f6a"
+      "uuid": "44ca99b0-5a44-4984-8ee1-ab6f8b98c93a"
     },
     {
       "type": "route",
-      "uuid": "801dd352-b1f6-47a6-9817-1f639876a5de"
+      "uuid": "2d2b8c99-242f-42a8-bde9-7c19914505b2"
     },
     {
       "type": "route",
-      "uuid": "244a7e7f-af5d-4dc5-86fa-110664ec9b76"
+      "uuid": "bbec096b-1b4b-423b-9fe4-1b7b0d455d29"
     },
     {
       "type": "route",
-      "uuid": "020e7675-cb53-444f-aac7-2bd43e510ed2"
+      "uuid": "6a4705f4-e8fa-4a0b-aa2a-986769e57183"
     },
     {
       "type": "route",
-      "uuid": "212724b9-dea4-42b8-84fb-a1a7dfe89bd3"
+      "uuid": "1c42d20f-f2e4-4dc9-a332-45695ff2355f"
     },
     {
       "type": "route",
-      "uuid": "1d1f62ae-07d6-4e3d-946b-28d057126e95"
+      "uuid": "ec99d562-a58d-4003-b105-73117fe53ec3"
     }
   ],
   "proxyMode": false,

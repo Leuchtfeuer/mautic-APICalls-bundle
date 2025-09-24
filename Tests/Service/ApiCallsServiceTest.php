@@ -70,9 +70,6 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
         $lead = $this->createMockLeadEventLog();
 
         $service->sendRequest($lead, $dto);
-
-        // Just verify the method completed without exception
-        $this->assertTrue(true);
     }
 
     public function testSendRequestWithRedirects(): void
