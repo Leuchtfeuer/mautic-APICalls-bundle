@@ -20,7 +20,9 @@ class ApiCallPropertiesDTOFactory
             username: $properties['username'] ?? '',
             password: $properties['password'] ?? '',
             contactField: $properties['contact_field'] ?? '',
-            regex: $properties['regex'] ?? ''
+            regex: $properties['regex'] ?? '',
+            objectKey: $properties['object_key'] ?? '',
+            valueKey: $properties['value_key'] ?? ''
         );
     }
 }
