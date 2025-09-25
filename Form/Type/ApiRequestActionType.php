@@ -113,6 +113,9 @@ class ApiRequestActionType extends AbstractType
                 'attr' => [
                     'class' => 'form-control',
                 ],
+                'constraints' => [
+                    new Assert\Callback([$this, 'validateByContentType']),
+                ],
             ])
             ->add('value_key', TextType::class, [
                 'label' => 'leuchtfeuer.mautic-apicalls-bundle.value_key.label',
@@ -120,6 +123,9 @@ class ApiRequestActionType extends AbstractType
                 'required' => false,
                 'attr' => [
                     'class' => 'form-control',
+                ],
+                'constraints' => [
+                    new Assert\Callback([$this, 'validateByContentType']),
                 ],
             ])
             ->add('contact_field', ChoiceType::class, [
