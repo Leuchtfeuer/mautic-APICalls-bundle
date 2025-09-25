@@ -37,8 +37,8 @@ class CampaignActionSubscriber implements EventSubscriberInterface
             $event->addAction(
                 self::ACTION_TYPE,
                 [
-                    'label' => 'leuchtfeuer.api.action.label',
-                    'description' => 'leuchtfeuer.api.action.description',
+                    'label' => 'leuchtfeuer.mautic-apicalls-bundle.action.label',
+                    'description' => 'leuchtfeuer.mautic-apicalls-bundle.action.description',
                     'batchEventName' => LeuchtfeuerAPICallsEvents::EXECUTE_CAMPAIGN_ACTION,
                     'formType' => ApiRequestActionType::class,
                 ]

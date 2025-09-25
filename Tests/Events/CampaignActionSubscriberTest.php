@@ -139,8 +139,8 @@ class CampaignActionSubscriberTest extends MauticMysqlTestCase
             ->with(
                 CampaignActionSubscriber::ACTION_TYPE,
                 [
-                    'label' => 'leuchtfeuer.api.action.label',
-                    'description' => 'leuchtfeuer.api.action.description',
+                    'label' => 'leuchtfeuer.mautic-apicalls-bundle.action.label',
+                    'description' => 'leuchtfeuer.mautic-apicalls-bundle.action.description',
                     'batchEventName' => 'api.campaign_action.execute',
                     'formType' => ApiRequestActionType::class,
                 ]

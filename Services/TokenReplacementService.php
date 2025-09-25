@@ -27,4 +27,20 @@ class TokenReplacementService
         return !is_array($tokenizedValue) ? $tokenizedValue : '';
     }
 
+
+    public function getTokenizedUrl(LeadEventLog $lead, string $url): string
+    {
+        $tokenizedValue = '';
+
+        if ($lead->getLead()) {
+            $tokenizedValue = TokenHelper::findLeadTokens(
+                $url,
+                $lead->getLead()->getProfileFields(),
+                true
+            );
+        }
+
+        return !is_array($tokenizedValue) ? $tokenizedValue : '';
+    }
+
 }

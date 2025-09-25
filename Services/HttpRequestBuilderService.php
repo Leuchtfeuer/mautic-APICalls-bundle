@@ -2,24 +2,24 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
+use Mautic\CampaignBundle\Entity\LeadEventLog;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 
 class HttpRequestBuilderService
 {
 
 
-    public function __construct(private UrlBuilderService $urlBuilderService)
+    public function __construct(private UrlBuilderService $urlBuilderService,  private TokenReplacementService $tokenReplacementService)
     {}
     /**
      * @return array{url: string, options: array<string, mixed>}
      */
-    public function buildUrlAndOptions(string $value, ApiCallPropertiesDTO $dto): array
+    public function buildUrlAndOptions(string $value, ApiCallPropertiesDTO $dto, LeadEventLog $lead): array
     {
-        $url = $dto->url;
+        $url = $this->tokenReplacementService->getTokenizedUrl($lead, $dto->url);
         // Build url with GET parameters
         if ($dto->method === 'GET' && !empty($value)) {
-
-            $url = $this->urlBuilderService->appendQueryString($dto, $dto->url, $value);
+            $url = $this->urlBuilderService->appendQueryString($dto, $url, $value);
         }
 
         // Options for sending request
