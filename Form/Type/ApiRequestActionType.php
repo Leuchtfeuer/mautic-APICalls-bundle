@@ -106,6 +106,22 @@ class ApiRequestActionType extends AbstractType
                     new Assert\Callback([$this, 'validateBodyByContentType']),
                 ],
             ])
+            ->add('object_key', TextType::class, [
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.object_key.label',
+                'label_attr' => ['class' => 'control-label'],
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+            ])
+            ->add('value_key', TextType::class, [
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.value_key.label',
+                'label_attr' => ['class' => 'control-label'],
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+            ])
             ->add('contact_field', ChoiceType::class, [
                 'choices' => $this->getTextFields(),
                 'label' => 'leuchtfeuer.mautic-apicalls-bundle.contactfield.label',
@@ -226,16 +242,12 @@ class ApiRequestActionType extends AbstractType
     {
         $fieldChoices = [];
 
-        $textFields = $this->fieldModel->getFieldsProperties([
+        $fields = $this->fieldModel->getFieldsProperties([
             'isPublished' => true,
             'object' => 'lead'
         ]);
 
-        $textTypeFields = array_filter($textFields, function($field) {
-            return is_array($field) && isset($field['type']) && in_array($field['type'], ['text', 'textarea']);
-        });
-
-        foreach ($textTypeFields as $alias => $field) {
+        foreach ($fields as $alias => $field) {
             if(is_array($field)){
                 $fieldChoices[$field['label']] = $alias;
             }
