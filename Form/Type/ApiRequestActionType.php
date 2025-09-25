@@ -129,7 +129,7 @@ class ApiRequestActionType extends AbstractType
                 ],
                 'attr' => [
                     'class' => 'form-control',
-                    'placeholder' => '1: /"value_key_to_get"\s*:\s*"([^"]+)"/'    .  "       "  .     '2: /"value_key_to_get"\s*:\s*\[([^\]]*)\]/"',
+                    'placeholder' => '/"myvalue"\s*:\s*"([^"]+)"/',
                     'tooltip' => 'leuchtfeuer.mautic-apicalls-bundle.regex.tooltip'
                 ],
             ]);
