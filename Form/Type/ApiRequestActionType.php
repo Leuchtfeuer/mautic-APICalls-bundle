@@ -23,16 +23,16 @@ class ApiRequestActionType extends AbstractType
 
         $builder
             ->add('url', TextType::class, [
-                'label' => 'leuchtfeuer.api.url.label',
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.url.label',
                 'label_attr' => ['class' => 'control-label'],
                 'required' => true,
                 'constraints' => [
-                    new Assert\NotBlank(['message' => 'leuchtfeuer.api.url.required']),
+                    new Assert\NotBlank(['message' => 'leuchtfeuer.mautic-apicalls-bundle.url.required']),
                     new Assert\Callback([$this, 'validateUrlAllowingPlaceholders']),
                 ],
                 'attr' => [
                     'class' => 'form-control',
-                    'placeholder' => 'leuchtfeuer.api.url.placeholder'
+                    'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.url.placeholder'
                 ],
             ])
             ->add('method', ChoiceType::class, [
@@ -42,29 +42,29 @@ class ApiRequestActionType extends AbstractType
                     'PUT'   => 'PUT',
                     'PATCH' => 'PATCH',
                 ],
-                'label' => 'leuchtfeuer.api.method.label',
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.method.label',
                 'label_attr' => ['class' => 'control-label'],
                 'required' => true,
                 'attr' => [
                     'class' => 'form-control',
-                    'tooltip' => 'leuchtfeuer.api.http.request.method'
+                    'tooltip' => 'leuchtfeuer.mautic-apicalls-bundle.method.tooltip'
                 ],
             ])
             ->add('url_parameters', TextType::class, [
-                'label' => 'URL parameters (only for GET)',
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.url.parameters.label',
                 'label_attr' => ['class' => 'control-label'],
                 'required' => false,
                 'attr' => [
                     'class' => 'form-control',
-                    'placeholder' => 'email={contactfield=email}&category=7',
-                    'tooltip' => 'leuchtfeuer.api.get.request.format'
+                    'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.url.parameters.placeholder',
+                    'tooltip' => 'leuchtfeuer.mautic-apicalls-bundle.url.parameters.tooltip'
                 ],
                 'constraints' => [
                     new Assert\Callback([$this, 'validateUrlParameters']),
                 ],
             ])
             ->add('username', TextType::class, [
-                'label' => 'leuchtfeuer.api.username.label',
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.username.label',
                 'label_attr' => ['class' => 'control-label'],
                 'required' => false,
                 'attr' => [
@@ -73,7 +73,7 @@ class ApiRequestActionType extends AbstractType
                 ],
             ])
             ->add('password', PasswordType::class, [
-                'label' => 'leuchtfeuer.api.password.label',
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.password.label',
                 'label_attr' => ['class' => 'control-label'],
                 'required' => false,
                 'attr' => [
@@ -91,16 +91,16 @@ class ApiRequestActionType extends AbstractType
                     'application/vnd.api+json' => 'application/vnd.api+json',
                     'application/x-www-form-urlencoded' => 'application/x-www-form-urlencoded',
                 ],
-                'label' => 'leuchtfeuer.api.content_type.label',
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.content_type.label',
                 'required' => true,
             ])
             ->add('body', TextareaType::class, [
-                'label' => 'leuchtfeuer.api.body.label',
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.body.label',
                 'label_attr' => ['class' => 'control-label'],
                 'attr' => [
                     'class' => 'form-control',
                     'rows' => 8,
-                    'placeholder' => 'leuchtfeuer.api.json.placeholder',
+                    'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.body.placeholder',
                 ],
                 'constraints' => [
                     new Assert\Callback([$this, 'validateBodyByContentType']),
@@ -108,20 +108,20 @@ class ApiRequestActionType extends AbstractType
             ])
             ->add('contact_field', ChoiceType::class, [
                 'choices' => $this->getTextFields(),
-                'label' => 'leuchtfeuer.api.contact.field.stored',
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.contact.field.label',
                 'label_attr' => ['class' => 'control-label'],
-                'placeholder' => 'leuchtfeuer.api.contact.field.placeholder',
+                'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.contact.field.placeholder',
                 'required' => false,
                 'attr' => [
                     'class' => 'form-control',
-                    'tooltip' => 'leuchtfeuer.api.select.text.field'
+                    'tooltip' => 'leuchtfeuer.mautic-apicalls-bundle.contact.field.tooltip'
                 ],
                 'constraints' => [
                     new Assert\Callback([$this, 'validateByContentType']),
                 ],
             ])
             ->add('regex', TextType::class, [
-                'label' => 'Pre-Store Regex for Contact Field',
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.regex.label',
                 'label_attr' => ['class' => 'control-label'],
                 'required' => false,
                 'constraints' => [
@@ -130,7 +130,7 @@ class ApiRequestActionType extends AbstractType
                 'attr' => [
                     'class' => 'form-control',
                     'placeholder' => '1: /"value_key_to_get"\s*:\s*"([^"]+)"/'    .  "       "  .     '2: /"value_key_to_get"\s*:\s*\[([^\]]*)\]/"',
-                    'tooltip' => 'leuchtfeuer.api.regex.example'
+                    'tooltip' => 'leuchtfeuer.mautic-apicalls-bundle.regex.tooltip'
                 ],
             ]);
 
@@ -145,13 +145,13 @@ class ApiRequestActionType extends AbstractType
         $method = $data['properties']['method'] ?? null;
 
         if (in_array($method, ['POST', 'PUT', 'PATCH']) && empty($body)) {
-            $context->buildViolation('leuchtfeuer.api.get.method.body.required')
+            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.body.required')
                 ->addViolation();
             return;
         }
 
         if ($method === 'GET' && !empty($body)) {
-            $context->buildViolation('leuchtfeuer.api.get.method.body.empty')
+            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.body.must.be.empty')
                 ->addViolation();
             return;
         }
@@ -159,7 +159,7 @@ class ApiRequestActionType extends AbstractType
         if (in_array($contentType, ['application/json', 'application/vnd.api+json'])) {
             $validator = $context->getValidator();
             $violations = $validator->validate($body, new Assert\Json(['message' =>
-                'leuchtfeuer.api.body.invalid_json']));
+                'leuchtfeuer.mautic-apicalls-bundle.body.invalid_json']));
 
             foreach ($violations as $violation) {
                 $context->buildViolation($violation->getMessage())
@@ -179,13 +179,13 @@ class ApiRequestActionType extends AbstractType
         }
 
         if ($method !== 'GET') {
-            $context->buildViolation('leuchtfeuer.api.get.method')
+            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.get.method.required')
                 ->addViolation();
             return;
         }
 
         if (str_starts_with($parameters, '?')) {
-            $context->buildViolation('leuchtfeuer.api.get.format.question.mark')
+            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.get.method.format.question.mark')
                 ->addViolation();
             return;
         }
@@ -194,7 +194,7 @@ class ApiRequestActionType extends AbstractType
 
         foreach ($pairs as $pair) {
             if (!str_contains($pair, '=')) {
-                $context->buildViolation('leuchtfeuer.api.get.format')
+                $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.get.method.format.required')
                     ->addViolation();
                 return;
             }
@@ -214,7 +214,7 @@ class ApiRequestActionType extends AbstractType
         }
 
         if ($method !== 'GET') {
-            $context->buildViolation('leuchtfeuer.api.get.content.type.validation')
+            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.get.method.required')
                 ->addViolation();
         }
     }
@@ -256,7 +256,7 @@ class ApiRequestActionType extends AbstractType
         $violations = $context->getValidator()->validate($urlForValidation, new Assert\Url());
 
         foreach ($violations as $violation) {
-            $context->buildViolation('leuchtfeuer.api.url.invalid')->addViolation();
+            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.url.invalid')->addViolation();
         }
     }
 
