@@ -108,13 +108,13 @@ class ApiRequestActionType extends AbstractType
             ])
             ->add('contact_field', ChoiceType::class, [
                 'choices' => $this->getTextFields(),
-                'label' => 'leuchtfeuer.mautic-apicalls-bundle.contact.field.label',
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.contactfield.label',
                 'label_attr' => ['class' => 'control-label'],
-                'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.contact.field.placeholder',
+                'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.contactfield.placeholder',
                 'required' => false,
                 'attr' => [
                     'class' => 'form-control',
-                    'tooltip' => 'leuchtfeuer.mautic-apicalls-bundle.contact.field.tooltip'
+                    'tooltip' => 'leuchtfeuer.mautic-apicalls-bundle.contactfield.tooltip'
                 ],
                 'constraints' => [
                     new Assert\Callback([$this, 'validateByContentType']),
