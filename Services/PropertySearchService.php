@@ -5,18 +5,25 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 class PropertySearchService
 {
 
-    public function getValue(mixed $content,  string $valueKey, string $objectKey = ''): string
+    public function getValue(mixed $content, string $valueKey, string $objectKey = ''): string
     {
+        $originalContent = json_encode($content);
+
         if ($objectKey !== '') {
-            $content = $this->findByKey($content, $objectKey);
-            if ($content === null) {
-                return '';
+
+            $result = $this->findByKey($content, $objectKey);
+
+            if ($result === null) {
+                return $originalContent;
             }
+
+            $result = $this->findByKey($result, $valueKey);
+
+        } else {
+            $result = $this->findByKey($content, $valueKey);
         }
 
-        $result = $this->findByKey($content, $valueKey);
-
-        return $result !== null ? (string) $result : '';
+        return ($result !== null && !is_object($result)) ? (string) $result : $originalContent;
     }
 
     private function findByKey(mixed $data, string $key): mixed

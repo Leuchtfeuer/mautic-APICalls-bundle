@@ -112,6 +112,7 @@ class ApiRequestActionType extends AbstractType
                 'required' => false,
                 'attr' => [
                     'class' => 'form-control',
+                    'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.object_key.placeholder',
                 ],
                 'constraints' => [
                     new Assert\Callback([$this, 'validateByContentType']),
