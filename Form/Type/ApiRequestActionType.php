@@ -82,6 +82,14 @@ class ApiRequestActionType extends AbstractType
                     'autocomplete' => 'off'
                 ],
             ])
+            ->add('authorization', TextType::class, [
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.authorization.label',
+                'label_attr' => ['class' => 'control-label'],
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+            ])
             ->add('contentType', ChoiceType::class, [
                 'choices' => [
                     'application/json' => 'application/json',
