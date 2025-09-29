@@ -41,14 +41,17 @@ class PropertySearchService
 
     public function handleObjects(mixed $data, string $key):mixed
     {
-        if (property_exists($data, $key)) {
-            return $data->$key;
-        }
+        if (is_object($data)) {
 
-        foreach (get_object_vars($data) as $value) {
-            $result = $this->findByKey($value, $key);
-            if ($result !== null) {
-                return $result;
+            if (property_exists($data, $key)) {
+                return $data->$key;
+            }
+
+            foreach (get_object_vars($data) as $value) {
+                $result = $this->findByKey($value, $key);
+                if ($result !== null) {
+                    return $result;
+                }
             }
         }
 
@@ -58,14 +61,17 @@ class PropertySearchService
 
     public function handleArrays(mixed $data, string $key):mixed
     {
-        if (array_key_exists($key, $data)) {
-            return $data[$key];
-        }
+        if (is_array($data)) {
 
-        foreach ($data as $item) {
-            $result = $this->findByKey($item, $key);
-            if ($result !== null) {
-                return $result;
+            if (array_key_exists($key, $data)) {
+                return $data[$key];
+            }
+
+            foreach ($data as $item) {
+                $result = $this->findByKey($item, $key);
+                if ($result !== null) {
+                    return $result;
+                }
             }
         }
 
