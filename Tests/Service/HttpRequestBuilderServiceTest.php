@@ -2,8 +2,10 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\Service;
 
+use Mautic\CampaignBundle\Entity\LeadEventLog;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\HttpRequestBuilderService;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\TokenReplacementService;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\UrlBuilderService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -12,12 +14,16 @@ class HttpRequestBuilderServiceTest extends TestCase
 {
     private HttpRequestBuilderService $service;
     private MockObject $urlBuilderService;
+    private MockObject $tokenReplacementService;
+    private MockObject $leadEventLog;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->urlBuilderService = $this->createMock(UrlBuilderService::class);
-        $this->service = new HttpRequestBuilderService($this->urlBuilderService);
+        $this->tokenReplacementService = $this->createMock(TokenReplacementService::class);
+        $this->leadEventLog = $this->createMock(LeadEventLog::class);
+        $this->service = new HttpRequestBuilderService($this->urlBuilderService, $this->tokenReplacementService);
     }
 
     public function testBuildUrlAndOptionsForGetRequest(): void
@@ -28,12 +34,17 @@ class HttpRequestBuilderServiceTest extends TestCase
             contentType: 'application/json'
         );
 
+        $this->tokenReplacementService->expects($this->once())
+            ->method('getTokenizedUrl')
+            ->with($this->leadEventLog, 'https://example.com/api')
+            ->willReturn('https://example.com/api');
+
         $this->urlBuilderService->expects($this->once())
             ->method('appendQueryString')
             ->with($dto, 'https://example.com/api', 'param1=value1&param2=value2')
             ->willReturn('https://example.com/api?param1=value1&param2=value2');
 
-        $result = $this->service->buildUrlAndOptions('param1=value1&param2=value2', $dto);
+        $result = $this->service->buildUrlAndOptions('param1=value1&param2=value2', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api?param1=value1&param2=value2', $result['url']);
         $this->assertEquals([
@@ -55,10 +66,15 @@ class HttpRequestBuilderServiceTest extends TestCase
             contentType: 'application/json'
         );
 
+        $this->tokenReplacementService->expects($this->once())
+            ->method('getTokenizedUrl')
+            ->with($this->leadEventLog, 'https://example.com/api')
+            ->willReturn('https://example.com/api');
+
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
@@ -81,10 +97,15 @@ class HttpRequestBuilderServiceTest extends TestCase
             contentType: 'application/json'
         );
 
+        $this->tokenReplacementService->expects($this->once())
+            ->method('getTokenizedUrl')
+            ->with($this->leadEventLog, 'https://example.com/api')
+            ->willReturn('https://example.com/api');
+
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
@@ -107,10 +128,15 @@ class HttpRequestBuilderServiceTest extends TestCase
             contentType: 'application/json'
         );
 
+        $this->tokenReplacementService->expects($this->once())
+            ->method('getTokenizedUrl')
+            ->with($this->leadEventLog, 'https://example.com/api')
+            ->willReturn('https://example.com/api');
+
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
@@ -136,12 +162,17 @@ class HttpRequestBuilderServiceTest extends TestCase
             password: 'pass123'
         );
 
+        $this->tokenReplacementService->expects($this->once())
+            ->method('getTokenizedUrl')
+            ->with($this->leadEventLog, 'https://example.com/api')
+            ->willReturn('https://example.com/api');
+
         $this->urlBuilderService->expects($this->once())
             ->method('appendQueryString')
             ->with($dto, 'https://example.com/api', 'data=test')
             ->willReturn('https://example.com/api?data=test');
 
-        $result = $this->service->buildUrlAndOptions('data=test', $dto);
+        $result = $this->service->buildUrlAndOptions('data=test', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api?data=test', $result['url']);
         $this->assertEquals([
@@ -164,11 +195,16 @@ class HttpRequestBuilderServiceTest extends TestCase
             contentType: 'application/json'
         );
 
+        $this->tokenReplacementService->expects($this->once())
+            ->method('getTokenizedUrl')
+            ->with($this->leadEventLog, 'https://example.com/api')
+            ->willReturn('https://example.com/api');
+
         // With empty value, appendQueryString should not be called
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        $result = $this->service->buildUrlAndOptions('', $dto);
+        $result = $this->service->buildUrlAndOptions('', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
@@ -193,12 +229,17 @@ class HttpRequestBuilderServiceTest extends TestCase
             contentType: $contentType
         );
 
+        $this->tokenReplacementService->expects($this->once())
+            ->method('getTokenizedUrl')
+            ->with($this->leadEventLog, 'https://example.com/api')
+            ->willReturn('https://example.com/api');
+
         if ($method === 'GET') {
             $this->urlBuilderService->expects($this->once())
                 ->method('appendQueryString')
                 ->willReturn('https://example.com/api?data=test');
 
-            $result = $this->service->buildUrlAndOptions('data=test', $dto);
+            $result = $this->service->buildUrlAndOptions('data=test', $dto, $this->leadEventLog);
             /** @var array<string, mixed> $headers */
             $headers = $result['options']['headers'];
             $this->assertEquals($contentType, $headers['Content-Type']);
@@ -207,7 +248,7 @@ class HttpRequestBuilderServiceTest extends TestCase
             $this->urlBuilderService->expects($this->never())
                 ->method('appendQueryString');
 
-            $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto);
+            $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
 
             $this->assertEquals('https://example.com/api', $result['url']);
             /** @var array<string, mixed> $headers */
@@ -215,6 +256,127 @@ class HttpRequestBuilderServiceTest extends TestCase
             $this->assertEquals($contentType, $headers['Content-Type']);
             $this->assertEquals('{"data": "test"}', $result['options']['body']);
         }
+    }
+
+    public function testBuildUrlAndOptionsWithAuthorizationHeader(): void
+    {
+        $dto = new ApiCallPropertiesDTO(
+            url: 'https://example.com/api',
+            method: 'POST',
+            contentType: 'application/json',
+            authorizationHeader: 'Authorization: Bearer eyJhbGc123'
+        );
+
+        $this->tokenReplacementService->expects($this->once())
+            ->method('getTokenizedUrl')
+            ->with($this->leadEventLog, 'https://example.com/api')
+            ->willReturn('https://example.com/api');
+
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
+
+        $this->assertEquals('https://example.com/api', $result['url']);
+        $this->assertEquals([
+            'headers' => [
+                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer eyJhbGc123',
+            ],
+            'verify_peer' => false,
+            'verify_host' => true,
+            'max_redirects' => 0,
+            'body' => '{"data": "test"}',
+        ], $result['options']);
+    }
+
+    public function testBuildUrlAndOptionsWithCustomAuthorizationHeader(): void
+    {
+        $dto = new ApiCallPropertiesDTO(
+            url: 'https://example.com/api',
+            method: 'POST',
+            contentType: 'application/json',
+            authorizationHeader: 'X-API-Key: secret123'
+        );
+
+        $this->tokenReplacementService->expects($this->once())
+            ->method('getTokenizedUrl')
+            ->with($this->leadEventLog, 'https://example.com/api')
+            ->willReturn('https://example.com/api');
+
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
+
+        $this->assertEquals([
+            'headers' => [
+                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'Content-Type' => 'application/json',
+                'X-API-Key' => 'secret123',
+            ],
+            'verify_peer' => false,
+            'verify_host' => true,
+            'max_redirects' => 0,
+            'body' => '{"data": "test"}',
+        ], $result['options']);
+    }
+
+    public function testBuildUrlAndOptionsWithInvalidAuthorizationHeader(): void
+    {
+        $dto = new ApiCallPropertiesDTO(
+            url: 'https://example.com/api',
+            method: 'POST',
+            contentType: 'application/json',
+            authorizationHeader: 'InvalidHeaderWithoutColon'
+        );
+
+        $this->tokenReplacementService->expects($this->once())
+            ->method('getTokenizedUrl')
+            ->with($this->leadEventLog, 'https://example.com/api')
+            ->willReturn('https://example.com/api');
+
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
+
+        // Should not add the invalid header
+        $this->assertEquals([
+            'headers' => [
+                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'Content-Type' => 'application/json',
+            ],
+            'verify_peer' => false,
+            'verify_host' => true,
+            'max_redirects' => 0,
+            'body' => '{"data": "test"}',
+        ], $result['options']);
+    }
+
+    public function testBuildUrlAndOptionsWithAuthenticationAndAuthorizationHeader(): void
+    {
+        // Test that both basic auth and authorization header can coexist
+        $dto = new ApiCallPropertiesDTO(
+            url: 'https://example.com/api',
+            method: 'POST',
+            contentType: 'application/json',
+            username: 'user123',
+            password: 'pass123',
+            authorizationHeader: 'X-Custom-Auth: token123'
+        );
+
+        $this->tokenReplacementService->expects($this->once())
+            ->method('getTokenizedUrl')
+            ->with($this->leadEventLog, 'https://example.com/api')
+            ->willReturn('https://example.com/api');
+
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
+
+        $this->assertEquals([
+            'headers' => [
+                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'Content-Type' => 'application/json',
+                'X-Custom-Auth' => 'token123',
+            ],
+            'verify_peer' => false,
+            'verify_host' => true,
+            'max_redirects' => 0,
+            'body' => '{"data": "test"}',
+            'auth_basic' => ['user123', 'pass123'],
+        ], $result['options']);
     }
 
     /**

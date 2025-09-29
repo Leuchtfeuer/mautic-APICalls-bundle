@@ -20,7 +20,10 @@ class ApiCallPropertiesDTOTest extends TestCase
             username: 'user123',
             password: 'pass123',
             contactField: 'email',
-            regex: '/test/'
+            regex: '/test/',
+            objectKey: 'data',
+            valueKey: 'user.email',
+            authorizationHeader: 'Authorization: Bearer token123'
         );
 
         $this->assertEquals('https://example.com/api', $dto->url);
@@ -32,6 +35,9 @@ class ApiCallPropertiesDTOTest extends TestCase
         $this->assertEquals('pass123', $dto->password);
         $this->assertEquals('email', $dto->contactField);
         $this->assertEquals('/test/', $dto->regex);
+        $this->assertEquals('data', $dto->objectKey);
+        $this->assertEquals('user.email', $dto->valueKey);
+        $this->assertEquals('Authorization: Bearer token123', $dto->authorizationHeader);
     }
 
     public function testConstructorWithRequiredParametersOnly(): void
@@ -51,6 +57,45 @@ class ApiCallPropertiesDTOTest extends TestCase
         $this->assertEmpty($dto->password);
         $this->assertEmpty($dto->contactField);
         $this->assertEmpty($dto->regex);
+        $this->assertEmpty($dto->objectKey);
+        $this->assertEmpty($dto->valueKey);
+        $this->assertEmpty($dto->authorizationHeader);
+    }
+
+    public function testConstructorWithAuthorizationHeaderOnly(): void
+    {
+        $dto = new ApiCallPropertiesDTO(
+            url: 'https://api.example.com',
+            method: 'POST',
+            contentType: 'application/json',
+            authorizationHeader: 'X-API-Key: secret123'
+        );
+
+        $this->assertEquals('https://api.example.com', $dto->url);
+        $this->assertEquals('POST', $dto->method);
+        $this->assertEquals('application/json', $dto->contentType);
+        $this->assertEquals('X-API-Key: secret123', $dto->authorizationHeader);
+        $this->assertEmpty($dto->username);
+        $this->assertEmpty($dto->password);
+    }
+
+    public function testConstructorWithJsonExtraction(): void
+    {
+        $dto = new ApiCallPropertiesDTO(
+            url: 'https://api.example.com/user',
+            method: 'GET',
+            contentType: 'application/json',
+            contactField: 'email',
+            objectKey: 'user',
+            valueKey: 'email'
+        );
+
+        $this->assertEquals('https://api.example.com/user', $dto->url);
+        $this->assertEquals('GET', $dto->method);
+        $this->assertEquals('application/json', $dto->contentType);
+        $this->assertEquals('email', $dto->contactField);
+        $this->assertEquals('user', $dto->objectKey);
+        $this->assertEquals('email', $dto->valueKey);
     }
 
 
