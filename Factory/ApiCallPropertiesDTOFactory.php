@@ -22,7 +22,8 @@ class ApiCallPropertiesDTOFactory
             contactField: $properties['contact_field'] ?? '',
             regex: $properties['regex'] ?? '',
             objectKey: $properties['object_key'] ?? '',
-            valueKey: $properties['value_key'] ?? ''
+            valueKey: $properties['value_key'] ?? '',
+            authorizationHeader: $properties['authorization_header'] ?? ''
         );
     }
 }

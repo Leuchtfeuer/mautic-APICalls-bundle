@@ -16,7 +16,8 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\DTO;
         public readonly string $contactField = '',
         public readonly string $regex = '',
         public readonly string $objectKey = '',
-        public readonly string $valueKey = ''
+        public readonly string $valueKey = '',
+        public readonly string $authorizationHeader = ''
     ) {}
 
 }

@@ -82,8 +82,8 @@ class ApiRequestActionType extends AbstractType
                     'autocomplete' => 'off'
                 ],
             ])
-            ->add('authorization', TextType::class, [
-                'label' => 'leuchtfeuer.mautic-apicalls-bundle.authorization.label',
+            ->add('authorization_header', TextType::class, [
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.authorization_header.label',
                 'label_attr' => ['class' => 'control-label'],
                 'required' => false,
                 'attr' => [
