@@ -13,11 +13,12 @@ class ApiCallsService
 {
 
     private  const MAX_REDIRECTS = 5;
-    public function __construct(private HttpClientInterface $client,
-                                private LeadModel $leadModel,
+    public function __construct(private HttpClientInterface       $client,
+                                private LeadModel                 $leadModel,
                                 private HttpRequestBuilderService $httpRequestBuilderService,
-                                private TokenReplacementService $tokenReplacementService,
-                                private UrlBuilderService $urlBuilderService)
+                                private TokenReplacementService   $tokenReplacementService,
+                                private UrlBuilderService         $urlBuilderService,
+                                private PropertySearchService     $propertySearchService)
     {}
 
     /**
@@ -37,7 +38,17 @@ class ApiCallsService
         $this->checkIfResponseValid($response);
 
         if (!empty($dto->contactField) && $dto->method === 'GET') {
-            $this->updateField($lead, $dto->contactField, $response, $dto->regex);
+
+            $content = $response->getContent(false);
+
+            $decoded = json_decode($content);
+
+            if (json_last_error() === JSON_ERROR_NONE && !empty($dto->valueKey)) {
+
+                $content = $this->propertySearchService->getValue($decoded, $dto->valueKey, $dto->objectKey);
+            }
+
+            $this->updateField($lead, $dto->contactField, $content, $dto->regex);
         }
 
         $this->setMetadata($lead, $response, $dto->method);
@@ -51,9 +62,8 @@ class ApiCallsService
         $response->getContent();
     }
 
-    public function updateField(LeadEventLog $lead, string $contactField, ResponseInterface $response, string $regex): void
+    public function updateField(LeadEventLog $lead, string $contactField, string $content, string $regex): void
     {
-        $content = $response->getContent(false);
 
         if (!empty($regex)) {
             if (preg_match_all($regex, $content, $matches)) {
@@ -64,12 +74,16 @@ class ApiCallsService
                 }
             }
         }
-        // @phpstan-ignore-next-line
-        $lead->getLead()->addUpdatedField($contactField, $content);
 
-        if($lead->getLead()){
-            $this->leadModel->saveEntity($lead->getLead());
+        if (!empty($content)) {
+            // @phpstan-ignore-next-line
+            $lead->getLead()->addUpdatedField($contactField, $content);
+
+            if($lead->getLead()){
+                $this->leadModel->saveEntity($lead->getLead());
+            }
         }
+
     }
 
     public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method):void

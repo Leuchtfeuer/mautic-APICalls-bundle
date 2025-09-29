@@ -82,6 +82,14 @@ class ApiRequestActionType extends AbstractType
                     'autocomplete' => 'off'
                 ],
             ])
+            ->add('authorization_header', TextType::class, [
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.authorization_header.label',
+                'label_attr' => ['class' => 'control-label'],
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+            ])
             ->add('contentType', ChoiceType::class, [
                 'choices' => [
                     'application/json' => 'application/json',
@@ -106,6 +114,30 @@ class ApiRequestActionType extends AbstractType
                     new Assert\Callback([$this, 'validateBodyByContentType']),
                 ],
             ])
+            ->add('object_key', TextType::class, [
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.object_key.label',
+                'label_attr' => ['class' => 'control-label'],
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                    'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.object_key.placeholder',
+                ],
+                'constraints' => [
+                    new Assert\Callback([$this, 'validateByContentType']),
+                ],
+            ])
+            ->add('value_key', TextType::class, [
+                'label' => 'leuchtfeuer.mautic-apicalls-bundle.value_key.label',
+                'label_attr' => ['class' => 'control-label'],
+                'required' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                ],
+                'constraints' => [
+                    new Assert\Callback([$this, 'validateByContentType']),
+                    new Assert\Callback([$this, 'valueKeyValidation']),
+                ],
+            ])
             ->add('contact_field', ChoiceType::class, [
                 'choices' => $this->getTextFields(),
                 'label' => 'leuchtfeuer.mautic-apicalls-bundle.contactfield.label',
@@ -118,6 +150,7 @@ class ApiRequestActionType extends AbstractType
                 ],
                 'constraints' => [
                     new Assert\Callback([$this, 'validateByContentType']),
+                    new Assert\Callback([$this, 'contactFieldValidation']),
                 ],
             ])
             ->add('regex', TextType::class, [
@@ -202,7 +235,6 @@ class ApiRequestActionType extends AbstractType
 
     }
 
-
     public function validateByContentType(string|null $parameters, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
@@ -226,16 +258,12 @@ class ApiRequestActionType extends AbstractType
     {
         $fieldChoices = [];
 
-        $textFields = $this->fieldModel->getFieldsProperties([
+        $fields = $this->fieldModel->getFieldsProperties([
             'isPublished' => true,
             'object' => 'lead'
         ]);
 
-        $textTypeFields = array_filter($textFields, function($field) {
-            return is_array($field) && isset($field['type']) && in_array($field['type'], ['text', 'textarea']);
-        });
-
-        foreach ($textTypeFields as $alias => $field) {
+        foreach ($fields as $alias => $field) {
             if(is_array($field)){
                 $fieldChoices[$field['label']] = $alias;
             }
@@ -260,6 +288,32 @@ class ApiRequestActionType extends AbstractType
         }
     }
 
+    public function valueKeyValidation(?string $valueKey, ExecutionContextInterface $context): void
+    {
+        // @phpstan-ignore-next-line
+        $data = $context->getRoot()->getData();
+        $objectKey = $data['properties']['object_key'] ?? null;
+
+        if (!empty($objectKey) && empty($valueKey)) {
+            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.value_key.required')
+                ->addViolation();
+        }
+
+    }
+
+    public function contactFieldValidation(?string $contactField, ExecutionContextInterface $context): void
+    {
+        // @phpstan-ignore-next-line
+        $data = $context->getRoot()->getData();
+        $regex = $data['properties']['regex'] ?? null;
+        $valueKey = $data['properties']['value_key'] ?? null;
+
+        if (!empty($contactField) && empty($valueKey) && empty($regex)) {
+            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.value_key.or.regex.required')
+                ->addViolation();
+        }
+
+    }
 
 
     public function configureOptions(OptionsResolver $resolver): void
