@@ -2,8 +2,6 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\DTO;
 
-use Mautic\CampaignBundle\Entity\LeadEventLog;
-use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 use PHPUnit\Framework\TestCase;
 
