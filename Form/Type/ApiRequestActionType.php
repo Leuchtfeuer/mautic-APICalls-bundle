@@ -150,6 +150,7 @@ class ApiRequestActionType extends AbstractType
                 ],
                 'constraints' => [
                     new Assert\Callback([$this, 'validateByContentType']),
+                    new Assert\Callback([$this, 'contactFieldValidation']),
                 ],
             ])
             ->add('regex', TextType::class, [
@@ -295,6 +296,20 @@ class ApiRequestActionType extends AbstractType
 
         if (!empty($objectKey) && empty($valueKey)) {
             $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.value_key.required')
+                ->addViolation();
+        }
+
+    }
+
+    public function contactFieldValidation(?string $contactField, ExecutionContextInterface $context): void
+    {
+        // @phpstan-ignore-next-line
+        $data = $context->getRoot()->getData();
+        $regex = $data['properties']['regex'] ?? null;
+        $valueKey = $data['properties']['value_key'] ?? null;
+
+        if (!empty($contactField) && empty($valueKey) && empty($regex)) {
+            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.value_key.or.regex.required')
                 ->addViolation();
         }
 
