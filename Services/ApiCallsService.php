@@ -43,7 +43,7 @@ class ApiCallsService
 
             $decoded = json_decode($content);
 
-            if (json_last_error() === JSON_ERROR_NONE && $dto->valueKey) {
+            if (json_last_error() === JSON_ERROR_NONE && !empty($dto->valueKey)) {
 
                 $content = $this->propertySearchService->getValue($decoded, $dto->valueKey, $dto->objectKey);
             }
