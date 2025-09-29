@@ -186,28 +186,28 @@ class PropertySearchServiceTest extends TestCase
         $this->assertEquals('Electronics', $result);
     }
 
-    public function testGetValueReturnsOriginalContentWhenKeyNotFound(): void
+    public function testGetValueReturnsEmptyStringWhenKeyNotFound(): void
     {
         $data = json_decode('{"orderId": "ORD-1001"}');
 
         $result = $this->service->getValue($data, 'nonexistent');
-        $this->assertEquals('{"orderId":"ORD-1001"}', $result);
+        $this->assertEquals('', $result);
     }
 
-    public function testGetValueReturnsOriginalContentWhenObjectKeyNotFound(): void
+    public function testGetValueReturnsEmptyStringWhenObjectKeyNotFound(): void
     {
         $data = json_decode('{"orderId": "ORD-1001"}');
 
         $result = $this->service->getValue($data, 'name', 'nonexistent');
-        $this->assertEquals('{"orderId":"ORD-1001"}', $result);
+        $this->assertEquals('', $result);
     }
 
-    public function testGetValueReturnsOriginalContentWhenValueKeyNotFoundInObject(): void
+    public function testGetValueReturnsEmptyStringWhenValueKeyNotFoundInObject(): void
     {
         $data = json_decode('{"customer": {"id": 501}}');
 
         $result = $this->service->getValue($data, 'nonexistent', 'customer');
-        $this->assertEquals('{"customer":{"id":501}}', $result);
+        $this->assertEquals('', $result);
     }
 
     public function testHandleArraysWithDirectKey(): void
@@ -287,9 +287,9 @@ class PropertySearchServiceTest extends TestCase
         $result = $this->service->getValue($data, 'inactive');
         $this->assertEquals('', $result);
 
-        // null values return original JSON since null cast check fails
+        // null values return empty string since they're not scalar
         $result = $this->service->getValue($data, 'empty');
-        $this->assertEquals('{"active":true,"inactive":false,"empty":null}', $result);
+        $this->assertEquals('', $result);
     }
 
     public function testGetValueWithNumericValues(): void
@@ -313,13 +313,13 @@ class PropertySearchServiceTest extends TestCase
         $this->assertEquals('-25', $result);
     }
 
-    public function testGetValueWithObjectValueReturnsOriginalContent(): void
+    public function testGetValueWithObjectValueReturnsEmptyString(): void
     {
         $data = json_decode('{"user": {"name": "John"}, "id": 123}');
 
-        // When trying to get an object value, should return original content
+        // When trying to get an object value, should return empty string since objects are not scalar
         $result = $this->service->getValue($data, 'user');
-        $this->assertEquals('{"user":{"name":"John"},"id":123}', $result);
+        $this->assertEquals('', $result);
     }
 
     public function testGetValueWithEmptyString(): void
@@ -332,16 +332,16 @@ class PropertySearchServiceTest extends TestCase
 
     public function testFindByKeyWithPrimitiveTypes(): void
     {
-        // Test with string
+        // Test with string - findByKey returns null for primitives, so result is empty
         $result = $this->service->getValue('simple string', 'any');
-        $this->assertEquals('"simple string"', $result);
+        $this->assertEquals('', $result);
 
-        // Test with integer
+        // Test with integer - findByKey returns null for primitives, so result is empty
         $result = $this->service->getValue(42, 'any');
-        $this->assertEquals('42', $result);
+        $this->assertEquals('', $result);
 
-        // Test with boolean
+        // Test with boolean - findByKey returns null for primitives, so result is empty
         $result = $this->service->getValue(true, 'any');
-        $this->assertEquals('true', $result);
+        $this->assertEquals('', $result);
     }
 }
