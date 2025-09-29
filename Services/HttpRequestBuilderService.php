@@ -33,6 +33,13 @@ class HttpRequestBuilderService
             'max_redirects' => 0,
         ];
 
+        if (!empty($dto->authorizationHeader)) {
+            if (str_contains($dto->authorizationHeader, ':')) {
+                [$headerName, $headerValue] = explode(':', $dto->authorizationHeader, 2);
+                $options['headers'][trim($headerName)] = trim($headerValue);
+            }
+        }
+
         // If not GET method then set body
         if ($dto->method !== 'GET') {
             $options['body'] = $value;
