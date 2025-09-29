@@ -127,6 +127,7 @@ class ApiRequestActionType extends AbstractType
                 ],
                 'constraints' => [
                     new Assert\Callback([$this, 'validateByContentType']),
+                    new Assert\Callback([$this, 'valueKeyValidation']),
                 ],
             ])
             ->add('contact_field', ChoiceType::class, [
@@ -225,7 +226,6 @@ class ApiRequestActionType extends AbstractType
 
     }
 
-
     public function validateByContentType(string|null $parameters, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
@@ -279,6 +279,18 @@ class ApiRequestActionType extends AbstractType
         }
     }
 
+    public function valueKeyValidation(?string $valueKey, ExecutionContextInterface $context): void
+    {
+        // @phpstan-ignore-next-line
+        $data = $context->getRoot()->getData();
+        $objectKey = $data['properties']['object_key'] ?? null;
+
+        if (!empty($objectKey) && empty($valueKey)) {
+            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.value_key.required')
+                ->addViolation();
+        }
+
+    }
 
 
     public function configureOptions(OptionsResolver $resolver): void

@@ -74,12 +74,16 @@ class ApiCallsService
                 }
             }
         }
-        // @phpstan-ignore-next-line
-        $lead->getLead()->addUpdatedField($contactField, $content);
 
-        if($lead->getLead()){
-            $this->leadModel->saveEntity($lead->getLead());
+        if (!empty($content)) {
+            // @phpstan-ignore-next-line
+            $lead->getLead()->addUpdatedField($contactField, $content);
+
+            if($lead->getLead()){
+                $this->leadModel->saveEntity($lead->getLead());
+            }
         }
+
     }
 
     public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method):void
