@@ -212,9 +212,9 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
 
         $mockResponse = $httpClient->request('GET', 'http://example.com');
 
-        // Should not throw exception for 200 status code
         $service->checkIfResponseValid($mockResponse);
-        $this->assertTrue(true); // If we reach here, no exception was thrown
+        // Should not throw exception for 200 status code
+        $this->expectNotToPerformAssertions();
     }
 
     public function testSetMetadata(): void
