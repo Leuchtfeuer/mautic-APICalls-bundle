@@ -1,4 +1,4 @@
-# Plugin: API Calls by Leuchtfeuer Test
+# Plugin: API Calls by Leuchtfeuer
 
 ## Overview / Purpose / Features
 This feature introduces a new campaign action in Mautic that allows campaigns to send outbound API requests.
