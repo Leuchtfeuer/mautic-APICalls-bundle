@@ -38,7 +38,7 @@ class ApiCallsPreSubmitFormListenerTest extends MauticMysqlTestCase
         ];
 
         // Create form with existing password data (simulating editing existing campaign action)
-        $formFactory = self::$container->get(FormFactoryInterface::class);
+        $formFactory = $this->getContainer()->get(FormFactoryInterface::class);
         $initialData = ['properties' => ['password' => 'existing_password_123']];
         $form = $formFactory->create(ApiRequestActionType::class, $initialData);
 
@@ -79,7 +79,7 @@ class ApiCallsPreSubmitFormListenerTest extends MauticMysqlTestCase
 
         // Don't set $_POST['campaignevent'] to simulate missing data
 
-        $formFactory = self::$container->get(FormFactoryInterface::class);
+        $formFactory = $this->getContainer()->get(FormFactoryInterface::class);
         $form = $formFactory->create(ApiRequestActionType::class);
 
         // This should not cause errors even without $_POST data

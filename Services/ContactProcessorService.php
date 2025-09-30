@@ -2,38 +2,25 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
-use Doctrine\Common\Collections\ArrayCollection;
 
-use Mautic\LeadBundle\Entity\Lead;
-use Mautic\LeadBundle\Helper\TokenHelper;
+
+use Mautic\CampaignBundle\Entity\LeadEventLog;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Factory\ApiCallPropertiesDTOFactory;
+
 
 class ContactProcessorService
 {
-    public function __construct(private ApiCallsService $apiCallsService){}
+    public function __construct(private ApiCallsService $apiCallsService, private ApiCallPropertiesDTOFactory $dtoFactory){}
 
     /**
-     * @param array<int, Lead>|ArrayCollection<int, Lead> $contacts
      * @param array<string, string> $properties
+     * @param array<LeadEventLog> $leads
      */
-    public function processContacts(array|ArrayCollection $contacts, array $properties): void
+    public function processContacts(array $properties,  array $leads): void
     {
-        foreach ($contacts as $contact) {
-            $tokenizedValue = TokenHelper::findLeadTokens(
-                $properties['body'],
-                $contact->getProfileFields(),
-                true
-            );
-
-            if (is_string($tokenizedValue)) {
-                $this->apiCallsService->sendRequest(
-                    $tokenizedValue,
-                    $properties['url'],
-                    $properties['method'],
-                    $properties['contentType'],
-                    $properties['username'] ?? '',
-                    $properties['password'] ?? '',
-                );
-            }
+        foreach ($leads as $lead) {
+            $dto = $this->dtoFactory->createFromProperties($properties);
+            $this->apiCallsService->sendRequest($lead, $dto);
         }
     }
 }
