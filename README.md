@@ -3,6 +3,11 @@
 ## Overview / Purpose / Features
 This feature introduces a new campaign action in Mautic that allows campaigns to send outbound API requests.
 
+## Requirements for this release
+> [!TIP]
+> Other releases of this plugin may cover different Mautic versions!
+- Mautic 6
+
 ### Key Features:
 - **Campaign action**: Send API request with comprehensive configuration options
 
@@ -23,10 +28,6 @@ This feature introduces a new campaign action in Mautic that allows campaigns to
 - **Token replacement**: Use contact field tokens in URLs and request bodies
 
 - **Redirect handling**: Automatic handling of HTTP redirects 
-
-## Requirements / Version Support
-- Mautic 6.0
-- PHP >= 8.1
 
 ## Installation
 ### Composer
