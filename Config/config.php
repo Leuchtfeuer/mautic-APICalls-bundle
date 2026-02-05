@@ -9,7 +9,7 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\Integration\Support\ConfigSupport;
 return [
     'name'        => 'API Calls by Leuchtfeuer',
     'description' => 'Allow generic outbound API calls e.g. as campaign action',
-    'version'     => '6.0.0',
+    'version'     => '6.0.1',
     'author'      => 'Leuchtfeuer Digital Marketing GmbH',
     'services'    => [
         'integrations' => [
