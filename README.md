@@ -149,7 +149,7 @@ For complete version history, see [GitHub](https://github.com/Leuchtfeuer/mautic
 For support or custom features, contact **mautic-plugins@leuchtfeuer.com**
 
 ## License
-This plugin is licensed under the GPL-3.0-or-later License.
+This plugin is licensed under the GPL v3 License.
 
 ## Resources / Further Readings
 - [Mautic Documentation](https://docs.mautic.org)
