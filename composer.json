@@ -10,7 +10,7 @@
       "role": "Developer"
     }
   ],
-  "license": "GPL-3.0-or-later",
+  "license": "GPL-3.0",
   "keywords": ["mautic","plugin","integration","api","campaign"],
   "extra": {
     "install-directory-name": "LeuchtfeuerAPICallsBundle"
