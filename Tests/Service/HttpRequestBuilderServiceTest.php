@@ -31,7 +31,8 @@ class HttpRequestBuilderServiceTest extends TestCase
         $dto = new ApiCallPropertiesDTO(
             url: 'https://example.com/api',
             method: 'GET',
-            contentType: 'application/json'
+            contentType: 'application/json',
+            urlParameters: 'param1=value1&param2=value2'
         );
 
         $this->tokenReplacementService->expects($this->once())
@@ -41,10 +42,10 @@ class HttpRequestBuilderServiceTest extends TestCase
 
         $this->urlBuilderService->expects($this->once())
             ->method('appendQueryString')
-            ->with($dto, 'https://example.com/api', 'param1=value1&param2=value2')
+            ->with('https://example.com/api', 'param1=value1&param2=value2')
             ->willReturn('https://example.com/api?param1=value1&param2=value2');
 
-        $result = $this->service->buildUrlAndOptions('param1=value1&param2=value2', $dto, $this->leadEventLog);
+        $result = $this->service->buildUrlAndOptions('', 'param1=value1&param2=value2', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api?param1=value1&param2=value2', $result['url']);
         $this->assertEquals([
@@ -74,7 +75,7 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', '', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
@@ -105,7 +106,7 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', '', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
@@ -136,7 +137,7 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', '', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
@@ -151,13 +152,38 @@ class HttpRequestBuilderServiceTest extends TestCase
         ], $result['options']);
     }
 
+    public function testBuildUrlAndOptionsForPostMethodWithUrlParameters(): void
+    {
+        $dto = new ApiCallPropertiesDTO(
+            url: 'https://example.com/api',
+            method: 'POST',
+            contentType: 'application/json',
+            urlParameters: 'filter=active&page=1'
+        );
+
+        $this->tokenReplacementService->expects($this->once())
+            ->method('getTokenizedUrl')
+            ->with($this->leadEventLog, 'https://example.com/api')
+            ->willReturn('https://example.com/api');
+
+        $this->urlBuilderService->expects($this->once())
+            ->method('appendQueryString')
+            ->with('https://example.com/api', 'filter=active&page=1')
+            ->willReturn('https://example.com/api?filter=active&page=1');
+
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', 'filter=active&page=1', $dto, $this->leadEventLog);
+
+        $this->assertEquals('https://example.com/api?filter=active&page=1', $result['url']);
+        $this->assertEquals('{"data": "test"}', $result['options']['body']);
+    }
+
     public function testBuildUrlAndOptionsWithAuthentication(): void
     {
-        // Test with GET method to avoid the undefined $url variable issue
         $dto = new ApiCallPropertiesDTO(
             url: 'https://example.com/api',
             method: 'GET',
             contentType: 'application/json',
+            urlParameters: 'data=test',
             username: 'user123',
             password: 'pass123'
         );
@@ -169,10 +195,10 @@ class HttpRequestBuilderServiceTest extends TestCase
 
         $this->urlBuilderService->expects($this->once())
             ->method('appendQueryString')
-            ->with($dto, 'https://example.com/api', 'data=test')
+            ->with('https://example.com/api', 'data=test')
             ->willReturn('https://example.com/api?data=test');
 
-        $result = $this->service->buildUrlAndOptions('data=test', $dto, $this->leadEventLog);
+        $result = $this->service->buildUrlAndOptions('', 'data=test', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api?data=test', $result['url']);
         $this->assertEquals([
@@ -200,11 +226,10 @@ class HttpRequestBuilderServiceTest extends TestCase
             ->with($this->leadEventLog, 'https://example.com/api')
             ->willReturn('https://example.com/api');
 
-        // With empty value, appendQueryString should not be called
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        $result = $this->service->buildUrlAndOptions('', $dto, $this->leadEventLog);
+        $result = $this->service->buildUrlAndOptions('', '', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
@@ -239,16 +264,15 @@ class HttpRequestBuilderServiceTest extends TestCase
                 ->method('appendQueryString')
                 ->willReturn('https://example.com/api?data=test');
 
-            $result = $this->service->buildUrlAndOptions('data=test', $dto, $this->leadEventLog);
+            $result = $this->service->buildUrlAndOptions('', 'data=test', $dto, $this->leadEventLog);
             /** @var array<string, mixed> $headers */
             $headers = $result['options']['headers'];
             $this->assertEquals($contentType, $headers['Content-Type']);
         } else {
-            // Non-GET methods should work now that the service is fixed
             $this->urlBuilderService->expects($this->never())
                 ->method('appendQueryString');
 
-            $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
+            $result = $this->service->buildUrlAndOptions('{"data": "test"}', '', $dto, $this->leadEventLog);
 
             $this->assertEquals('https://example.com/api', $result['url']);
             /** @var array<string, mixed> $headers */
@@ -272,7 +296,7 @@ class HttpRequestBuilderServiceTest extends TestCase
             ->with($this->leadEventLog, 'https://example.com/api')
             ->willReturn('https://example.com/api');
 
-        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', '', $dto, $this->leadEventLog);
 
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
@@ -302,7 +326,7 @@ class HttpRequestBuilderServiceTest extends TestCase
             ->with($this->leadEventLog, 'https://example.com/api')
             ->willReturn('https://example.com/api');
 
-        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', '', $dto, $this->leadEventLog);
 
         $this->assertEquals([
             'headers' => [
@@ -331,9 +355,8 @@ class HttpRequestBuilderServiceTest extends TestCase
             ->with($this->leadEventLog, 'https://example.com/api')
             ->willReturn('https://example.com/api');
 
-        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', '', $dto, $this->leadEventLog);
 
-        // Should not add the invalid header
         $this->assertEquals([
             'headers' => [
                 'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
@@ -348,7 +371,6 @@ class HttpRequestBuilderServiceTest extends TestCase
 
     public function testBuildUrlAndOptionsWithAuthenticationAndAuthorizationHeader(): void
     {
-        // Test that both basic auth and authorization header can coexist
         $dto = new ApiCallPropertiesDTO(
             url: 'https://example.com/api',
             method: 'POST',
@@ -363,7 +385,7 @@ class HttpRequestBuilderServiceTest extends TestCase
             ->with($this->leadEventLog, 'https://example.com/api')
             ->willReturn('https://example.com/api');
 
-        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $this->leadEventLog);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', '', $dto, $this->leadEventLog);
 
         $this->assertEquals([
             'headers' => [

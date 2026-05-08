@@ -211,12 +211,6 @@ class ApiRequestActionType extends AbstractType
             return;
         }
 
-        if ($method !== 'GET') {
-            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.get.method.required')
-                ->addViolation();
-            return;
-        }
-
         if (str_starts_with($parameters, '?')) {
             $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.get.method.format.question.mark')
                 ->addViolation();

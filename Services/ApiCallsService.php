@@ -28,12 +28,13 @@ class ApiCallsService
     public function sendRequest(LeadEventLog $lead, ApiCallPropertiesDTO $dto): void
     {
         $tokenizedValue = $this->tokenReplacementService->getTokenizedValue($lead, $dto);
-        $urlAndOptions = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $dto, $lead);
+        $tokenizedUrlParams = $this->tokenReplacementService->getTokenizedUrl($lead, $dto->urlParameters);
+        $urlAndOptions = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $tokenizedUrlParams, $dto, $lead);
 
         $currentUrl = $urlAndOptions['url'];
         $options = $urlAndOptions['options'];
 
-        $response = $this->handleRedirects($dto, $currentUrl, $options, $tokenizedValue);
+        $response = $this->handleRedirects($dto, $currentUrl, $options, $tokenizedUrlParams);
 
         $this->checkIfResponseValid($response);
 
@@ -101,7 +102,7 @@ class ApiCallsService
      * @param array<mixed> $options
      */
 
-    private function handleRedirects(ApiCallPropertiesDTO $dto, string $currentUrl, array $options, string $tokenizedValue): ResponseInterface
+    private function handleRedirects(ApiCallPropertiesDTO $dto, string $currentUrl, array $options, string $tokenizedUrlParams): ResponseInterface
     {
         $redirectCount = 0;
         $response = null;
@@ -120,7 +121,7 @@ class ApiCallsService
                 break;
             }
 
-            $currentUrl = $this->urlBuilderService->appendQueryString($dto, $locationHeader, $tokenizedValue);
+            $currentUrl = $this->urlBuilderService->appendQueryString($locationHeader, $tokenizedUrlParams);
 
             $redirectCount++;
         }

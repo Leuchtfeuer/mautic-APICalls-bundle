@@ -2,14 +2,12 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
-use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
-
 class UrlBuilderService
 {
 
-    public function appendQueryString(ApiCallPropertiesDTO $dto, string $url, string $value): string
+    public function appendQueryString(string $url, string $value): string
     {
-        if ($dto->method !== 'GET' || empty($value)) {
+        if (empty($value)) {
             return $url;
         }
 
