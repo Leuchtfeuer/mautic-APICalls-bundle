@@ -7,6 +7,7 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\Form\Type;
 use Mautic\LeadBundle\Model\FieldModel;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener\ApiCallsPreSubmitFormListener;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type\ApiRequestActionType;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\CampaignActionSecretService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\FormInterface;
@@ -27,7 +28,7 @@ final class ApiRequestActionTypeTest extends TestCase
         $this->context  = $this->createMock(ExecutionContextInterface::class);
         $this->formType = new ApiRequestActionType(
             $this->createMock(FieldModel::class),
-            new ApiCallsPreSubmitFormListener(),
+            new ApiCallsPreSubmitFormListener($this->createMock(CampaignActionSecretService::class)),
         );
     }
 

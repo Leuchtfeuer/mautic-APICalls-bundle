@@ -83,15 +83,18 @@ class ApiRequestActionType extends AbstractType
                 'attr' => [
                     'class' => 'form-control',
                     'preaddon' => 'ri-lock-fill',
-                    'autocomplete' => 'off'
+                    'autocomplete' => 'off',
+                    'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.secret.stored.placeholder',
                 ],
             ])
-            ->add('authorization_header', TextType::class, [
+            ->add('authorization_header', PasswordType::class, [
                 'label' => 'leuchtfeuer.mautic-apicalls-bundle.authorization_header.label',
                 'label_attr' => ['class' => 'control-label'],
                 'required' => false,
                 'attr' => [
                     'class' => 'form-control',
+                    'autocomplete' => 'off',
+                    'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.secret.stored.placeholder',
                 ],
             ])
             ->add('contentType', ChoiceType::class, [

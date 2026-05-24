@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\Functional\Form;
 
+use Mautic\CoreBundle\Helper\EncryptionHelper;
 use Mautic\CoreBundle\Test\MauticMysqlTestCase;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Factory\ApiCallPropertiesDTOFactory;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type\ApiRequestActionType;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\CampaignActionSecretService;
 use PHPUnit\Framework\Assert;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -13,6 +16,14 @@ use Symfony\Component\Form\FormInterface;
 
 final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
 {
+    private function createSecretService(): CampaignActionSecretService
+    {
+        /** @var EncryptionHelper $encryptionHelper */
+        $encryptionHelper = self::$container->get(EncryptionHelper::class);
+
+        return new CampaignActionSecretService($encryptionHelper);
+    }
+
     /**
      * @param array<string, mixed> $properties
      */
@@ -135,5 +146,123 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
         Assert::assertTrue($form->isSubmitted());
         Assert::assertFalse($form->isValid());
         Assert::assertGreaterThan(0, $form->get('body')->getErrors(true)->count());
+    }
+
+    public function testFormEncryptsSecretsOnSubmit(): void
+    {
+        $secretService = $this->createSecretService();
+
+        $properties = [
+            'url'                   => 'https://api.example.com/contacts',
+            'method'                => 'POST',
+            'contentType'           => 'application/json',
+            'body'                  => '{"email":"test@example.com"}',
+            'password'              => 'plain-password',
+            'authorization_header'  => 'Authorization: Bearer token',
+        ];
+
+        $form = $this->createCampaignPropertiesForm();
+        $form->submit(['properties' => $properties]);
+
+        Assert::assertTrue($form->isSubmitted());
+        Assert::assertTrue($form->isValid(), (string) $form->getErrors(true, false));
+
+        $stored = $form->get('properties')->getNormData();
+        Assert::assertTrue($secretService->isEncrypted($stored['password']));
+        Assert::assertTrue($secretService->isEncrypted($stored['authorization_header']));
+        Assert::assertNotSame('plain-password', $stored['password']);
+        Assert::assertNotSame('Authorization: Bearer token', $stored['authorization_header']);
+    }
+
+    public function testFormDoesNotDisplayStoredSecretsWhenEditing(): void
+    {
+        $secretService = $this->createSecretService();
+
+        $encryptedPassword = $secretService->encrypt('stored-password');
+        $encryptedHeader   = $secretService->encrypt('Authorization: Bearer stored');
+
+        $form = $this->createCampaignPropertiesForm([
+            'url'                  => 'https://api.example.com/contacts',
+            'method'               => 'POST',
+            'contentType'          => 'application/json',
+            'body'                 => '{"email":"test@example.com"}',
+            'password'             => $encryptedPassword,
+            'authorization_header' => $encryptedHeader,
+        ]);
+
+        Assert::assertSame('', $form->get('properties')->get('password')->getViewData());
+        Assert::assertSame('', $form->get('properties')->get('authorization_header')->getViewData());
+        Assert::assertSame(
+            'leuchtfeuer.mautic-apicalls-bundle.secret.stored.placeholder',
+            $form->get('properties')->get('password')->getConfig()->getOption('attr')['placeholder']
+        );
+    }
+
+    public function testFormPreservesEncryptedSecretsWhenFieldsLeftEmpty(): void
+    {
+        $secretService = $this->createSecretService();
+
+        $encryptedPassword = $secretService->encrypt('stored-password');
+        $encryptedHeader   = $secretService->encrypt('Authorization: Bearer stored');
+
+        $existing = [
+            'url'                  => 'https://api.example.com/contacts',
+            'method'               => 'POST',
+            'contentType'          => 'application/json',
+            'body'                 => '{"email":"test@example.com"}',
+            'password'             => $encryptedPassword,
+            'authorization_header' => $encryptedHeader,
+        ];
+
+        $form = $this->createCampaignPropertiesForm($existing);
+        $form->submit([
+            'properties' => [
+                'url'                  => $existing['url'],
+                'method'               => $existing['method'],
+                'contentType'          => $existing['contentType'],
+                'body'                 => $existing['body'],
+                'password'             => '',
+                'authorization_header' => '',
+            ],
+        ]);
+
+        Assert::assertTrue($form->isSubmitted());
+        Assert::assertTrue($form->isValid(), (string) $form->getErrors(true, false));
+
+        $stored = $form->get('properties')->getNormData();
+        Assert::assertSame($encryptedPassword, $stored['password']);
+        Assert::assertSame($encryptedHeader, $stored['authorization_header']);
+    }
+
+    public function testFormDoesNotDisplayLegacyPlaintextSecretsWhenEditing(): void
+    {
+        $form = $this->createCampaignPropertiesForm([
+            'url'                  => 'https://api.example.com/contacts',
+            'method'               => 'POST',
+            'contentType'          => 'application/json',
+            'body'                 => '{"email":"test@example.com"}',
+            'password'             => 'legacy-plain-password',
+            'authorization_header' => 'Authorization: Bearer legacy-token',
+        ]);
+
+        Assert::assertSame('', $form->get('properties')->get('password')->getViewData());
+        Assert::assertSame('', $form->get('properties')->get('authorization_header')->getViewData());
+    }
+
+    public function testFactoryDecryptsStoredSecretsForRuntime(): void
+    {
+        $secretService = $this->createSecretService();
+        $factory       = new ApiCallPropertiesDTOFactory($secretService);
+
+        $dto = $factory->createFromProperties([
+            'url'                  => 'https://api.example.com/contacts',
+            'method'               => 'POST',
+            'contentType'          => 'application/json',
+            'password'             => $secretService->encrypt('runtime-password'),
+            'authorization_header' => $secretService->encrypt('Authorization: Bearer runtime'),
+        ]);
+
+        Assert::assertSame('runtime-password', $dto->password);
+        Assert::assertSame('Authorization: Bearer runtime', $dto->authorizationHeader);
     }
 }
