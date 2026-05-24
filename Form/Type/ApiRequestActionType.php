@@ -163,6 +163,7 @@ class ApiRequestActionType extends AbstractType
                 'required' => false,
                 'constraints' => [
                     new Assert\Callback([$this, 'validateByContentType']),
+                    new Assert\Callback([$this, 'validateRegex']),
                 ],
                 'attr' => [
                     'class' => 'form-control',
@@ -317,6 +318,18 @@ class ApiRequestActionType extends AbstractType
                 ->addViolation();
         }
 
+    }
+
+    public function validateRegex(?string $regex, ExecutionContextInterface $context): void
+    {
+        if (null === $regex || '' === $regex) {
+            return;
+        }
+
+        if (false === @preg_match($regex, '')) {
+            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.regex.invalid')
+                ->addViolation();
+        }
     }
 
 
