@@ -6,6 +6,7 @@ use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\PendingEvent;
+use Mautic\IntegrationsBundle\Exception\IntegrationNotFoundException;
 use Mautic\IntegrationsBundle\Helper\IntegrationsHelper;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type\ApiRequestActionType;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Integration\ApiCallsIntegration;
@@ -38,23 +39,32 @@ class CampaignActionSubscriber implements EventSubscriberInterface
 
     public function onCampaignBuild(CampaignBuilderEvent $event): void
     {
-        $integrationConfiguration = $this->integrationsHelper->getIntegration(ApiCallsIntegration::INTEGRATION_NAME)->getIntegrationConfiguration();
+        try {
+            $integration = $this->integrationsHelper->getIntegration(ApiCallsIntegration::INTEGRATION_NAME);
+        } catch (IntegrationNotFoundException) {
+            return;
+        }
 
-            if(!$integrationConfiguration->getIsPublished()) {
-                return;
-            }
+        if (!$integration->hasIntegrationConfiguration()) {
+            return;
+        }
 
-            $event->addAction(
-                self::ACTION_TYPE,
-                [
-                    'label' => 'leuchtfeuer.mautic-apicalls-bundle.action.label',
-                    'description' => 'leuchtfeuer.mautic-apicalls-bundle.action.description',
-                    'batchEventName' => LeuchtfeuerAPICallsEvents::EXECUTE_CAMPAIGN_ACTION,
-                    'formType' => ApiRequestActionType::class,
-                    'formTypeCleanMasks' => self::FORM_TYPE_CLEAN_MASKS,
-                ]
-            );
+        $integrationConfiguration = $integration->getIntegrationConfiguration();
 
+        if (!$integrationConfiguration->getIsPublished()) {
+            return;
+        }
+
+        $event->addAction(
+            self::ACTION_TYPE,
+            [
+                'label'              => 'leuchtfeuer.mautic-apicalls-bundle.action.label',
+                'description'        => 'leuchtfeuer.mautic-apicalls-bundle.action.description',
+                'batchEventName'     => LeuchtfeuerAPICallsEvents::EXECUTE_CAMPAIGN_ACTION,
+                'formType'           => ApiRequestActionType::class,
+                'formTypeCleanMasks' => self::FORM_TYPE_CLEAN_MASKS,
+            ]
+        );
     }
 
     public function onExecuteApiRequest(PendingEvent $event): void

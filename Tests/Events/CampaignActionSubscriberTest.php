@@ -8,6 +8,7 @@ use Mautic\CampaignBundle\Entity\Event;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\PendingEvent;
 use Mautic\CoreBundle\Test\MauticMysqlTestCase;
+use Mautic\IntegrationsBundle\Exception\IntegrationNotFoundException;
 use Mautic\IntegrationsBundle\Helper\IntegrationsHelper;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener\CampaignActionSubscriber;
@@ -126,6 +127,10 @@ class CampaignActionSubscriberTest extends MauticMysqlTestCase
             ->willReturn(true);
 
         $integration->expects($this->once())
+            ->method('hasIntegrationConfiguration')
+            ->willReturn(true);
+
+        $integration->expects($this->once())
             ->method('getIntegrationConfiguration')
             ->willReturn($integrationConfiguration);
 
@@ -161,8 +166,50 @@ class CampaignActionSubscriberTest extends MauticMysqlTestCase
             ->willReturn(false);
 
         $integration->expects($this->once())
+            ->method('hasIntegrationConfiguration')
+            ->willReturn(true);
+
+        $integration->expects($this->once())
             ->method('getIntegrationConfiguration')
             ->willReturn($integrationConfiguration);
+
+        $this->integrationsHelper->expects($this->once())
+            ->method('getIntegration')
+            ->with(ApiCallsIntegration::INTEGRATION_NAME)
+            ->willReturn($integration);
+
+        $event->expects($this->never())
+            ->method('addAction');
+
+        $this->subscriber->onCampaignBuild($event);
+    }
+
+    public function testOnCampaignBuildDoesNotAddActionWhenIntegrationIsNotFound(): void
+    {
+        $event = $this->createMock(CampaignBuilderEvent::class);
+
+        $this->integrationsHelper->expects($this->once())
+            ->method('getIntegration')
+            ->with(ApiCallsIntegration::INTEGRATION_NAME)
+            ->willThrowException(new IntegrationNotFoundException('apicalls'));
+
+        $event->expects($this->never())
+            ->method('addAction');
+
+        $this->subscriber->onCampaignBuild($event);
+    }
+
+    public function testOnCampaignBuildDoesNotAddActionWhenIntegrationConfigurationIsMissing(): void
+    {
+        $event = $this->createMock(CampaignBuilderEvent::class);
+        $integration = $this->createMock(ApiCallsIntegration::class);
+
+        $integration->expects($this->once())
+            ->method('hasIntegrationConfiguration')
+            ->willReturn(false);
+
+        $integration->expects($this->never())
+            ->method('getIntegrationConfiguration');
 
         $this->integrationsHelper->expects($this->once())
             ->method('getIntegration')
