@@ -76,11 +76,10 @@ class ApiCallsService
         }
 
         if (!empty($content)) {
-            // @phpstan-ignore-next-line
-            $lead->getLead()->addUpdatedField($contactField, $content);
-
-            if($lead->getLead()){
-                $this->leadModel->saveEntity($lead->getLead());
+            $leadEntity = $lead->getLead();
+            if (null !== $leadEntity) {
+                $leadEntity->addUpdatedField($contactField, $content);
+                $this->leadModel->saveEntity($leadEntity);
             }
         }
 
