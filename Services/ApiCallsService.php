@@ -119,12 +119,62 @@ class ApiCallsService
                 break;
             }
 
-            $currentUrl = $this->urlBuilderService->appendQueryString($dto, $locationHeader, $tokenizedValue);
+            $redirectUrl = $this->urlBuilderService->appendQueryString($dto, $locationHeader, $tokenizedValue);
+
+            if (!$this->isSameOrigin($currentUrl, $redirectUrl)) {
+                $options = $this->stripCredentialsFromOptions($options);
+            }
+
+            $currentUrl = $redirectUrl;
 
             $redirectCount++;
         }
 
         return $response;
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     *
+     * @return array<string, mixed>
+     */
+    private function stripCredentialsFromOptions(array $options): array
+    {
+        unset($options['auth_basic']);
+
+        if (isset($options['headers']) && is_array($options['headers'])) {
+            foreach (array_keys($options['headers']) as $headerName) {
+                if (0 === strcasecmp($headerName, 'Authorization')) {
+                    unset($options['headers'][$headerName]);
+                }
+            }
+        }
+
+        return $options;
+    }
+
+    private function isSameOrigin(string $fromUrl, string $toUrl): bool
+    {
+        $from = parse_url($fromUrl);
+        $to   = parse_url($toUrl);
+
+        if (!is_array($from) || !is_array($to)) {
+            return false;
+        }
+
+        $fromScheme = strtolower($from['scheme'] ?? '');
+        $toScheme   = strtolower($to['scheme'] ?? '');
+        $fromHost   = strtolower($from['host'] ?? '');
+        $toHost     = strtolower($to['host'] ?? '');
+        $fromPort   = $from['port'] ?? $this->getDefaultPortForScheme($fromScheme);
+        $toPort     = $to['port'] ?? $this->getDefaultPortForScheme($toScheme);
+
+        return $fromScheme === $toScheme && $fromHost === $toHost && $fromPort === $toPort;
+    }
+
+    private function getDefaultPortForScheme(string $scheme): int
+    {
+        return 'https' === $scheme ? 443 : 80;
     }
 
     private function isRedirectResponse(ResponseInterface $response): bool
