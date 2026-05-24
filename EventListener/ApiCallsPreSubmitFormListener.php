@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -18,26 +20,20 @@ class ApiCallsPreSubmitFormListener implements EventSubscriberInterface
     public function preSubmitData(FormEvent $event): void
     {
         $data = $event->getData();
-        $data = is_array($data) ? $data : [];
-        $postCampaignEvent = $_POST['campaignevent'] ?? [];
-
-        if (($postCampaignEvent['type'] ?? '') === 'mautic.leuchtfeuer.api_request') {
-            $properties = $postCampaignEvent['properties'] ?? [];
-
-            if (isset($properties['body'])) {
-                $data['body'] = $properties['body'];
-            }
-
-            if (empty($data['password'])) {
-                $originalData = $event->getForm()->getRoot()->getData();
-                if (is_array($originalData) && isset($originalData['properties']['password'])) {
-                    $data['password'] = $originalData['properties']['password'];
-                }
-            }
-
-            $event->setData($data);
+        if (!is_array($data)) {
+            return;
         }
+
+        if (!empty($data['password'])) {
+            return;
+        }
+
+        $originalData = $event->getForm()->getRoot()->getData();
+        if (!is_array($originalData) || !isset($originalData['properties']['password'])) {
+            return;
+        }
+
+        $data['password'] = $originalData['properties']['password'];
+        $event->setData($data);
     }
-
 }
-

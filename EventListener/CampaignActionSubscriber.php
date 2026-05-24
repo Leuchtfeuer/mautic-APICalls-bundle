@@ -17,6 +17,16 @@ class CampaignActionSubscriber implements EventSubscriberInterface
 {
     public const ACTION_TYPE = 'mautic.leuchtfeuer.api_request';
 
+    /**
+     * @var array<string, string>
+     */
+    public const FORM_TYPE_CLEAN_MASKS = [
+        'body'                 => 'raw',
+        'url_parameters'       => 'raw',
+        'authorization_header' => 'string',
+        'regex'                => 'string',
+    ];
+
     public function __construct(private ContactProcessorService $contactProcessorService,  private IntegrationsHelper $integrationsHelper){}
     public static function getSubscribedEvents(): array
     {
@@ -41,6 +51,7 @@ class CampaignActionSubscriber implements EventSubscriberInterface
                     'description' => 'leuchtfeuer.mautic-apicalls-bundle.action.description',
                     'batchEventName' => LeuchtfeuerAPICallsEvents::EXECUTE_CAMPAIGN_ACTION,
                     'formType' => ApiRequestActionType::class,
+                    'formTypeCleanMasks' => self::FORM_TYPE_CLEAN_MASKS,
                 ]
             );
 

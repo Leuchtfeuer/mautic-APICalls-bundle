@@ -17,7 +17,11 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 class ApiRequestActionType extends AbstractType
 {
 
-    public function __construct(private FieldModel $fieldModel){}
+    public function __construct(
+        private FieldModel $fieldModel,
+        private ApiCallsPreSubmitFormListener $preSubmitFormListener,
+    ) {
+    }
     public function buildForm(FormBuilderInterface $builder, array $options):void
     {
 
@@ -167,7 +171,7 @@ class ApiRequestActionType extends AbstractType
                 ],
             ]);
 
-        $builder->addEventSubscriber(new ApiCallsPreSubmitFormListener());
+        $builder->addEventSubscriber($this->preSubmitFormListener);
     }
 
     public function validateBodyByContentType(string|null $body, ExecutionContextInterface $context): void
