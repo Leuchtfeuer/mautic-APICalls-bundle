@@ -88,4 +88,52 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
         Assert::assertTrue($form->isSubmitted());
         Assert::assertTrue($form->isValid(), (string) $form->getErrors(true, false));
     }
+
+    /**
+     * @param array<string, mixed> $properties
+     */
+    private function createStandaloneForm(array $properties = []): FormInterface
+    {
+        /** @var FormFactoryInterface $formFactory */
+        $formFactory = self::$container->get(FormFactoryInterface::class);
+
+        return $formFactory
+            ->createBuilder(ApiRequestActionType::class, $properties, ['csrf_protection' => false])
+            ->getForm();
+    }
+
+    public function testStandaloneFormRejectsUrlParametersForNonGetMethod(): void
+    {
+        $properties = [
+            'url'            => 'https://api.example.com/contacts',
+            'method'         => 'POST',
+            'contentType'    => 'application/json',
+            'body'           => '{"email":"test@example.com"}',
+            'url_parameters' => 'email=test@example.com',
+        ];
+
+        $form = $this->createStandaloneForm($properties);
+        $form->submit($properties);
+
+        Assert::assertTrue($form->isSubmitted());
+        Assert::assertFalse($form->isValid());
+        Assert::assertGreaterThan(0, $form->get('url_parameters')->getErrors(true)->count());
+    }
+
+    public function testStandaloneFormRejectsBodyForGetMethod(): void
+    {
+        $properties = [
+            'url'         => 'https://api.example.com/contacts',
+            'method'      => 'GET',
+            'contentType' => 'application/json',
+            'body'        => '{"email":"test@example.com"}',
+        ];
+
+        $form = $this->createStandaloneForm($properties);
+        $form->submit($properties);
+
+        Assert::assertTrue($form->isSubmitted());
+        Assert::assertFalse($form->isValid());
+        Assert::assertGreaterThan(0, $form->get('body')->getErrors(true)->count());
+    }
 }

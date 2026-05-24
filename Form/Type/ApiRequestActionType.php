@@ -178,9 +178,9 @@ class ApiRequestActionType extends AbstractType
     public function validateBodyByContentType(string|null $body, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
-        $data = $context->getRoot()->getData();
-        $contentType = $data['properties']['contentType'] ?? null;
-        $method = $data['properties']['method'] ?? null;
+        $data        = $context->getRoot()->getData();
+        $contentType = $this->getFormPropertyValue($data, 'contentType');
+        $method      = $this->getFormPropertyValue($data, 'method');
 
         if (in_array($method, ['POST', 'PUT', 'PATCH']) && empty($body)) {
             $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.body.required')
@@ -209,8 +209,8 @@ class ApiRequestActionType extends AbstractType
     public function validateUrlParameters(string|null $parameters, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
-        $data = $context->getRoot()->getData();
-        $method = $data['properties']['method'] ?? null;
+        $data   = $context->getRoot()->getData();
+        $method = $this->getFormPropertyValue($data, 'method');
 
         if (empty($parameters)) {
             return;
@@ -243,8 +243,8 @@ class ApiRequestActionType extends AbstractType
     public function validateByContentType(string|null $parameters, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
-        $data = $context->getRoot()->getData();
-        $method = $data['properties']['method'] ?? null;
+        $data   = $context->getRoot()->getData();
+        $method = $this->getFormPropertyValue($data, 'method');
 
         if (empty($parameters)) {
             return;
@@ -296,8 +296,8 @@ class ApiRequestActionType extends AbstractType
     public function valueKeyValidation(?string $valueKey, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
-        $data = $context->getRoot()->getData();
-        $objectKey = $data['properties']['object_key'] ?? null;
+        $data      = $context->getRoot()->getData();
+        $objectKey = $this->getFormPropertyValue($data, 'object_key');
 
         if (!empty($objectKey) && empty($valueKey)) {
             $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.value_key.required')
@@ -309,9 +309,9 @@ class ApiRequestActionType extends AbstractType
     public function contactFieldValidation(?string $contactField, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
-        $data = $context->getRoot()->getData();
-        $regex = $data['properties']['regex'] ?? null;
-        $valueKey = $data['properties']['value_key'] ?? null;
+        $data     = $context->getRoot()->getData();
+        $regex    = $this->getFormPropertyValue($data, 'regex');
+        $valueKey = $this->getFormPropertyValue($data, 'value_key');
 
         if (!empty($contactField) && empty($valueKey) && empty($regex)) {
             $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.value_key.or.regex.required')
@@ -332,6 +332,18 @@ class ApiRequestActionType extends AbstractType
         }
     }
 
+
+    /**
+     * @param array<string, mixed>|mixed $data
+     */
+    private function getFormPropertyValue(mixed $data, string $key): mixed
+    {
+        if (!is_array($data)) {
+            return null;
+        }
+
+        return $data['properties'][$key] ?? $data[$key] ?? null;
+    }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
