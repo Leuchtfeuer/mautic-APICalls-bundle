@@ -1,22 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener;
 
 use Mautic\CampaignBundle\CampaignEvents;
 use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\PendingEvent;
-use Mautic\IntegrationsBundle\Exception\IntegrationNotFoundException;
-use Mautic\IntegrationsBundle\Helper\IntegrationsHelper;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type\ApiRequestActionType;
-use MauticPlugin\LeuchtfeuerAPICallsBundle\Integration\ApiCallsIntegration;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Integration\Config;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\LeuchtfeuerAPICallsEvents;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\ContactProcessorService;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 class CampaignActionSubscriber implements EventSubscriberInterface
 {
     public const ACTION_TYPE = 'mautic.leuchtfeuer.api_request';
+
+    public const UNPUBLISHED_FAILURE_REASON = 'leuchtfeuer.mautic-apicalls-bundle.action.unpublished';
 
     /**
      * @var array<string, string>
@@ -28,7 +31,13 @@ class CampaignActionSubscriber implements EventSubscriberInterface
         'regex'                => 'string',
     ];
 
-    public function __construct(private ContactProcessorService $contactProcessorService,  private IntegrationsHelper $integrationsHelper){}
+    public function __construct(
+        private ContactProcessorService $contactProcessorService,
+        private Config $config,
+        private TranslatorInterface $translator,
+    ) {
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -39,19 +48,7 @@ class CampaignActionSubscriber implements EventSubscriberInterface
 
     public function onCampaignBuild(CampaignBuilderEvent $event): void
     {
-        try {
-            $integration = $this->integrationsHelper->getIntegration(ApiCallsIntegration::INTEGRATION_NAME);
-        } catch (IntegrationNotFoundException) {
-            return;
-        }
-
-        if (!$integration->hasIntegrationConfiguration()) {
-            return;
-        }
-
-        $integrationConfiguration = $integration->getIntegrationConfiguration();
-
-        if (!$integrationConfiguration->getIsPublished()) {
+        if (!$this->config->isPublished()) {
             return;
         }
 
@@ -69,6 +66,12 @@ class CampaignActionSubscriber implements EventSubscriberInterface
 
     public function onExecuteApiRequest(PendingEvent $event): void
     {
+        if (!$this->config->isPublished()) {
+            $event->failAll($this->translator->trans(self::UNPUBLISHED_FAILURE_REASON));
+
+            return;
+        }
+
         try {
             /** @var LeadEventLog[] $leads */
             $leads = $event->getPending()->toArray();
@@ -79,6 +82,4 @@ class CampaignActionSubscriber implements EventSubscriberInterface
             $event->failAll($e->getMessage());
         }
     }
-
-
 }
