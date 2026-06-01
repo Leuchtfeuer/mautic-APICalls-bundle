@@ -12,7 +12,12 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 class ApiCallsService
 {
 
-    private  const MAX_REDIRECTS = 5;
+    private const MAX_REDIRECTS = 5;
+
+    /**
+     * Maximum number of bytes stored in campaign event metadata for the API response body.
+     */
+    public const MAX_METADATA_RESPONSE_BODY_LENGTH = 65536;
     public function __construct(private HttpClientInterface       $client,
                                 private LeadModel                 $leadModel,
                                 private HttpRequestBuilderService $httpRequestBuilderService,
@@ -87,13 +92,22 @@ class ApiCallsService
 
     public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method):void
     {
-        $lead->setMetadata([
+        $responseBody = $response->getContent(false);
+        $metadata     = [
             'event' => 'api_calls',
             'object_description' => 'API-Request Response',
             'response_header' => $response->getHeaders(false),
-            'response_body' => $response->getContent(false),
-            'method' => $method
-        ]);
+            'response_body' => $responseBody,
+            'method' => $method,
+        ];
+
+        if (strlen($responseBody) > self::MAX_METADATA_RESPONSE_BODY_LENGTH) {
+            $metadata['response_body']                 = substr($responseBody, 0, self::MAX_METADATA_RESPONSE_BODY_LENGTH);
+            $metadata['response_body_truncated']       = true;
+            $metadata['response_body_original_length'] = strlen($responseBody);
+        }
+
+        $lead->setMetadata($metadata);
     }
 
     /**
