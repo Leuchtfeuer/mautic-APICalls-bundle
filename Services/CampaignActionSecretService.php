@@ -36,10 +36,6 @@ class CampaignActionSecretService
 
     public function sanitizeForFormDisplay(?string $value): string
     {
-        if ($this->hasStoredSecret($value)) {
-            return '';
-        }
-
         return '';
     }
 

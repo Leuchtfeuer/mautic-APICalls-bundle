@@ -43,7 +43,7 @@ final class ApiCallsServiceMetadataTest extends TestCase
         $responseBody = '{"data": "test"}';
         $httpClient   = new MockHttpClient([
             new MockResponse($responseBody, [
-                'http_code' => 200,
+                'http_code'        => 200,
                 'response_headers' => [
                     'Content-Type' => ['application/json'],
                 ],
@@ -54,13 +54,13 @@ final class ApiCallsServiceMetadataTest extends TestCase
         $leadEventLog->expects(self::once())
             ->method('setMetadata')
             ->with([
-                'event' => 'api_calls',
+                'event'              => 'api_calls',
                 'object_description' => 'API-Request Response',
-                'response_header' => [
+                'response_header'    => [
                     'content-type' => ['application/json'],
                 ],
                 'response_body' => $responseBody,
-                'method' => 'POST',
+                'method'        => 'POST',
             ]);
 
         $response = $httpClient->request('GET', 'http://example.com');

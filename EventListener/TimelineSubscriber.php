@@ -21,7 +21,7 @@ final class TimelineSubscriber implements EventSubscriberInterface
     private const METADATA_FILTER = '%s:5:"event";s:9:"api_calls"%';
 
     public function __construct(
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
     ) {
     }
 

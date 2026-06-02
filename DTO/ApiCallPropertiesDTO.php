@@ -2,8 +2,7 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\DTO;
 
-
- class ApiCallPropertiesDTO
+class ApiCallPropertiesDTO
 {
     public function __construct(
         public readonly string $url,
@@ -17,7 +16,7 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\DTO;
         public readonly string $regex = '',
         public readonly string $objectKey = '',
         public readonly string $valueKey = '',
-        public readonly string $authorizationHeader = ''
-    ) {}
-
+        public readonly string $authorizationHeader = '',
+    ) {
+    }
 }

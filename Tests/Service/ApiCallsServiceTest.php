@@ -9,9 +9,9 @@ use Mautic\LeadBundle\Model\LeadModel;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\ApiCallsService;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\HttpRequestBuilderService;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\PropertySearchService;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\TokenReplacementService;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\UrlBuilderService;
-use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\PropertySearchService;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
@@ -33,14 +33,14 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
     public function testSendRequestCallsCorrectServices(): void
     {
         $httpClient = new MockHttpClient([
-            new MockResponse('success', ['http_code' => 200])
+            new MockResponse('success', ['http_code' => 200]),
         ]);
 
-        $leadModel = $this->createMock(LeadModel::class);
+        $leadModel                 = $this->createMock(LeadModel::class);
         $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
-        $tokenReplacementService = $this->createMock(TokenReplacementService::class);
-        $urlBuilderService = $this->createMock(UrlBuilderService::class);
-        $propertySearchService = $this->createMock(PropertySearchService::class);
+        $tokenReplacementService   = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService         = $this->createMock(UrlBuilderService::class);
+        $propertySearchService     = $this->createMock(PropertySearchService::class);
 
         $dto = new ApiCallPropertiesDTO(
             url: 'https://api.example.com/webhook',
@@ -59,50 +59,51 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             ->method('buildUrlAndOptions')
             ->with('{"test": "data"}', $dto)
             ->willReturn([
-                'url' => 'https://api.example.com/webhook',
+                'url'     => 'https://api.example.com/webhook',
                 'options' => [
                     'headers' => [
-                        'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                        'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                         'Content-Type' => 'application/json',
                     ],
-                    'body' => '{"test": "data"}',
-                    'auth_basic' => ['user', 'pass']
-                ]
+                    'body'       => '{"test": "data"}',
+                    'auth_basic' => ['user', 'pass'],
+                ],
             ]);
 
         $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService, $propertySearchService);
-        $lead = $this->createMockLeadEventLog();
+        $lead    = $this->createMockLeadEventLog();
 
         $service->sendRequest($lead, $dto);
     }
 
     public function testSendRequestWithRedirects(): void
     {
-        $requestsCount = 0;
+        $requestsCount    = 0;
         $capturedRequests = [];
 
         $httpClient = new MockHttpClient(function ($method, $url, $options) use (&$requestsCount, &$capturedRequests) {
             $capturedRequests[] = [
-                'method' => $method,
-                'url' => $url,
-                'options' => $options
+                'method'  => $method,
+                'url'     => $url,
+                'options' => $options,
             ];
-            $requestsCount++;
+            ++$requestsCount;
 
-            if ($requestsCount === 1) {
+            if (1 === $requestsCount) {
                 return new MockResponse('', [
-                    'http_code' => 302,
-                    'response_headers' => ['Location' => 'https://api.example.com/redirected']
+                    'http_code'        => 302,
+                    'response_headers' => ['Location' => 'https://api.example.com/redirected'],
                 ]);
             }
+
             return new MockResponse('success', ['http_code' => 200]);
         });
 
-        $leadModel = $this->createMock(LeadModel::class);
+        $leadModel                 = $this->createMock(LeadModel::class);
         $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
-        $tokenReplacementService = $this->createMock(TokenReplacementService::class);
-        $urlBuilderService = $this->createMock(UrlBuilderService::class);
-        $propertySearchService = $this->createMock(PropertySearchService::class);
+        $tokenReplacementService   = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService         = $this->createMock(UrlBuilderService::class);
+        $propertySearchService     = $this->createMock(PropertySearchService::class);
 
         $dto = new ApiCallPropertiesDTO(
             url: 'https://api.example.com/webhook',
@@ -113,20 +114,20 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
 
         $tokenReplacementService->method('getTokenizedValue')->willReturn('{"test": "data"}');
         $httpRequestBuilderService->method('buildUrlAndOptions')->willReturn([
-            'url' => 'https://api.example.com/webhook',
+            'url'     => 'https://api.example.com/webhook',
             'options' => [
                 'headers' => [
-                    'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                    'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                     'Content-Type' => 'application/json',
                 ],
-                'body' => '{"test": "data"}'
-            ]
+                'body' => '{"test": "data"}',
+            ],
         ]);
 
         $urlBuilderService->method('appendQueryString')->willReturn('https://api.example.com/redirected');
 
         $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService, $propertySearchService);
-        $lead = $this->createMockLeadEventLog();
+        $lead    = $this->createMockLeadEventLog();
 
         $service->sendRequest($lead, $dto);
 
@@ -343,13 +344,13 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             ->with($lead);
 
         $httpClient = new MockHttpClient([
-            new MockResponse('john@example.com', ['http_code' => 200])
+            new MockResponse('john@example.com', ['http_code' => 200]),
         ]);
 
         $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
-        $tokenReplacementService = $this->createMock(TokenReplacementService::class);
-        $urlBuilderService = $this->createMock(UrlBuilderService::class);
-        $propertySearchService = $this->createMock(PropertySearchService::class);
+        $tokenReplacementService   = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService         = $this->createMock(UrlBuilderService::class);
+        $propertySearchService     = $this->createMock(PropertySearchService::class);
 
         $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService, $propertySearchService);
 
@@ -373,13 +374,13 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             ->with($lead);
 
         $httpClient = new MockHttpClient([
-            new MockResponse('Email: john@example.com, Another: test@example.com', ['http_code' => 200])
+            new MockResponse('Email: john@example.com, Another: test@example.com', ['http_code' => 200]),
         ]);
 
         $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
-        $tokenReplacementService = $this->createMock(TokenReplacementService::class);
-        $urlBuilderService = $this->createMock(UrlBuilderService::class);
-        $propertySearchService = $this->createMock(PropertySearchService::class);
+        $tokenReplacementService   = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService         = $this->createMock(UrlBuilderService::class);
+        $propertySearchService     = $this->createMock(PropertySearchService::class);
 
         $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService, $propertySearchService);
 
@@ -390,14 +391,14 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
     public function testCheckIfResponseValidDoesNotThrowExceptionForSuccessCode(): void
     {
         $httpClient = new MockHttpClient([
-            new MockResponse('Success', ['http_code' => 200])
+            new MockResponse('Success', ['http_code' => 200]),
         ]);
 
-        $leadModel = $this->createMock(LeadModel::class);
+        $leadModel                 = $this->createMock(LeadModel::class);
         $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
-        $tokenReplacementService = $this->createMock(TokenReplacementService::class);
-        $urlBuilderService = $this->createMock(UrlBuilderService::class);
-        $propertySearchService = $this->createMock(PropertySearchService::class);
+        $tokenReplacementService   = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService         = $this->createMock(UrlBuilderService::class);
+        $propertySearchService     = $this->createMock(PropertySearchService::class);
 
         $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService, $propertySearchService);
 
@@ -412,33 +413,33 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
     {
         $httpClient = new MockHttpClient([
             new MockResponse('{"data": "test"}', [
-                'http_code' => 200,
+                'http_code'        => 200,
                 'response_headers' => [
-                    'Content-Type' => ['application/json'],
-                    'X-Custom-Header' => ['custom-value']
-                ]
-            ])
+                    'Content-Type'    => ['application/json'],
+                    'X-Custom-Header' => ['custom-value'],
+                ],
+            ]),
         ]);
 
         $leadEventLog = $this->createMock(LeadEventLog::class);
         $leadEventLog->expects($this->once())
             ->method('setMetadata')
             ->with([
-                'event' => 'api_calls',
+                'event'              => 'api_calls',
                 'object_description' => 'API-Request Response',
-                'response_header' => [
-                    'content-type' => ['application/json'],
-                    'x-custom-header' => ['custom-value']
+                'response_header'    => [
+                    'content-type'    => ['application/json'],
+                    'x-custom-header' => ['custom-value'],
                 ],
                 'response_body' => '{"data": "test"}',
-                'method' => 'POST'
+                'method'        => 'POST',
             ]);
 
-        $leadModel = $this->createMock(LeadModel::class);
+        $leadModel                 = $this->createMock(LeadModel::class);
         $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
-        $tokenReplacementService = $this->createMock(TokenReplacementService::class);
-        $urlBuilderService = $this->createMock(UrlBuilderService::class);
-        $propertySearchService = $this->createMock(PropertySearchService::class);
+        $tokenReplacementService   = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService         = $this->createMock(UrlBuilderService::class);
+        $propertySearchService     = $this->createMock(PropertySearchService::class);
 
         $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService, $propertySearchService);
 
@@ -449,7 +450,7 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
     public function testSendRequestWithContactFieldAndJson(): void
     {
         $httpClient = new MockHttpClient([
-            new MockResponse('{"user": {"email": "john@example.com"}}', ['http_code' => 200])
+            new MockResponse('{"user": {"email": "john@example.com"}}', ['http_code' => 200]),
         ]);
 
         $lead = $this->createMock(Lead::class);
@@ -467,9 +468,9 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
             ->with($lead);
 
         $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
-        $tokenReplacementService = $this->createMock(TokenReplacementService::class);
-        $urlBuilderService = $this->createMock(UrlBuilderService::class);
-        $propertySearchService = $this->createMock(PropertySearchService::class);
+        $tokenReplacementService   = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService         = $this->createMock(UrlBuilderService::class);
+        $propertySearchService     = $this->createMock(PropertySearchService::class);
 
         $dto = new ApiCallPropertiesDTO(
             url: 'https://api.example.com/user',
@@ -481,8 +482,8 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
 
         $tokenReplacementService->method('getTokenizedValue')->willReturn('');
         $httpRequestBuilderService->method('buildUrlAndOptions')->willReturn([
-            'url' => 'https://api.example.com/user',
-            'options' => ['headers' => []]
+            'url'     => 'https://api.example.com/user',
+            'options' => ['headers' => []],
         ]);
 
         $propertySearchService->expects($this->once())

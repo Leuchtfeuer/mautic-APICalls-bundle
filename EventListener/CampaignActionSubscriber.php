@@ -41,7 +41,7 @@ class CampaignActionSubscriber implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            CampaignEvents::CAMPAIGN_ON_BUILD => ['onCampaignBuild', 0],
+            CampaignEvents::CAMPAIGN_ON_BUILD                  => ['onCampaignBuild', 0],
             LeuchtfeuerAPICallsEvents::EXECUTE_CAMPAIGN_ACTION => ['onExecuteApiRequest', 0],
         ];
     }

@@ -20,10 +20,10 @@ class HttpRequestBuilderServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->urlBuilderService = $this->createMock(UrlBuilderService::class);
+        $this->urlBuilderService       = $this->createMock(UrlBuilderService::class);
         $this->tokenReplacementService = $this->createMock(TokenReplacementService::class);
-        $this->leadEventLog = $this->createMock(LeadEventLog::class);
-        $this->service = new HttpRequestBuilderService($this->urlBuilderService, $this->tokenReplacementService);
+        $this->leadEventLog            = $this->createMock(LeadEventLog::class);
+        $this->service                 = new HttpRequestBuilderService($this->urlBuilderService, $this->tokenReplacementService);
     }
 
     public function testBuildUrlAndOptionsForGetRequest(): void
@@ -49,11 +49,11 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->assertEquals('https://example.com/api?param1=value1&param2=value2', $result['url']);
         $this->assertEquals([
             'headers' => [
-                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                 'Content-Type' => 'application/json',
             ],
-            'verify_peer' => true,
-            'verify_host' => true,
+            'verify_peer'   => true,
+            'verify_host'   => true,
             'max_redirects' => 0,
         ], $result['options']);
     }
@@ -79,13 +79,13 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
             'headers' => [
-                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                 'Content-Type' => 'application/json',
             ],
-            'verify_peer' => true,
-            'verify_host' => true,
+            'verify_peer'   => true,
+            'verify_host'   => true,
             'max_redirects' => 0,
-            'body' => '{"data": "test"}',
+            'body'          => '{"data": "test"}',
         ], $result['options']);
     }
 
@@ -110,13 +110,13 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
             'headers' => [
-                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                 'Content-Type' => 'application/json',
             ],
-            'verify_peer' => true,
-            'verify_host' => true,
+            'verify_peer'   => true,
+            'verify_host'   => true,
             'max_redirects' => 0,
-            'body' => '{"data": "test"}',
+            'body'          => '{"data": "test"}',
         ], $result['options']);
     }
 
@@ -141,13 +141,13 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
             'headers' => [
-                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                 'Content-Type' => 'application/json',
             ],
-            'verify_peer' => true,
-            'verify_host' => true,
+            'verify_peer'   => true,
+            'verify_host'   => true,
             'max_redirects' => 0,
-            'body' => '{"data": "test"}',
+            'body'          => '{"data": "test"}',
         ], $result['options']);
     }
 
@@ -177,13 +177,13 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->assertEquals('https://example.com/api?data=test', $result['url']);
         $this->assertEquals([
             'headers' => [
-                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                 'Content-Type' => 'application/json',
             ],
-            'verify_peer' => true,
-            'verify_host' => true,
+            'verify_peer'   => true,
+            'verify_host'   => true,
             'max_redirects' => 0,
-            'auth_basic' => ['user123', 'pass123'],
+            'auth_basic'    => ['user123', 'pass123'],
         ], $result['options']);
     }
 
@@ -209,11 +209,11 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
             'headers' => [
-                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                 'Content-Type' => 'application/json',
             ],
-            'verify_peer' => true,
-            'verify_host' => true,
+            'verify_peer'   => true,
+            'verify_host'   => true,
             'max_redirects' => 0,
         ], $result['options']);
     }
@@ -234,7 +234,7 @@ class HttpRequestBuilderServiceTest extends TestCase
             ->with($this->leadEventLog, 'https://example.com/api')
             ->willReturn('https://example.com/api');
 
-        if ($method === 'GET') {
+        if ('GET' === $method) {
             $this->urlBuilderService->expects($this->once())
                 ->method('appendQueryString')
                 ->willReturn('https://example.com/api?data=test');
@@ -277,14 +277,14 @@ class HttpRequestBuilderServiceTest extends TestCase
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
             'headers' => [
-                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
-                'Content-Type' => 'application/json',
+                'User-Agent'    => 'LeuchtfeuerMauticAPI/1.0',
+                'Content-Type'  => 'application/json',
                 'Authorization' => 'Bearer eyJhbGc123',
             ],
-            'verify_peer' => true,
-            'verify_host' => true,
+            'verify_peer'   => true,
+            'verify_host'   => true,
             'max_redirects' => 0,
-            'body' => '{"data": "test"}',
+            'body'          => '{"data": "test"}',
         ], $result['options']);
     }
 
@@ -306,14 +306,14 @@ class HttpRequestBuilderServiceTest extends TestCase
 
         $this->assertEquals([
             'headers' => [
-                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                 'Content-Type' => 'application/json',
-                'X-API-Key' => 'secret123',
+                'X-API-Key'    => 'secret123',
             ],
-            'verify_peer' => true,
-            'verify_host' => true,
+            'verify_peer'   => true,
+            'verify_host'   => true,
             'max_redirects' => 0,
-            'body' => '{"data": "test"}',
+            'body'          => '{"data": "test"}',
         ], $result['options']);
     }
 
@@ -336,13 +336,13 @@ class HttpRequestBuilderServiceTest extends TestCase
         // Should not add the invalid header
         $this->assertEquals([
             'headers' => [
-                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
+                'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                 'Content-Type' => 'application/json',
             ],
-            'verify_peer' => true,
-            'verify_host' => true,
+            'verify_peer'   => true,
+            'verify_host'   => true,
             'max_redirects' => 0,
-            'body' => '{"data": "test"}',
+            'body'          => '{"data": "test"}',
         ], $result['options']);
     }
 
@@ -367,15 +367,15 @@ class HttpRequestBuilderServiceTest extends TestCase
 
         $this->assertEquals([
             'headers' => [
-                'User-Agent' => 'LeuchtfeuerMauticAPI/1.0',
-                'Content-Type' => 'application/json',
+                'User-Agent'    => 'LeuchtfeuerMauticAPI/1.0',
+                'Content-Type'  => 'application/json',
                 'X-Custom-Auth' => 'token123',
             ],
-            'verify_peer' => true,
-            'verify_host' => true,
+            'verify_peer'   => true,
+            'verify_host'   => true,
             'max_redirects' => 0,
-            'body' => '{"data": "test"}',
-            'auth_basic' => ['user123', 'pass123'],
+            'body'          => '{"data": "test"}',
+            'auth_basic'    => ['user123', 'pass123'],
         ], $result['options']);
     }
 
@@ -385,10 +385,10 @@ class HttpRequestBuilderServiceTest extends TestCase
     public function httpMethodsProvider(): array
     {
         return [
-            'GET with JSON' => ['GET', 'application/json'],
-            'GET with XML' => ['GET', 'application/xml'],
-            'POST with JSON' => ['POST', 'application/json'],
-            'PUT with XML' => ['PUT', 'application/xml'],
+            'GET with JSON'        => ['GET', 'application/json'],
+            'GET with XML'         => ['GET', 'application/xml'],
+            'POST with JSON'       => ['POST', 'application/json'],
+            'PUT with XML'         => ['PUT', 'application/xml'],
             'PATCH with form data' => ['PATCH', 'application/x-www-form-urlencoded'],
         ];
     }

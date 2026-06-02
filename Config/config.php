@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Integration\ApiCallsIntegration;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Integration\Support\ConfigSupport;
 

@@ -66,9 +66,9 @@ final class CampaignActionSecretMigratorTest extends TestCase
         $this->secretService->expects(self::exactly(2))
             ->method('encryptIfNeeded')
             ->willReturnCallback(static fn (string $value): string => match ($value) {
-                'plain-password'             => 'encrypted-password',
+                'plain-password'              => 'encrypted-password',
                 'Authorization: Bearer token' => 'encrypted-header',
-                default                      => $value,
+                default                       => $value,
             });
 
         $this->entityManager->expects(self::once())->method('flush');

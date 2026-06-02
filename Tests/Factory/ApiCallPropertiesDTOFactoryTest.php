@@ -20,7 +20,7 @@ final class ApiCallPropertiesDTOFactoryTest extends TestCase
     {
         parent::setUp();
 
-        $this->secretService = $this->createMock(CampaignActionSecretService::class);
+        $this->secretService   = $this->createMock(CampaignActionSecretService::class);
         $this->factory         = new ApiCallPropertiesDTOFactory($this->secretService);
     }
 

@@ -226,8 +226,8 @@ class PropertySearchServiceTest extends TestCase
         $data = [
             'users' => [
                 ['name' => 'John', 'id' => 1],
-                ['name' => 'Jane', 'id' => 2]
-            ]
+                ['name' => 'Jane', 'id' => 2],
+            ],
         ];
 
         $result = $this->service->handleArrays($data, 'name');
@@ -244,7 +244,7 @@ class PropertySearchServiceTest extends TestCase
 
     public function testHandleObjectsWithDirectProperty(): void
     {
-        $data = (object)['name' => 'John', 'age' => 30];
+        $data = (object) ['name' => 'John', 'age' => 30];
 
         $result = $this->service->handleObjects($data, 'name');
         $this->assertEquals('John', $result);
@@ -255,9 +255,9 @@ class PropertySearchServiceTest extends TestCase
 
     public function testHandleObjectsWithNestedSearch(): void
     {
-        $data = (object)[
-            'user' => (object)['name' => 'John', 'id' => 1],
-            'settings' => (object)['theme' => 'dark']
+        $data = (object) [
+            'user'     => (object) ['name' => 'John', 'id' => 1],
+            'settings' => (object) ['theme' => 'dark'],
         ];
 
         $result = $this->service->handleObjects($data, 'name');
@@ -269,7 +269,7 @@ class PropertySearchServiceTest extends TestCase
 
     public function testHandleObjectsReturnsNullWhenNotFound(): void
     {
-        $data = (object)['name' => 'John'];
+        $data = (object) ['name' => 'John'];
 
         $result = $this->service->handleObjects($data, 'nonexistent');
         $this->assertNull($result);

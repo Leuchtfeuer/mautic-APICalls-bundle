@@ -47,6 +47,7 @@ class CampaignActionSecretMigrator
             }
 
             $event->setProperties($encrypted);
+            $this->entityManager->persist($event);
             ++$updated;
         }
 

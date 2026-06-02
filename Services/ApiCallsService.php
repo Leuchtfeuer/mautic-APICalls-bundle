@@ -8,48 +8,42 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
-
 class ApiCallsService
 {
-
     private const MAX_REDIRECTS = 5;
 
     /**
      * Maximum number of bytes stored in campaign event metadata for the API response body.
      */
     public const MAX_METADATA_RESPONSE_BODY_LENGTH = 65536;
-    public function __construct(private HttpClientInterface       $client,
-                                private LeadModel                 $leadModel,
-                                private HttpRequestBuilderService $httpRequestBuilderService,
-                                private TokenReplacementService   $tokenReplacementService,
-                                private UrlBuilderService         $urlBuilderService,
-                                private PropertySearchService     $propertySearchService)
-    {}
 
-    /**
-     * @param ApiCallPropertiesDTO $dto
-     * @param LeadEventLog $lead
-     */
+    public function __construct(private HttpClientInterface $client,
+        private LeadModel $leadModel,
+        private HttpRequestBuilderService $httpRequestBuilderService,
+        private TokenReplacementService $tokenReplacementService,
+        private UrlBuilderService $urlBuilderService,
+        private PropertySearchService $propertySearchService)
+    {
+    }
+
     public function sendRequest(LeadEventLog $lead, ApiCallPropertiesDTO $dto): void
     {
         $tokenizedValue = $this->tokenReplacementService->getTokenizedValue($lead, $dto);
-        $urlAndOptions = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $dto, $lead);
+        $urlAndOptions  = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $dto, $lead);
 
         $currentUrl = $urlAndOptions['url'];
-        $options = $urlAndOptions['options'];
+        $options    = $urlAndOptions['options'];
 
         $response = $this->handleRedirects($dto, $currentUrl, $options, $tokenizedValue);
 
         $this->checkIfResponseValid($response);
 
-        if (!empty($dto->contactField) && $dto->method === 'GET') {
-
+        if (!empty($dto->contactField) && 'GET' === $dto->method) {
             $content = $response->getContent(false);
 
             $decoded = json_decode($content);
 
-            if (json_last_error() === JSON_ERROR_NONE && !empty($dto->valueKey)) {
-
+            if (JSON_ERROR_NONE === json_last_error() && !empty($dto->valueKey)) {
                 $content = $this->propertySearchService->getValue($decoded, $dto->valueKey, $dto->objectKey);
             }
 
@@ -59,17 +53,13 @@ class ApiCallsService
         $this->setMetadata($lead, $response, $dto->method);
     }
 
-    /**
-     * @param ResponseInterface $response
-     */
-    public function checkIfResponseValid(ResponseInterface $response):void
+    public function checkIfResponseValid(ResponseInterface $response): void
     {
         $response->getContent();
     }
 
     public function updateField(LeadEventLog $lead, string $contactField, string $content, string $regex): void
     {
-
         if (!empty($regex)) {
             if (preg_match_all($regex, $content, $matches)) {
                 if (isset($matches[1]) && !empty($matches[1])) {
@@ -87,18 +77,17 @@ class ApiCallsService
                 $this->leadModel->saveEntity($leadEntity);
             }
         }
-
     }
 
-    public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method):void
+    public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method): void
     {
         $responseBody = $response->getContent(false);
         $metadata     = [
-            'event' => 'api_calls',
+            'event'              => 'api_calls',
             'object_description' => 'API-Request Response',
-            'response_header' => $response->getHeaders(false),
-            'response_body' => $responseBody,
-            'method' => $method,
+            'response_header'    => $response->getHeaders(false),
+            'response_body'      => $responseBody,
+            'method'             => $method,
         ];
 
         if (strlen($responseBody) > self::MAX_METADATA_RESPONSE_BODY_LENGTH) {
@@ -113,14 +102,12 @@ class ApiCallsService
     /**
      * @param array<mixed> $options
      */
-
     private function handleRedirects(ApiCallPropertiesDTO $dto, string $currentUrl, array $options, string $tokenizedValue): ResponseInterface
     {
         $redirectCount = 0;
-        $response = null;
+        $response      = null;
 
         while ($redirectCount < self::MAX_REDIRECTS) {
-
             $response = $this->client->request($dto->method, $currentUrl, $options);
 
             if (!$this->isRedirectResponse($response)) {
@@ -141,7 +128,7 @@ class ApiCallsService
 
             $currentUrl = $redirectUrl;
 
-            $redirectCount++;
+            ++$redirectCount;
         }
 
         return $response;
@@ -200,6 +187,4 @@ class ApiCallsService
     {
         return $response->getHeaders(false)['location'][0] ?? null;
     }
-
-
 }

@@ -44,11 +44,11 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
     private function getValidGetProperties(string $regex = '/"email"\s*:\s*"([^"]+)"/'): array
     {
         return [
-            'url'          => 'https://api.example.com/contacts',
-            'method'       => 'GET',
-            'contentType'  => 'application/json',
+            'url'            => 'https://api.example.com/contacts',
+            'method'         => 'GET',
+            'contentType'    => 'application/json',
             'url_parameters' => 'email={contactfield=email}',
-            'regex'        => $regex,
+            'regex'          => $regex,
         ];
     }
 
@@ -90,7 +90,7 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
 
     public function testFormAllowsEmptyRegex(): void
     {
-        $properties         = $this->getValidGetProperties();
+        $properties          = $this->getValidGetProperties();
         $properties['regex'] = '';
 
         $form = $this->createCampaignPropertiesForm($properties);
