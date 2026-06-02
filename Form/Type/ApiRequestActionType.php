@@ -17,7 +17,11 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 class ApiRequestActionType extends AbstractType
 {
 
-    public function __construct(private FieldModel $fieldModel){}
+    public function __construct(
+        private FieldModel $fieldModel,
+        private ApiCallsPreSubmitFormListener $preSubmitFormListener,
+    ) {
+    }
     public function buildForm(FormBuilderInterface $builder, array $options):void
     {
 
@@ -79,15 +83,18 @@ class ApiRequestActionType extends AbstractType
                 'attr' => [
                     'class' => 'form-control',
                     'preaddon' => 'ri-lock-fill',
-                    'autocomplete' => 'off'
+                    'autocomplete' => 'off',
+                    'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.secret.stored.placeholder',
                 ],
             ])
-            ->add('authorization_header', TextType::class, [
+            ->add('authorization_header', PasswordType::class, [
                 'label' => 'leuchtfeuer.mautic-apicalls-bundle.authorization_header.label',
                 'label_attr' => ['class' => 'control-label'],
                 'required' => false,
                 'attr' => [
                     'class' => 'form-control',
+                    'autocomplete' => 'off',
+                    'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.secret.stored.placeholder',
                 ],
             ])
             ->add('contentType', ChoiceType::class, [
@@ -159,6 +166,7 @@ class ApiRequestActionType extends AbstractType
                 'required' => false,
                 'constraints' => [
                     new Assert\Callback([$this, 'validateByContentType']),
+                    new Assert\Callback([$this, 'validateRegex']),
                 ],
                 'attr' => [
                     'class' => 'form-control',
@@ -167,15 +175,15 @@ class ApiRequestActionType extends AbstractType
                 ],
             ]);
 
-        $builder->addEventSubscriber(new ApiCallsPreSubmitFormListener());
+        $builder->addEventSubscriber($this->preSubmitFormListener);
     }
 
     public function validateBodyByContentType(string|null $body, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
-        $data = $context->getRoot()->getData();
-        $contentType = $data['properties']['contentType'] ?? null;
-        $method = $data['properties']['method'] ?? null;
+        $data        = $context->getRoot()->getData();
+        $contentType = $this->getFormPropertyValue($data, 'contentType');
+        $method      = $this->getFormPropertyValue($data, 'method');
 
         if (in_array($method, ['POST', 'PUT', 'PATCH']) && empty($body)) {
             $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.body.required')
@@ -204,8 +212,8 @@ class ApiRequestActionType extends AbstractType
     public function validateUrlParameters(string|null $parameters, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
-        $data = $context->getRoot()->getData();
-        $method = $data['properties']['method'] ?? null;
+        $data   = $context->getRoot()->getData();
+        $method = $this->getFormPropertyValue($data, 'method');
 
         if (empty($parameters)) {
             return;
@@ -238,8 +246,8 @@ class ApiRequestActionType extends AbstractType
     public function validateByContentType(string|null $parameters, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
-        $data = $context->getRoot()->getData();
-        $method = $data['properties']['method'] ?? null;
+        $data   = $context->getRoot()->getData();
+        $method = $this->getFormPropertyValue($data, 'method');
 
         if (empty($parameters)) {
             return;
@@ -291,8 +299,8 @@ class ApiRequestActionType extends AbstractType
     public function valueKeyValidation(?string $valueKey, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
-        $data = $context->getRoot()->getData();
-        $objectKey = $data['properties']['object_key'] ?? null;
+        $data      = $context->getRoot()->getData();
+        $objectKey = $this->getFormPropertyValue($data, 'object_key');
 
         if (!empty($objectKey) && empty($valueKey)) {
             $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.value_key.required')
@@ -304,9 +312,9 @@ class ApiRequestActionType extends AbstractType
     public function contactFieldValidation(?string $contactField, ExecutionContextInterface $context): void
     {
         // @phpstan-ignore-next-line
-        $data = $context->getRoot()->getData();
-        $regex = $data['properties']['regex'] ?? null;
-        $valueKey = $data['properties']['value_key'] ?? null;
+        $data     = $context->getRoot()->getData();
+        $regex    = $this->getFormPropertyValue($data, 'regex');
+        $valueKey = $this->getFormPropertyValue($data, 'value_key');
 
         if (!empty($contactField) && empty($valueKey) && empty($regex)) {
             $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.method.value_key.or.regex.required')
@@ -315,6 +323,30 @@ class ApiRequestActionType extends AbstractType
 
     }
 
+    public function validateRegex(?string $regex, ExecutionContextInterface $context): void
+    {
+        if (null === $regex || '' === $regex) {
+            return;
+        }
+
+        if (false === @preg_match($regex, '')) {
+            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.regex.invalid')
+                ->addViolation();
+        }
+    }
+
+
+    /**
+     * @param array<string, mixed>|mixed $data
+     */
+    private function getFormPropertyValue(mixed $data, string $key): mixed
+    {
+        if (!is_array($data)) {
+            return null;
+        }
+
+        return $data['properties'][$key] ?? $data[$key] ?? null;
+    }
 
     public function configureOptions(OptionsResolver $resolver): void
     {

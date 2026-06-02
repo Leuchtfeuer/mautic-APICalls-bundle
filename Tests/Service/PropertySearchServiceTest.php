@@ -344,4 +344,37 @@ class PropertySearchServiceTest extends TestCase
         $result = $this->service->getValue(true, 'any');
         $this->assertEquals('', $result);
     }
+
+    public function testGetValueWithDotNotationPath(): void
+    {
+        $data = json_decode('{
+            "user": {
+                "email": "john@example.com",
+                "profile": {
+                    "name": "John Doe",
+                    "age": 30
+                }
+            },
+            "items": [
+                {"name": "Product A", "price": 19.99},
+                {"name": "Product B", "price": 29.99}
+            ]
+        }');
+
+        $this->assertEquals('john@example.com', $this->service->getValue($data, 'user.email'));
+        $this->assertEquals('John Doe', $this->service->getValue($data, 'profile.name', 'user'));
+        $this->assertEquals('30', $this->service->getValue($data, 'profile.age', 'user'));
+        $this->assertEquals('Product A', $this->service->getValue($data, 'items[0].name'));
+        $this->assertEquals('Product B', $this->service->getValue($data, 'items[1].name'));
+        $this->assertEquals('19.99', $this->service->getValue($data, 'items[0].price'));
+    }
+
+    public function testGetValueWithDotNotationReturnsEmptyStringWhenPathNotFound(): void
+    {
+        $data = json_decode('{"user": {"email": "john@example.com"}}');
+
+        $this->assertEquals('', $this->service->getValue($data, 'user.missing'));
+        $this->assertEquals('', $this->service->getValue($data, 'items[0].name'));
+        $this->assertEquals('', $this->service->getValue($data, 'profile.name', 'user'));
+    }
 }
