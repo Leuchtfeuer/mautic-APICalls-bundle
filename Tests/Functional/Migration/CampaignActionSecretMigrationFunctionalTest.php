@@ -19,9 +19,9 @@ final class CampaignActionSecretMigrationFunctionalTest extends MauticMysqlTestC
     private function createMigrator(): CampaignActionSecretMigrator
     {
         /** @var EntityManagerInterface $entityManager */
-        $entityManager = self::$container->get(EntityManagerInterface::class);
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
         /** @var EncryptionHelper $encryptionHelper */
-        $encryptionHelper = self::$container->get(EncryptionHelper::class);
+        $encryptionHelper = static::getContainer()->get(EncryptionHelper::class);
 
         return new CampaignActionSecretMigrator(
             $entityManager,
@@ -32,7 +32,7 @@ final class CampaignActionSecretMigrationFunctionalTest extends MauticMysqlTestC
     private function createSecretService(): CampaignActionSecretService
     {
         /** @var EncryptionHelper $encryptionHelper */
-        $encryptionHelper = self::$container->get(EncryptionHelper::class);
+        $encryptionHelper = static::getContainer()->get(EncryptionHelper::class);
 
         return new CampaignActionSecretService($encryptionHelper);
     }
@@ -40,7 +40,7 @@ final class CampaignActionSecretMigrationFunctionalTest extends MauticMysqlTestC
     public function testMigratorEncryptsPlaintextCampaignActionSecrets(): void
     {
         /** @var EntityManagerInterface $entityManager */
-        $entityManager = self::$container->get(EntityManagerInterface::class);
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
 
         $campaign = new Campaign();
         $campaign->setName('API Calls migration test');

@@ -19,7 +19,7 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
     private function createSecretService(): CampaignActionSecretService
     {
         /** @var EncryptionHelper $encryptionHelper */
-        $encryptionHelper = self::$container->get(EncryptionHelper::class);
+        $encryptionHelper = static::getContainer()->get(EncryptionHelper::class);
 
         return new CampaignActionSecretService($encryptionHelper);
     }
@@ -30,7 +30,7 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
     private function createCampaignPropertiesForm(array $properties = []): FormInterface
     {
         /** @var FormFactoryInterface $formFactory */
-        $formFactory = self::$container->get(FormFactoryInterface::class);
+        $formFactory = static::getContainer()->get(FormFactoryInterface::class);
 
         return $formFactory
             ->createBuilder(FormType::class, ['properties' => $properties], ['csrf_protection' => false])
@@ -106,7 +106,7 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
     private function createStandaloneForm(array $properties = []): FormInterface
     {
         /** @var FormFactoryInterface $formFactory */
-        $formFactory = self::$container->get(FormFactoryInterface::class);
+        $formFactory = static::getContainer()->get(FormFactoryInterface::class);
 
         return $formFactory
             ->createBuilder(ApiRequestActionType::class, $properties, ['csrf_protection' => false])
