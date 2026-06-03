@@ -7,19 +7,26 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\Events;
 use Mautic\CampaignBundle\Entity\Event;
 use Mautic\CampaignBundle\Event\CampaignBuilderEvent;
 use Mautic\CampaignBundle\Event\PendingEvent;
-use Mautic\CoreBundle\Test\MauticMysqlTestCase;
-use Mautic\IntegrationsBundle\Helper\IntegrationsHelper;
 use Mautic\LeadBundle\Entity\Lead;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener\CampaignActionSubscriber;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type\ApiRequestActionType;
-use MauticPlugin\LeuchtfeuerAPICallsBundle\Integration\ApiCallsIntegration;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Integration\Config;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\ContactProcessorService;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
-class CampaignActionSubscriberTest extends MauticMysqlTestCase
+final class CampaignActionSubscriberTest extends TestCase
 {
-    private MockObject $contactProcessorService;
-    private MockObject $integrationsHelper;
+    /** @var ContactProcessorService&MockObject */
+    private ContactProcessorService $contactProcessorService;
+
+    /** @var Config&MockObject */
+    private Config $config;
+
+    /** @var TranslatorInterface&MockObject */
+    private TranslatorInterface $translator;
+
     private CampaignActionSubscriber $subscriber;
 
     protected function setUp(): void
@@ -27,10 +34,12 @@ class CampaignActionSubscriberTest extends MauticMysqlTestCase
         parent::setUp();
 
         $this->contactProcessorService = $this->createMock(ContactProcessorService::class);
-        $this->integrationsHelper = $this->createMock(IntegrationsHelper::class);
-        $this->subscriber = new CampaignActionSubscriber(
+        $this->config                  = $this->createMock(Config::class);
+        $this->translator              = $this->createMock(TranslatorInterface::class);
+        $this->subscriber              = new CampaignActionSubscriber(
             $this->contactProcessorService,
-            $this->integrationsHelper
+            $this->config,
+            $this->translator,
         );
     }
 
@@ -38,75 +47,110 @@ class CampaignActionSubscriberTest extends MauticMysqlTestCase
     {
         $events = CampaignActionSubscriber::getSubscribedEvents();
 
-        $this->assertArrayHasKey('mautic.campaign_on_build', $events);
-        $this->assertArrayHasKey('api.campaign_action.execute', $events);
-        $this->assertEquals(['onCampaignBuild', 0], $events['mautic.campaign_on_build']);
-        $this->assertEquals(['onExecuteApiRequest', 0], $events['api.campaign_action.execute']);
+        self::assertArrayHasKey('mautic.campaign_on_build', $events);
+        self::assertArrayHasKey('api.campaign_action.execute', $events);
+        self::assertSame(['onCampaignBuild', 0], $events['mautic.campaign_on_build']);
+        self::assertSame(['onExecuteApiRequest', 0], $events['api.campaign_action.execute']);
     }
-
 
     public function testOnExecuteApiRequestProcessesContactsSuccessfully(): void
     {
-        $contacts = [new Lead()];
+        $contacts   = [new Lead()];
         $properties = ['url' => 'https://api.example.com', 'method' => 'POST'];
 
+        $this->config->expects(self::once())
+            ->method('isPublished')
+            ->willReturn(true);
+
         $campaignEvent = $this->createMock(Event::class);
-        $campaignEvent->expects($this->once())
+        $campaignEvent->expects(self::once())
             ->method('getProperties')
             ->willReturn($properties);
 
         $pending = $this->createMock(\Doctrine\Common\Collections\ArrayCollection::class);
-        $pending->expects($this->once())
+        $pending->expects(self::once())
             ->method('toArray')
             ->willReturn($contacts);
 
         $event = $this->createMock(PendingEvent::class);
-        $event->expects($this->once())
+        $event->expects(self::once())
             ->method('getPending')
             ->willReturn($pending);
-        $event->expects($this->once())
+        $event->expects(self::once())
             ->method('getEvent')
             ->willReturn($campaignEvent);
-        $event->expects($this->once())
+        $event->expects(self::once())
             ->method('passAll');
 
-        $this->contactProcessorService->expects($this->once())
+        $this->contactProcessorService->expects(self::once())
             ->method('processContacts')
             ->with($properties, $contacts);
 
         $this->subscriber->onExecuteApiRequest($event);
     }
 
+    public function testOnExecuteApiRequestFailsAllWhenIntegrationIsNotPublished(): void
+    {
+        $failureMessage = 'The API Calls plugin is not published.';
+
+        $this->config->expects(self::once())
+            ->method('isPublished')
+            ->willReturn(false);
+
+        $this->translator->expects(self::once())
+            ->method('trans')
+            ->with(CampaignActionSubscriber::UNPUBLISHED_FAILURE_REASON)
+            ->willReturn($failureMessage);
+
+        $event = $this->createMock(PendingEvent::class);
+        $event->expects(self::once())
+            ->method('failAll')
+            ->with($failureMessage);
+        $event->expects(self::never())
+            ->method('passAll');
+        $event->expects(self::never())
+            ->method('getPending');
+
+        $this->contactProcessorService->expects(self::never())
+            ->method('processContacts');
+
+        $this->subscriber->onExecuteApiRequest($event);
+    }
+
     public function testOnExecuteApiRequestFailsAllWhenExceptionOccurs(): void
     {
-        $contacts = [new Lead()];
-        $properties = ['url' => 'https://api.example.com', 'method' => 'POST'];
+        $contacts     = [new Lead()];
+        $properties   = ['url' => 'https://api.example.com', 'method' => 'POST'];
         $errorMessage = 'API request failed';
 
+        $this->config->expects(self::once())
+            ->method('isPublished')
+            ->willReturn(true);
+
         $campaignEvent = $this->createMock(Event::class);
-        $campaignEvent->expects($this->once())
+        $campaignEvent->expects(self::once())
             ->method('getProperties')
             ->willReturn($properties);
 
         $pending = $this->createMock(\Doctrine\Common\Collections\ArrayCollection::class);
-        $pending->expects($this->once())
+        $pending->expects(self::once())
             ->method('toArray')
             ->willReturn($contacts);
 
         $event = $this->createMock(PendingEvent::class);
-        $event->expects($this->once())
+        $event->expects(self::once())
             ->method('getPending')
             ->willReturn($pending);
-        $event->expects($this->once())
+        $event->expects(self::once())
             ->method('getEvent')
             ->willReturn($campaignEvent);
-        $event->expects($this->once())
+        $event->expects(self::once())
             ->method('failAll')
             ->with($errorMessage);
-        $event->expects($this->never())
+        $event->expects(self::never())
             ->method('passAll');
 
-        $this->contactProcessorService->expects($this->once())
+        $this->contactProcessorService->expects(self::once())
             ->method('processContacts')
             ->with($properties, $contacts)
             ->willThrowException(new \Exception($errorMessage));
@@ -114,35 +158,24 @@ class CampaignActionSubscriberTest extends MauticMysqlTestCase
         $this->subscriber->onExecuteApiRequest($event);
     }
 
-
     public function testOnCampaignBuildAddsActionWhenIntegrationIsPublished(): void
     {
         $event = $this->createMock(CampaignBuilderEvent::class);
-        $integration = $this->createMock(ApiCallsIntegration::class);
-        $integrationConfiguration = $this->createMock(\Mautic\PluginBundle\Entity\Integration::class);
 
-        $integrationConfiguration->expects($this->once())
-            ->method('getIsPublished')
+        $this->config->expects(self::once())
+            ->method('isPublished')
             ->willReturn(true);
 
-        $integration->expects($this->once())
-            ->method('getIntegrationConfiguration')
-            ->willReturn($integrationConfiguration);
-
-        $this->integrationsHelper->expects($this->once())
-            ->method('getIntegration')
-            ->with(ApiCallsIntegration::INTEGRATION_NAME)
-            ->willReturn($integration);
-
-        $event->expects($this->once())
+        $event->expects(self::once())
             ->method('addAction')
             ->with(
                 CampaignActionSubscriber::ACTION_TYPE,
                 [
-                    'label' => 'leuchtfeuer.mautic-apicalls-bundle.action.label',
-                    'description' => 'leuchtfeuer.mautic-apicalls-bundle.action.description',
-                    'batchEventName' => 'api.campaign_action.execute',
-                    'formType' => ApiRequestActionType::class,
+                    'label'              => 'leuchtfeuer.mautic-apicalls-bundle.action.label',
+                    'description'        => 'leuchtfeuer.mautic-apicalls-bundle.action.description',
+                    'batchEventName'     => 'api.campaign_action.execute',
+                    'formType'           => ApiRequestActionType::class,
+                    'formTypeCleanMasks' => CampaignActionSubscriber::FORM_TYPE_CLEAN_MASKS,
                 ]
             );
 
@@ -152,23 +185,12 @@ class CampaignActionSubscriberTest extends MauticMysqlTestCase
     public function testOnCampaignBuildDoesNotAddActionWhenIntegrationIsNotPublished(): void
     {
         $event = $this->createMock(CampaignBuilderEvent::class);
-        $integration = $this->createMock(ApiCallsIntegration::class);
-        $integrationConfiguration = $this->createMock(\Mautic\PluginBundle\Entity\Integration::class);
 
-        $integrationConfiguration->expects($this->once())
-            ->method('getIsPublished')
+        $this->config->expects(self::once())
+            ->method('isPublished')
             ->willReturn(false);
 
-        $integration->expects($this->once())
-            ->method('getIntegrationConfiguration')
-            ->willReturn($integrationConfiguration);
-
-        $this->integrationsHelper->expects($this->once())
-            ->method('getIntegration')
-            ->with(ApiCallsIntegration::INTEGRATION_NAME)
-            ->willReturn($integration);
-
-        $event->expects($this->never())
+        $event->expects(self::never())
             ->method('addAction');
 
         $this->subscriber->onCampaignBuild($event);

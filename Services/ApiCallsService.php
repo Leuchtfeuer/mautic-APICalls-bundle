@@ -12,7 +12,12 @@ use Symfony\Contracts\HttpClient\ResponseInterface;
 class ApiCallsService
 {
 
-    private  const MAX_REDIRECTS = 5;
+    private const MAX_REDIRECTS = 5;
+
+    /**
+     * Maximum number of bytes stored in campaign event metadata for the API response body.
+     */
+    public const MAX_METADATA_RESPONSE_BODY_LENGTH = 65536;
     public function __construct(private HttpClientInterface       $client,
                                 private LeadModel                 $leadModel,
                                 private HttpRequestBuilderService $httpRequestBuilderService,
@@ -76,11 +81,10 @@ class ApiCallsService
         }
 
         if (!empty($content)) {
-            // @phpstan-ignore-next-line
-            $lead->getLead()->addUpdatedField($contactField, $content);
-
-            if($lead->getLead()){
-                $this->leadModel->saveEntity($lead->getLead());
+            $leadEntity = $lead->getLead();
+            if (null !== $leadEntity) {
+                $leadEntity->addUpdatedField($contactField, $content);
+                $this->leadModel->saveEntity($leadEntity);
             }
         }
 
@@ -88,13 +92,22 @@ class ApiCallsService
 
     public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method):void
     {
-        $lead->setMetadata([
+        $responseBody = $response->getContent(false);
+        $metadata     = [
             'event' => 'api_calls',
             'object_description' => 'API-Request Response',
             'response_header' => $response->getHeaders(false),
-            'response_body' => $response->getContent(false),
-            'method' => $method
-        ]);
+            'response_body' => $responseBody,
+            'method' => $method,
+        ];
+
+        if (strlen($responseBody) > self::MAX_METADATA_RESPONSE_BODY_LENGTH) {
+            $metadata['response_body']                 = substr($responseBody, 0, self::MAX_METADATA_RESPONSE_BODY_LENGTH);
+            $metadata['response_body_truncated']       = true;
+            $metadata['response_body_original_length'] = strlen($responseBody);
+        }
+
+        $lead->setMetadata($metadata);
     }
 
     /**
@@ -120,12 +133,62 @@ class ApiCallsService
                 break;
             }
 
-            $currentUrl = $this->urlBuilderService->appendQueryString($dto, $locationHeader, $tokenizedValue);
+            $redirectUrl = $this->urlBuilderService->appendQueryString($dto, $locationHeader, $tokenizedValue);
+
+            if (!$this->isSameOrigin($currentUrl, $redirectUrl)) {
+                $options = $this->stripCredentialsFromOptions($options);
+            }
+
+            $currentUrl = $redirectUrl;
 
             $redirectCount++;
         }
 
         return $response;
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     *
+     * @return array<string, mixed>
+     */
+    private function stripCredentialsFromOptions(array $options): array
+    {
+        unset($options['auth_basic']);
+
+        if (isset($options['headers']) && is_array($options['headers'])) {
+            foreach (array_keys($options['headers']) as $headerName) {
+                if (0 === strcasecmp($headerName, 'Authorization')) {
+                    unset($options['headers'][$headerName]);
+                }
+            }
+        }
+
+        return $options;
+    }
+
+    private function isSameOrigin(string $fromUrl, string $toUrl): bool
+    {
+        $from = parse_url($fromUrl);
+        $to   = parse_url($toUrl);
+
+        if (!is_array($from) || !is_array($to)) {
+            return false;
+        }
+
+        $fromScheme = strtolower($from['scheme'] ?? '');
+        $toScheme   = strtolower($to['scheme'] ?? '');
+        $fromHost   = strtolower($from['host'] ?? '');
+        $toHost     = strtolower($to['host'] ?? '');
+        $fromPort   = $from['port'] ?? $this->getDefaultPortForScheme($fromScheme);
+        $toPort     = $to['port'] ?? $this->getDefaultPortForScheme($toScheme);
+
+        return $fromScheme === $toScheme && $fromHost === $toHost && $fromPort === $toPort;
+    }
+
+    private function getDefaultPortForScheme(string $scheme): int
+    {
+        return 'https' === $scheme ? 443 : 80;
     }
 
     private function isRedirectResponse(ResponseInterface $response): bool

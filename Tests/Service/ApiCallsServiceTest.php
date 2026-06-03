@@ -14,6 +14,8 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\UrlBuilderService;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\PropertySearchService;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class ApiCallsServiceTest extends MauticMysqlTestCase
 {
@@ -131,9 +133,201 @@ class ApiCallsServiceTest extends MauticMysqlTestCase
 
         $service->sendRequest($lead, $dto);
 
-        // Verify both requests were made
         $this->assertEquals(2, $requestsCount);
         $this->assertCount(2, $capturedRequests);
+    }
+
+    public function testSendRequestKeepsCredentialsOnSameOriginRedirect(): void
+    {
+        $requestsCount    = 0;
+        $capturedRequests = [];
+
+        $redirectResponse = $this->createMock(ResponseInterface::class);
+        $redirectResponse->method('getStatusCode')->willReturn(302);
+        $redirectResponse->method('getHeaders')->with(false)->willReturn(['location' => ['https://api.example.com/redirected']]);
+
+        $successResponse = $this->createMock(ResponseInterface::class);
+        $successResponse->method('getStatusCode')->willReturn(200);
+        $successResponse->method('getContent')->willReturn('success');
+        $successResponse->method('getHeaders')->with(false)->willReturn([]);
+
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient->method('request')->willReturnCallback(
+            static function ($method, $url, $options) use (&$requestsCount, &$capturedRequests, $redirectResponse, $successResponse) {
+                $capturedRequests[] = ['url' => $url, 'options' => $options];
+                ++$requestsCount;
+
+                return 1 === $requestsCount ? $redirectResponse : $successResponse;
+            }
+        );
+
+        $leadModel                   = $this->createMock(LeadModel::class);
+        $httpRequestBuilderService   = $this->createMock(HttpRequestBuilderService::class);
+        $tokenReplacementService     = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService           = $this->createMock(UrlBuilderService::class);
+        $propertySearchService       = $this->createMock(PropertySearchService::class);
+
+        $dto = new ApiCallPropertiesDTO(
+            url: 'https://api.example.com/webhook',
+            method: 'GET',
+            contentType: 'application/json',
+            username: 'user',
+            password: 'pass',
+            authorizationHeader: 'Authorization: Bearer secret-token',
+        );
+
+        $tokenReplacementService->method('getTokenizedValue')->willReturn('');
+        $httpRequestBuilderService->method('buildUrlAndOptions')->willReturn([
+            'url'     => 'https://api.example.com/webhook',
+            'options' => [
+                'headers'    => [
+                    'User-Agent'    => 'LeuchtfeuerMauticAPI/1.0',
+                    'Content-Type'  => 'application/json',
+                    'Authorization' => 'Bearer secret-token',
+                ],
+                'auth_basic' => ['user', 'pass'],
+            ],
+        ]);
+        $urlBuilderService->method('appendQueryString')->willReturn('https://api.example.com/redirected');
+
+        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService, $propertySearchService);
+
+        $service->sendRequest($this->createMockLeadEventLog(), $dto);
+
+        $this->assertEquals(2, $requestsCount);
+        $this->assertCount(2, $capturedRequests);
+        /** @var array<int, array{url: string, options: array<string, mixed>}> $requests */
+        $requests            = $capturedRequests;
+        $redirectedRequest   = $requests[1];
+        $this->assertArrayHasKey('auth_basic', $redirectedRequest['options']);
+        $this->assertEquals('Bearer secret-token', $redirectedRequest['options']['headers']['Authorization']);
+    }
+
+    public function testSendRequestStripsCredentialsOnCrossOriginRedirect(): void
+    {
+        $requestsCount    = 0;
+        $capturedRequests = [];
+
+        $redirectResponse = $this->createMock(ResponseInterface::class);
+        $redirectResponse->method('getStatusCode')->willReturn(302);
+        $redirectResponse->method('getHeaders')->with(false)->willReturn(['location' => ['https://attacker.example.net/steal']]);
+
+        $successResponse = $this->createMock(ResponseInterface::class);
+        $successResponse->method('getStatusCode')->willReturn(200);
+        $successResponse->method('getContent')->willReturn('success');
+        $successResponse->method('getHeaders')->with(false)->willReturn([]);
+
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient->method('request')->willReturnCallback(
+            static function ($method, $url, $options) use (&$requestsCount, &$capturedRequests, $redirectResponse, $successResponse) {
+                $capturedRequests[] = ['url' => $url, 'options' => $options];
+                ++$requestsCount;
+
+                return 1 === $requestsCount ? $redirectResponse : $successResponse;
+            }
+        );
+
+        $leadModel                   = $this->createMock(LeadModel::class);
+        $httpRequestBuilderService   = $this->createMock(HttpRequestBuilderService::class);
+        $tokenReplacementService     = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService           = $this->createMock(UrlBuilderService::class);
+        $propertySearchService       = $this->createMock(PropertySearchService::class);
+
+        $dto = new ApiCallPropertiesDTO(
+            url: 'https://trusted.example.com/webhook',
+            method: 'GET',
+            contentType: 'application/json',
+            username: 'user',
+            password: 'pass',
+            authorizationHeader: 'Authorization: Bearer secret-token',
+        );
+
+        $tokenReplacementService->method('getTokenizedValue')->willReturn('');
+        $httpRequestBuilderService->method('buildUrlAndOptions')->willReturn([
+            'url'     => 'https://trusted.example.com/webhook',
+            'options' => [
+                'headers'    => [
+                    'User-Agent'    => 'LeuchtfeuerMauticAPI/1.0',
+                    'Content-Type'  => 'application/json',
+                    'Authorization' => 'Bearer secret-token',
+                ],
+                'auth_basic' => ['user', 'pass'],
+            ],
+        ]);
+        $urlBuilderService->method('appendQueryString')->willReturn('https://attacker.example.net/steal');
+
+        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService, $propertySearchService);
+
+        $service->sendRequest($this->createMockLeadEventLog(), $dto);
+
+        $this->assertEquals(2, $requestsCount);
+        $this->assertCount(2, $capturedRequests);
+        /** @var array<int, array{url: string, options: array<string, mixed>}> $requests */
+        $requests          = $capturedRequests;
+        $redirectedRequest = $requests[1];
+        $this->assertArrayNotHasKey('auth_basic', $redirectedRequest['options']);
+        $this->assertArrayNotHasKey('Authorization', $redirectedRequest['options']['headers']);
+        $this->assertEquals('LeuchtfeuerMauticAPI/1.0', $redirectedRequest['options']['headers']['User-Agent']);
+    }
+
+    public function testSendRequestStripsCredentialsOnCrossOriginRedirectWithDifferentPort(): void
+    {
+        $requestsCount    = 0;
+        $capturedRequests = [];
+
+        $redirectResponse = $this->createMock(ResponseInterface::class);
+        $redirectResponse->method('getStatusCode')->willReturn(302);
+        $redirectResponse->method('getHeaders')->with(false)->willReturn(['location' => ['https://api.example.com:8443/redirected']]);
+
+        $successResponse = $this->createMock(ResponseInterface::class);
+        $successResponse->method('getStatusCode')->willReturn(200);
+        $successResponse->method('getContent')->willReturn('success');
+        $successResponse->method('getHeaders')->with(false)->willReturn([]);
+
+        $httpClient = $this->createMock(HttpClientInterface::class);
+        $httpClient->method('request')->willReturnCallback(
+            static function ($method, $url, $options) use (&$requestsCount, &$capturedRequests, $redirectResponse, $successResponse) {
+                $capturedRequests[] = ['options' => $options];
+                ++$requestsCount;
+
+                return 1 === $requestsCount ? $redirectResponse : $successResponse;
+            }
+        );
+
+        $leadModel                 = $this->createMock(LeadModel::class);
+        $httpRequestBuilderService = $this->createMock(HttpRequestBuilderService::class);
+        $tokenReplacementService   = $this->createMock(TokenReplacementService::class);
+        $urlBuilderService         = $this->createMock(UrlBuilderService::class);
+        $propertySearchService     = $this->createMock(PropertySearchService::class);
+
+        $dto = new ApiCallPropertiesDTO(
+            url: 'https://api.example.com/webhook',
+            method: 'GET',
+            contentType: 'application/json',
+            username: 'user',
+            password: 'pass',
+        );
+
+        $tokenReplacementService->method('getTokenizedValue')->willReturn('');
+        $httpRequestBuilderService->method('buildUrlAndOptions')->willReturn([
+            'url'     => 'https://api.example.com/webhook',
+            'options' => [
+                'headers'    => ['User-Agent' => 'LeuchtfeuerMauticAPI/1.0'],
+                'auth_basic' => ['user', 'pass'],
+            ],
+        ]);
+        $urlBuilderService->method('appendQueryString')->willReturn('https://api.example.com:8443/redirected');
+
+        $service = new ApiCallsService($httpClient, $leadModel, $httpRequestBuilderService, $tokenReplacementService, $urlBuilderService, $propertySearchService);
+
+        $service->sendRequest($this->createMockLeadEventLog(), $dto);
+
+        $this->assertEquals(2, $requestsCount);
+        $this->assertCount(2, $capturedRequests);
+        /** @var array<int, array{options: array<string, mixed>}> $requests */
+        $requests          = $capturedRequests;
+        $redirectedRequest = $requests[1];
+        $this->assertArrayNotHasKey('auth_basic', $redirectedRequest['options']);
     }
 
     public function testUpdateField(): void

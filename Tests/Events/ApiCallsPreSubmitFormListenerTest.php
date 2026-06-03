@@ -1,96 +1,153 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\Events;
 
-use Mautic\CoreBundle\Test\MauticMysqlTestCase;
-use MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type\ApiRequestActionType;
-use Symfony\Component\Form\FormFactoryInterface;
+use Mautic\CoreBundle\Helper\InputHelper;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener\ApiCallsPreSubmitFormListener;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener\CampaignActionSubscriber;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\CampaignActionSecretService;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\Form\Form;
+use Symfony\Component\Form\FormEvent;
 
-
-class ApiCallsPreSubmitFormListenerTest extends MauticMysqlTestCase
+final class ApiCallsPreSubmitFormListenerTest extends TestCase
 {
+    /** @var CampaignActionSecretService&MockObject */
+    private CampaignActionSecretService $secretService;
 
+    private ApiCallsPreSubmitFormListener $listener;
 
-    public function testPreSubmitListenerBypassesSanitizerAndStoresRawContent(): void
+    protected function setUp(): void
     {
-        // Test data that would typically be sanitized by Mautic
-        $rawBodyContent = '{"contact_email": "{contactfield=email}", "html_content": "<script>alert(\'test\')</script>", "special_chars":
-  "&<>\"\'", "tokens": "{contactfield=firstname} {contactfield=lastname}"}';
+        parent::setUp();
 
-        // Simulate form data that would come from the UI (potentially sanitized)
-        $formData = [
-            'url' => 'https://api.example.com/webhook',
-            'method' => 'POST',
-            'contentType' => 'application/json',
-            'body' => 'This would be sanitized content', // This should be overwritten by listener
-            'password' => '' // Empty password to test preservation logic
-        ];
+        $this->secretService = $this->createMock(CampaignActionSecretService::class);
+        $this->listener      = new ApiCallsPreSubmitFormListener($this->secretService);
+    }
 
-        // Mock $_POST data with the raw content that should bypass sanitization
-        $_POST['campaignevent'] = [
-            'type' => 'mautic.leuchtfeuer.api_request',
+    public function testPreSetDataClearsStoredSecretsFromFormData(): void
+    {
+        $this->secretService->expects(self::exactly(2))
+            ->method('sanitizeForFormDisplay')
+            ->willReturn('');
+
+        $event = new FormEvent($this->createMock(Form::class), [
+            'password'              => 'cipher|vector',
+            'authorization_header'  => 'legacy-secret',
+            'url'                   => 'https://api.example.com',
+        ]);
+
+        $this->listener->preSetData($event);
+
+        self::assertSame('', $event->getData()['password']);
+        self::assertSame('', $event->getData()['authorization_header']);
+        self::assertSame('https://api.example.com', $event->getData()['url']);
+    }
+
+    public function testPreservesEncryptedPasswordWhenSubmittedEmpty(): void
+    {
+        $rootForm = $this->createMock(Form::class);
+        $rootForm->method('getData')->willReturn(['properties' => ['password' => 'cipher|vector']]);
+
+        $form = $this->createMock(Form::class);
+        $form->method('getRoot')->willReturn($rootForm);
+
+        $this->secretService->expects(self::once())
+            ->method('encryptIfNeeded')
+            ->with('cipher|vector')
+            ->willReturn('cipher|vector');
+
+        $event = new FormEvent($form, [
+            'url'      => 'https://api.example.com/webhook',
+            'method'   => 'POST',
+            'body'     => '{"data":"test"}',
+            'password' => '',
+        ]);
+
+        $this->listener->preSubmitData($event);
+
+        self::assertSame('cipher|vector', $event->getData()['password']);
+        self::assertSame('{"data":"test"}', $event->getData()['body']);
+    }
+
+    public function testEncryptsSubmittedPassword(): void
+    {
+        $rootForm = $this->createMock(Form::class);
+        $rootForm->method('getData')->willReturn([]);
+
+        $form = $this->createMock(Form::class);
+        $form->method('getRoot')->willReturn($rootForm);
+
+        $this->secretService->expects(self::once())
+            ->method('encryptIfNeeded')
+            ->with('new_password')
+            ->willReturn('encrypted|blob');
+
+        $event = new FormEvent($form, [
+            'password' => 'new_password',
+            'body'     => '{"data":"test"}',
+        ]);
+
+        $this->listener->preSubmitData($event);
+
+        self::assertSame('encrypted|blob', $event->getData()['password']);
+    }
+
+    public function testPreservesEncryptedAuthorizationHeaderWhenSubmittedEmpty(): void
+    {
+        $rootForm = $this->createMock(Form::class);
+        $rootForm->method('getData')->willReturn(['properties' => ['authorization_header' => 'cipher|vector']]);
+
+        $form = $this->createMock(Form::class);
+        $form->method('getRoot')->willReturn($rootForm);
+
+        $this->secretService->expects(self::once())
+            ->method('encryptIfNeeded')
+            ->with('cipher|vector')
+            ->willReturn('cipher|vector');
+
+        $event = new FormEvent($form, [
+            'authorization_header' => '',
+        ]);
+
+        $this->listener->preSubmitData($event);
+
+        self::assertSame('cipher|vector', $event->getData()['authorization_header']);
+    }
+
+    public function testFormTypeCleanMasksPreserveJsonBodyContent(): void
+    {
+        $rawBody = '{"contact_email": "{contactfield=email}", "html_content": "<script>alert(\'test\')</script>", "special_chars": "&<>\"\'"}';
+
+        $data = [
             'properties' => [
-                'url' => 'https://api.example.com/webhook',
-                'method' => 'POST',
-                'contentType' => 'application/json',
-                'body' => $rawBodyContent // Raw content from $_POST
-            ]
+                'body' => $rawBody,
+                'url'  => 'https://api.example.com/webhook',
+            ],
         ];
 
-        // Create form with existing password data (simulating editing existing campaign action)
-        $formFactory = self::$container->get(FormFactoryInterface::class);
-        $initialData = ['properties' => ['password' => 'existing_password_123']];
-        $form = $formFactory->create(ApiRequestActionType::class, $initialData);
+        $result = InputHelper::_($data, [
+            'properties' => CampaignActionSubscriber::FORM_TYPE_CLEAN_MASKS,
+        ]);
 
-        // Submit form data (your listener should intercept this)
-        $form->submit($formData);
-
-        // Get the processed form data (after your listener processes it)
-        /** @var array<string, mixed> $processedData */
-        $processedData = $form->getData();
-
-        // Verify that your listener correctly replaced the body with raw content from $_POST
-        $this->assertEquals($rawBodyContent, $processedData['body'], 'Listener should use raw body content from $_POST');
-        $this->assertNotEquals('This would be sanitized content', $processedData['body'], 'Original form body should be overwritten');
-
-        // Verify password preservation logic works
-        $this->assertEquals('existing_password_123', $processedData['password'], 'Existing password should be preserved when empty password
-  is submitted');
-
-        // Verify other fields remain unchanged
-        $this->assertEquals('https://api.example.com/webhook', $processedData['url']);
-        $this->assertEquals('POST', $processedData['method']);
-        $this->assertEquals('application/json', $processedData['contentType']);
-
-        // Clean up $_POST
-        unset($_POST['campaignevent']);
+        self::assertSame($rawBody, $result['properties']['body']);
     }
 
-
-    public function testListenerHandlesMissingPostData(): void
+    public function testDefaultCleanMaskStripsHtmlFromBody(): void
     {
-        // Test when $_POST data is missing or incomplete
-        $formData = [
-            'url' => 'https://api.example.com/webhook',
-            'method' => 'POST',
-            'contentType' => 'application/json',
-            'body' => 'original body content'
+        $rawBody = '{"html_content": "<script>alert(\'test\')</script>"}';
+
+        $data = [
+            'properties' => [
+                'body' => $rawBody,
+            ],
         ];
 
-        // Don't set $_POST['campaignevent'] to simulate missing data
+        $result = InputHelper::_($data, ['properties' => 'clean']);
 
-        $formFactory = self::$container->get(FormFactoryInterface::class);
-        $form = $formFactory->create(ApiRequestActionType::class);
-
-        // This should not cause errors even without $_POST data
-        $form->submit($formData);
-
-        /** @var array<string, mixed> $processedData */
-        $processedData = $form->getData();
-
-        // Verify original body is preserved when no $_POST override exists
-        $this->assertEquals('original body content', $processedData['body']);
+        self::assertNotSame($rawBody, $result['properties']['body']);
     }
-
 }
-

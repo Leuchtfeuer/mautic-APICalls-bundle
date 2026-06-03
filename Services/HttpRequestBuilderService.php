@@ -28,7 +28,7 @@ class HttpRequestBuilderService
                 'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                 'Content-Type' => $dto->contentType,
             ],
-            'verify_peer' => false,
+            'verify_peer' => true,
             'verify_host' => true,
             'max_redirects' => 0,
         ];
