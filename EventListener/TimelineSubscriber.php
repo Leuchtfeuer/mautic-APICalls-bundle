@@ -1,18 +1,29 @@
 <?php
+
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
 use Mautic\CampaignBundle\Entity\LeadEventLog;
+use Mautic\CampaignBundle\Entity\LeadEventLogRepository;
+use Mautic\LeadBundle\Entity\Lead;
 use Mautic\LeadBundle\Event\LeadTimelineEvent;
 use Mautic\LeadBundle\LeadEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 final class TimelineSubscriber implements EventSubscriberInterface
 {
+    private const EVENT_TYPE = 'leuchtfeuer.api_call';
+
+    /**
+     * Mautic stores metadata as PHP-serialized arrays in the database.
+     */
+    private const METADATA_FILTER = '%s:5:"event";s:9:"api_calls"%';
 
     public function __construct(
-        private EntityManagerInterface $entityManager
-    ) {}
+        private EntityManagerInterface $entityManager,
+    ) {
+    }
 
     public static function getSubscribedEvents(): array
     {
@@ -23,65 +34,88 @@ final class TimelineSubscriber implements EventSubscriberInterface
 
     public function onTimelineGenerate(LeadTimelineEvent $event): void
     {
-        $eventType = 'leuchtfeuer.api_call';
+        $eventType     = self::EVENT_TYPE;
         $eventTypeName = 'API Request';
 
-       $event->addEventType($eventType, $eventTypeName);
+        $event->addEventType($eventType, $eventTypeName);
 
         if (!$event->isApplicable($eventType)) {
             return;
         }
 
-        $campaignLeadEventLogRepo = $this->entityManager->getRepository(LeadEventLog::class);
-        $options = $event->getQueryOptions();
+        $lead = $event->getLead();
 
-        $qb = $campaignLeadEventLogRepo->createQueryBuilder('log')
-          ->where('log.lead = :lead')
-          ->andWhere('log.metadata IS NOT NULL')
-          ->setParameter('lead', $event->getLead())
-          ->orderBy('log.dateTriggered', 'DESC');
-
-         if (isset($options['limit'])) {
-             $qb->setMaxResults($options['limit']);
-         }
-
-        $logs = $qb->getQuery()->getResult();
-
-        // Add to counter
-        $event->addToCounter($eventType, count($logs));
-
-        if (!$event->isEngagementCount()) {
-
-            /** @var LeadEventLog $log */
-            foreach ($logs as $log) {
-
-                $metadata = $log->getMetadata();
-                if (isset($metadata['event']) && $metadata['event'] === 'api_calls' && isset($metadata['method'])) {
-
-                    $lead = $log->getLead();
-
-                    if ($lead === null) {
-                        continue;
-                    }
-
-                    $event->addEvent([
-                        'event'      => $eventType,
-                        'eventId'    => $eventType . $log->getId(),
-                        'eventLabel' => $metadata['object_description'] . '/' . $metadata['method'],
-                        'eventType'  => $eventTypeName,
-                        'timestamp'  => $log->getDateTriggered(),
-                        'icon'       => 'ri-share-box-line',
-                        'contactId'  => $lead->getId(),
-                        'extra'      => [
-                            'properties' => $metadata,
-                            'bundle' => $metadata['bundle'] ?? null,
-                            'object' => $metadata['object'] ?? null,
-                            'action' => $metadata['action'] ?? null
-                        ],
-                        'contentTemplate' => '@LeuchtfeuerAPICalls/SubscribedEvents/Timeline/index.html.twig',
-                    ]);
-                }
-            }
+        if (!$lead instanceof Lead) {
+            return;
         }
+
+        /** @var LeadEventLogRepository $repository */
+        $repository = $this->entityManager->getRepository(LeadEventLog::class);
+        $options    = $event->getQueryOptions();
+
+        $total = (int) $this->createApiCallLogsQueryBuilder($repository, $lead)
+            ->select('COUNT(log.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        $event->addToCounter($eventType, $total);
+
+        if ($event->isEngagementCount()) {
+            return;
+        }
+
+        $queryBuilder = $this->createApiCallLogsQueryBuilder($repository, $lead);
+
+        if (isset($options['limit'])) {
+            $queryBuilder->setMaxResults($options['limit']);
+        }
+
+        if (isset($options['start'])) {
+            $queryBuilder->setFirstResult($options['start']);
+        }
+
+        /** @var LeadEventLog[] $logs */
+        $logs = $queryBuilder->getQuery()->getResult();
+
+        foreach ($logs as $log) {
+            $metadata = $log->getMetadata();
+
+            if (!isset($metadata['method'])) {
+                continue;
+            }
+
+            $logLead = $log->getLead();
+
+            if (null === $logLead) {
+                continue;
+            }
+
+            $event->addEvent([
+                'event'      => $eventType,
+                'eventId'    => $eventType.$log->getId(),
+                'eventLabel' => $metadata['object_description'].'/'.$metadata['method'],
+                'eventType'  => $eventTypeName,
+                'timestamp'  => $log->getDateTriggered(),
+                'icon'       => 'ri-share-box-line',
+                'contactId'  => $logLead->getId(),
+                'extra'      => [
+                    'properties' => $metadata,
+                    'bundle'     => $metadata['bundle'] ?? null,
+                    'object'     => $metadata['object'] ?? null,
+                    'action'     => $metadata['action'] ?? null,
+                ],
+                'contentTemplate' => '@LeuchtfeuerAPICalls/SubscribedEvents/Timeline/index.html.twig',
+            ]);
+        }
+    }
+
+    private function createApiCallLogsQueryBuilder(LeadEventLogRepository $repository, Lead $lead): QueryBuilder
+    {
+        return $repository->createQueryBuilder('log')
+            ->where('log.lead = :lead')
+            ->andWhere('log.metadata LIKE :apiCallsMetadata')
+            ->setParameter('lead', $lead)
+            ->setParameter('apiCallsMetadata', self::METADATA_FILTER)
+            ->orderBy('log.dateTriggered', 'DESC');
     }
 }

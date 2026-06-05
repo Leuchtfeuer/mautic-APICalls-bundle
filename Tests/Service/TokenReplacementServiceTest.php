@@ -28,7 +28,7 @@ class TokenReplacementServiceTest extends TestCase
             urlParameters: 'name={contactfield=firstname}'
         );
 
-        $lead = $this->createMock(LeadEventLog::class);
+        $lead       = $this->createMock(LeadEventLog::class);
         $leadEntity = $this->createMock(Lead::class);
         $leadEntity->method('getProfileFields')->willReturn(['firstname' => 'John']);
         $lead->method('getLead')->willReturn($leadEntity);
@@ -49,7 +49,7 @@ class TokenReplacementServiceTest extends TestCase
             body: '{"name": "{contactfield=firstname}"}'
         );
 
-        $lead = $this->createMock(LeadEventLog::class);
+        $lead       = $this->createMock(LeadEventLog::class);
         $leadEntity = $this->createMock(Lead::class);
         $leadEntity->method('getProfileFields')->willReturn(['firstname' => 'John']);
         $lead->method('getLead')->willReturn($leadEntity);
@@ -82,11 +82,11 @@ class TokenReplacementServiceTest extends TestCase
     {
         $url = 'https://example.com/api/{contactfield=firstname}/{contactfield=lastname}';
 
-        $lead = $this->createMock(LeadEventLog::class);
+        $lead       = $this->createMock(LeadEventLog::class);
         $leadEntity = $this->createMock(Lead::class);
         $leadEntity->method('getProfileFields')->willReturn([
             'firstname' => 'John',
-            'lastname' => 'Doe'
+            'lastname'  => 'Doe',
         ]);
         $lead->method('getLead')->willReturn($leadEntity);
 
@@ -99,7 +99,7 @@ class TokenReplacementServiceTest extends TestCase
     {
         $url = 'https://example.com/api/endpoint';
 
-        $lead = $this->createMock(LeadEventLog::class);
+        $lead       = $this->createMock(LeadEventLog::class);
         $leadEntity = $this->createMock(Lead::class);
         $leadEntity->method('getProfileFields')->willReturn(['firstname' => 'John']);
         $lead->method('getLead')->willReturn($leadEntity);
@@ -125,7 +125,7 @@ class TokenReplacementServiceTest extends TestCase
     {
         $url = '';
 
-        $lead = $this->createMock(LeadEventLog::class);
+        $lead       = $this->createMock(LeadEventLog::class);
         $leadEntity = $this->createMock(Lead::class);
         $leadEntity->method('getProfileFields')->willReturn(['firstname' => 'John']);
         $lead->method('getLead')->willReturn($leadEntity);
@@ -139,12 +139,12 @@ class TokenReplacementServiceTest extends TestCase
     {
         $url = 'https://api.example.com/{contactfield=id}/profile/{contactfield=email}?name={contactfield=firstname}';
 
-        $lead = $this->createMock(LeadEventLog::class);
+        $lead       = $this->createMock(LeadEventLog::class);
         $leadEntity = $this->createMock(Lead::class);
         $leadEntity->method('getProfileFields')->willReturn([
-            'id' => '123',
-            'email' => 'john.doe@example.com',
-            'firstname' => 'John'
+            'id'        => '123',
+            'email'     => 'john.doe@example.com',
+            'firstname' => 'John',
         ]);
         $lead->method('getLead')->willReturn($leadEntity);
 
@@ -152,5 +152,4 @@ class TokenReplacementServiceTest extends TestCase
 
         $this->assertEquals('https://api.example.com/123/profile/john.doe@example.com?name=John', $result);
     }
-
 }

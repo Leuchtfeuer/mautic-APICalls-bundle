@@ -7,10 +7,10 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 
 class HttpRequestBuilderService
 {
+    public function __construct(private UrlBuilderService $urlBuilderService, private TokenReplacementService $tokenReplacementService)
+    {
+    }
 
-
-    public function __construct(private UrlBuilderService $urlBuilderService,  private TokenReplacementService $tokenReplacementService)
-    {}
     /**
      * @return array{url: string, options: array<string, mixed>}
      */
@@ -18,7 +18,7 @@ class HttpRequestBuilderService
     {
         $url = $this->tokenReplacementService->getTokenizedUrl($lead, $dto->url);
         // Build url with GET parameters
-        if ($dto->method === 'GET' && !empty($value)) {
+        if ('GET' === $dto->method && !empty($value)) {
             $url = $this->urlBuilderService->appendQueryString($dto, $url, $value);
         }
 
@@ -28,20 +28,20 @@ class HttpRequestBuilderService
                 'User-Agent'   => 'LeuchtfeuerMauticAPI/1.0',
                 'Content-Type' => $dto->contentType,
             ],
-            'verify_peer' => false,
-            'verify_host' => true,
+            'verify_peer'   => true,
+            'verify_host'   => true,
             'max_redirects' => 0,
         ];
 
         if (!empty($dto->authorizationHeader)) {
             if (str_contains($dto->authorizationHeader, ':')) {
-                [$headerName, $headerValue] = explode(':', $dto->authorizationHeader, 2);
+                [$headerName, $headerValue]            = explode(':', $dto->authorizationHeader, 2);
                 $options['headers'][trim($headerName)] = trim($headerValue);
             }
         }
 
         // If not GET method then set body
-        if ($dto->method !== 'GET') {
+        if ('GET' !== $dto->method) {
             $options['body'] = $value;
         }
 
@@ -51,8 +51,8 @@ class HttpRequestBuilderService
         }
 
         return [
-            'url' => $url,
-            'options' => $options
+            'url'     => $url,
+            'options' => $options,
         ];
     }
 }

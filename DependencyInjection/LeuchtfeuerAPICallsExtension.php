@@ -16,7 +16,7 @@ class LeuchtfeuerAPICallsExtension extends Extension
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
-         $loader = new PhpFileLoader($container, new FileLocator(__DIR__.'/../Config'));
-         $loader->load('services.php');
+        $loader = new PhpFileLoader($container, new FileLocator(__DIR__.'/../Config'));
+        $loader->load('services.php');
     }
 }

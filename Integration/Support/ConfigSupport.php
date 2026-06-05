@@ -1,4 +1,5 @@
 <?php
+
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Integration\Support;
 
 use Mautic\IntegrationsBundle\Integration\DefaultConfigFormTrait;
