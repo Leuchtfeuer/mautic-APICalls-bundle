@@ -149,6 +149,15 @@ For complete version history, see [GitHub](https://github.com/Leuchtfeuer/mautic
 ## Sponsoring & Commercial Support
 For support or custom features, contact **mautic-plugins@leuchtfeuer.com**
 
+## Credits
+@Leuchtfeuer
+
+## Author
+Leuchtfeuer Digital Marketing GmbH
+
+Please raise any issues in GitHub.
+For all other things, please email mautic-plugins@Leuchtfeuer.com
+
 ## License
 This plugin is licensed under the GPL v3 License.
 
