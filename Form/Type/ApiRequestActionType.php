@@ -210,17 +210,7 @@ class ApiRequestActionType extends AbstractType
 
     public function validateUrlParameters(?string $parameters, ExecutionContextInterface $context): void
     {
-        $data   = $context->getRoot()->getData();
-        $method = $this->getFormPropertyValue($data, 'method');
-
         if (empty($parameters)) {
-            return;
-        }
-
-        if ('GET' !== $method) {
-            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.get.method.required')
-                ->addViolation();
-
             return;
         }
 

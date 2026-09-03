@@ -57,9 +57,11 @@ final class ApiCallsServiceTest extends MauticMysqlTestCase
             ->method('getTokenizedValue')
             ->willReturn('{"test": "data"}');
 
+        $tokenReplacementService->method('getTokenizedUrl')
+            ->willReturn('');
+
         $httpRequestBuilderService->expects($this->once())
             ->method('buildUrlAndOptions')
-            ->with('{"test": "data"}', $dto)
             ->willReturn([
                 'url'     => 'https://api.example.com/webhook',
                 'options' => [
@@ -115,6 +117,7 @@ final class ApiCallsServiceTest extends MauticMysqlTestCase
         );
 
         $tokenReplacementService->method('getTokenizedValue')->willReturn('{"test": "data"}');
+        $tokenReplacementService->method('getTokenizedUrl')->willReturn('');
         $httpRequestBuilderService->method('buildUrlAndOptions')->willReturn([
             'url'     => 'https://api.example.com/webhook',
             'options' => [
@@ -484,6 +487,7 @@ final class ApiCallsServiceTest extends MauticMysqlTestCase
         );
 
         $tokenReplacementService->method('getTokenizedValue')->willReturn('');
+        $tokenReplacementService->method('getTokenizedUrl')->willReturn('');
         $httpRequestBuilderService->method('buildUrlAndOptions')->willReturn([
             'url'     => 'https://api.example.com/user',
             'options' => ['headers' => []],

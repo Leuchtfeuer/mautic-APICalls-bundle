@@ -63,8 +63,8 @@ Choose from the following HTTP methods:
 - **PUT**: For updating existing resources
 - **PATCH**: For partial updates
 
-### GET Request Parameters
-When using the GET method, you can define URL parameters in a dedicated field:
+### URL Parameters
+Regardless of the HTTP method, you can define URL parameters in a dedicated field:
 - Format: `email={contactfield=email}&category=7`
 - Use `{contactfield=fieldname}` to insert contact field values
 - The leading `?` is automatically added - do not include it in your parameter string

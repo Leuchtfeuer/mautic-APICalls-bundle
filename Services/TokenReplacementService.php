@@ -13,10 +13,8 @@ class TokenReplacementService
         $tokenizedValue = '';
 
         if ($lead->getLead()) {
-            $sourceText = !empty($dto->body) ? $dto->body : $dto->urlParameters;
-
             $tokenizedValue = TokenHelper::findLeadTokens(
-                $sourceText,
+                $dto->body,
                 $lead->getLead()->getProfileFields(),
                 true
             );
