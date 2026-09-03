@@ -109,14 +109,14 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
             ->getForm();
     }
 
-    public function testStandaloneFormRejectsUrlParametersForNonGetMethod(): void
+    public function testStandaloneFormRejectsRegexForNonGetMethod(): void
     {
         $properties = [
-            'url'            => 'https://api.example.com/contacts',
-            'method'         => 'POST',
-            'contentType'    => 'application/json',
-            'body'           => '{"email":"test@example.com"}',
-            'url_parameters' => 'email=test@example.com',
+            'url'         => 'https://api.example.com/contacts',
+            'method'      => 'POST',
+            'contentType' => 'application/json',
+            'body'        => '{"email":"test@example.com"}',
+            'regex'       => '/"email"\s*:\s*"([^"]+)"/',
         ];
 
         $form = $this->createStandaloneForm($properties);
@@ -124,7 +124,7 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
 
         $this->assertTrue($form->isSubmitted());
         $this->assertFalse($form->isValid());
-        $this->assertGreaterThan(0, $form->get('url_parameters')->getErrors(true)->count());
+        $this->assertGreaterThan(0, $form->get('regex')->getErrors(true)->count());
     }
 
     public function testStandaloneFormRejectsBodyForGetMethod(): void

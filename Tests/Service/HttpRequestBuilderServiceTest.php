@@ -84,7 +84,7 @@ final class HttpRequestBuilderServiceTest extends TestCase
         $this->urlBuilderService->expects($this->never())
             ->method('appendQueryString');
 
-        $result = $this->service->buildUrlAndOptions('{"data": "test"}', $dto, $leadEventLogStub);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', '', $dto, $leadEventLogStub);
 
         $this->assertEquals('https://example.com/api', $result['url']);
         $this->assertEquals([
@@ -171,10 +171,11 @@ final class HttpRequestBuilderServiceTest extends TestCase
             contentType: 'application/json',
             urlParameters: 'filter=active&page=1'
         );
+        $leadEventLogStub = $this->createStub(LeadEventLog::class);
 
         $this->tokenReplacementService->expects($this->once())
             ->method('getTokenizedUrl')
-            ->with($this->leadEventLog, 'https://example.com/api')
+            ->with($leadEventLogStub, 'https://example.com/api')
             ->willReturn('https://example.com/api');
 
         $this->urlBuilderService->expects($this->once())
@@ -182,7 +183,7 @@ final class HttpRequestBuilderServiceTest extends TestCase
             ->with('https://example.com/api', 'filter=active&page=1')
             ->willReturn('https://example.com/api?filter=active&page=1');
 
-        $result = $this->service->buildUrlAndOptions('{"data": "test"}', 'filter=active&page=1', $dto, $this->leadEventLog);
+        $result = $this->service->buildUrlAndOptions('{"data": "test"}', 'filter=active&page=1', $dto, $leadEventLogStub);
 
         $this->assertEquals('https://example.com/api?filter=active&page=1', $result['url']);
         $this->assertEquals('{"data": "test"}', $result['options']['body']);

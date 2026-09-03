@@ -28,9 +28,9 @@ class ApiCallsService
 
     public function sendRequest(LeadEventLog $lead, ApiCallPropertiesDTO $dto): void
     {
-        $tokenizedValue = $this->tokenReplacementService->getTokenizedValue($lead, $dto);
+        $tokenizedValue     = $this->tokenReplacementService->getTokenizedValue($lead, $dto);
         $tokenizedUrlParams = $this->tokenReplacementService->getTokenizedUrl($lead, $dto->urlParameters);
-        $urlAndOptions = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $tokenizedUrlParams, $dto, $lead);
+        $urlAndOptions      = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $tokenizedUrlParams, $dto, $lead);
 
         $currentUrl = $urlAndOptions['url'];
         $options    = $urlAndOptions['options'];
@@ -103,7 +103,6 @@ class ApiCallsService
     /**
      * @param array<mixed> $options
      */
-
     private function handleRedirects(ApiCallPropertiesDTO $dto, string $currentUrl, array $options, string $tokenizedUrlParams): ResponseInterface
     {
         $redirectCount = 0;
@@ -122,7 +121,7 @@ class ApiCallsService
                 break;
             }
 
-            $currentUrl = $this->urlBuilderService->appendQueryString($locationHeader, $tokenizedUrlParams);
+            $redirectUrl = $this->urlBuilderService->appendQueryString($locationHeader, $tokenizedUrlParams);
 
             if (!$this->isSameOrigin($currentUrl, $redirectUrl)) {
                 $options = $this->stripCredentialsFromOptions($options);

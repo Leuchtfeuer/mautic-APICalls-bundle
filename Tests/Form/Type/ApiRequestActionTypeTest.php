@@ -60,7 +60,7 @@ final class ApiRequestActionTypeTest extends TestCase
         $this->formType->validateRegex('[invalid', $this->context);
     }
 
-    public function testValidateUrlParametersUsesFlatFormData(): void
+    public function testValidateByContentTypeUsesFlatFormData(): void
     {
         $this->mockRootFormData([
             'method' => 'POST',
@@ -74,10 +74,10 @@ final class ApiRequestActionTypeTest extends TestCase
             ->with('leuchtfeuer.mautic-apicalls-bundle.get.method.required')
             ->willReturn($violationBuilder);
 
-        $this->formType->validateUrlParameters('email=test@example.com', $this->context);
+        $this->formType->validateByContentType('user.email', $this->context);
     }
 
-    public function testValidateUrlParametersUsesNestedCampaignFormData(): void
+    public function testValidateByContentTypeUsesNestedCampaignFormData(): void
     {
         $this->mockRootFormData([
             'properties' => [
@@ -93,7 +93,7 @@ final class ApiRequestActionTypeTest extends TestCase
             ->with('leuchtfeuer.mautic-apicalls-bundle.get.method.required')
             ->willReturn($violationBuilder);
 
-        $this->formType->validateUrlParameters('email=test@example.com', $this->context);
+        $this->formType->validateByContentType('user.email', $this->context);
     }
 
     public function testValidateBodyByContentTypeUsesFlatFormData(): void

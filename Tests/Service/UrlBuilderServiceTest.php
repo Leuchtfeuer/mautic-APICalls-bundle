@@ -35,7 +35,7 @@ final class UrlBuilderServiceTest extends TestCase
     {
         $result = $this->service->appendQueryString('https://example.com/api', 'param1=value1');
 
-        $this->assertEquals('https://example.com/api?param1=value1', $result);
+        $this->assertSame('https://example.com/api?param1=value1', $result);
     }
 
     public function testAppendQueryStringWithEmptyValue(): void

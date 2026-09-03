@@ -4,7 +4,6 @@ namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Services;
 
 class UrlBuilderService
 {
-
     public function appendQueryString(string $url, string $value): string
     {
         if (empty($value)) {
