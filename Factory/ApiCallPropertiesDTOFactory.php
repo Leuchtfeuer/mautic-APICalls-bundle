@@ -3,9 +3,15 @@
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Factory;
 
 use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
+use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\CampaignActionSecretService;
 
 class ApiCallPropertiesDTOFactory
 {
+    public function __construct(
+        private CampaignActionSecretService $secretService,
+    ) {
+    }
+
     /**
      * @param array<string, string> $properties
      */
@@ -18,12 +24,12 @@ class ApiCallPropertiesDTOFactory
             body: $properties['body'] ?? '',
             urlParameters: $properties['url_parameters'] ?? '',
             username: $properties['username'] ?? '',
-            password: $properties['password'] ?? '',
+            password: $this->secretService->decryptIfNeeded($properties['password'] ?? null),
             contactField: $properties['contact_field'] ?? '',
             regex: $properties['regex'] ?? '',
             objectKey: $properties['object_key'] ?? '',
             valueKey: $properties['value_key'] ?? '',
-            authorizationHeader: $properties['authorization_header'] ?? ''
+            authorizationHeader: $this->secretService->decryptIfNeeded($properties['authorization_header'] ?? null),
         );
     }
 }

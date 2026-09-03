@@ -226,8 +226,8 @@ class PropertySearchServiceTest extends TestCase
         $data = [
             'users' => [
                 ['name' => 'John', 'id' => 1],
-                ['name' => 'Jane', 'id' => 2]
-            ]
+                ['name' => 'Jane', 'id' => 2],
+            ],
         ];
 
         $result = $this->service->handleArrays($data, 'name');
@@ -244,7 +244,7 @@ class PropertySearchServiceTest extends TestCase
 
     public function testHandleObjectsWithDirectProperty(): void
     {
-        $data = (object)['name' => 'John', 'age' => 30];
+        $data = (object) ['name' => 'John', 'age' => 30];
 
         $result = $this->service->handleObjects($data, 'name');
         $this->assertEquals('John', $result);
@@ -255,9 +255,9 @@ class PropertySearchServiceTest extends TestCase
 
     public function testHandleObjectsWithNestedSearch(): void
     {
-        $data = (object)[
-            'user' => (object)['name' => 'John', 'id' => 1],
-            'settings' => (object)['theme' => 'dark']
+        $data = (object) [
+            'user'     => (object) ['name' => 'John', 'id' => 1],
+            'settings' => (object) ['theme' => 'dark'],
         ];
 
         $result = $this->service->handleObjects($data, 'name');
@@ -269,7 +269,7 @@ class PropertySearchServiceTest extends TestCase
 
     public function testHandleObjectsReturnsNullWhenNotFound(): void
     {
-        $data = (object)['name' => 'John'];
+        $data = (object) ['name' => 'John'];
 
         $result = $this->service->handleObjects($data, 'nonexistent');
         $this->assertNull($result);
@@ -343,5 +343,38 @@ class PropertySearchServiceTest extends TestCase
         // Test with boolean - findByKey returns null for primitives, so result is empty
         $result = $this->service->getValue(true, 'any');
         $this->assertEquals('', $result);
+    }
+
+    public function testGetValueWithDotNotationPath(): void
+    {
+        $data = json_decode('{
+            "user": {
+                "email": "john@example.com",
+                "profile": {
+                    "name": "John Doe",
+                    "age": 30
+                }
+            },
+            "items": [
+                {"name": "Product A", "price": 19.99},
+                {"name": "Product B", "price": 29.99}
+            ]
+        }');
+
+        $this->assertEquals('john@example.com', $this->service->getValue($data, 'user.email'));
+        $this->assertEquals('John Doe', $this->service->getValue($data, 'profile.name', 'user'));
+        $this->assertEquals('30', $this->service->getValue($data, 'profile.age', 'user'));
+        $this->assertEquals('Product A', $this->service->getValue($data, 'items[0].name'));
+        $this->assertEquals('Product B', $this->service->getValue($data, 'items[1].name'));
+        $this->assertEquals('19.99', $this->service->getValue($data, 'items[0].price'));
+    }
+
+    public function testGetValueWithDotNotationReturnsEmptyStringWhenPathNotFound(): void
+    {
+        $data = json_decode('{"user": {"email": "john@example.com"}}');
+
+        $this->assertEquals('', $this->service->getValue($data, 'user.missing'));
+        $this->assertEquals('', $this->service->getValue($data, 'items[0].name'));
+        $this->assertEquals('', $this->service->getValue($data, 'profile.name', 'user'));
     }
 }

@@ -95,6 +95,4 @@ class ApiCallPropertiesDTOTest extends TestCase
         $this->assertEquals('user', $dto->objectKey);
         $this->assertEquals('email', $dto->valueKey);
     }
-
-
 }

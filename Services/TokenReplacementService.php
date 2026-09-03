@@ -8,7 +8,6 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 
 class TokenReplacementService
 {
-
     public function getTokenizedValue(LeadEventLog $lead, ApiCallPropertiesDTO $dto): string
     {
         $tokenizedValue = '';
@@ -24,7 +23,6 @@ class TokenReplacementService
         return !is_array($tokenizedValue) ? $tokenizedValue : '';
     }
 
-
     public function getTokenizedUrl(LeadEventLog $lead, string $url): string
     {
         $tokenizedValue = '';
@@ -39,5 +37,4 @@ class TokenReplacementService
 
         return !is_array($tokenizedValue) ? $tokenizedValue : '';
     }
-
 }

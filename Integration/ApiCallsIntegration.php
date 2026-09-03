@@ -11,7 +11,7 @@ class ApiCallsIntegration extends BasicIntegration implements BasicInterface
     use ConfigurationTrait;
 
     public const INTEGRATION_NAME = 'apicalls';
-    public const DISPLAY_NAME  = 'API Calls by Leuchtfeuer';
+    public const DISPLAY_NAME     = 'API Calls by Leuchtfeuer';
 
     public function getName(): string
     {
@@ -27,5 +27,4 @@ class ApiCallsIntegration extends BasicIntegration implements BasicInterface
     {
         return 'plugins/LeuchtfeuerAPICallsBundle/Assets/icon/Leuchtfeuer-mautic-APICalls.png';
     }
-
 }

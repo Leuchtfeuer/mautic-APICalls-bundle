@@ -15,9 +15,8 @@ class UrlBuilderService
 
         parse_str($value, $newParams);
         $queryString = http_build_query($newParams, '', '&');
-        $separator = str_contains($url, '?') ? '&' : '?';
+        $separator   = str_contains($url, '?') ? '&' : '?';
 
-        return $url . $separator . $queryString;
+        return $url.$separator.$queryString;
     }
-
 }

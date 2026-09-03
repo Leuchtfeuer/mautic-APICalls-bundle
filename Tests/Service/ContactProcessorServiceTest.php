@@ -14,15 +14,15 @@ class ContactProcessorServiceTest extends TestCase
     public function testProcessContacts(): void
     {
         $properties = [
-            'url' => 'https://api.example.com/webhook',
-            'method' => 'POST',
+            'url'         => 'https://api.example.com/webhook',
+            'method'      => 'POST',
             'contentType' => 'application/json',
-            'body' => '{"test": "data"}'
+            'body'        => '{"test": "data"}',
         ];
 
         $leads = [
             $this->createMock(LeadEventLog::class),
-            $this->createMock(LeadEventLog::class)
+            $this->createMock(LeadEventLog::class),
         ];
 
         $dto = $this->createMock(ApiCallPropertiesDTO::class);
@@ -46,9 +46,9 @@ class ContactProcessorServiceTest extends TestCase
     public function testProcessContactsWithEmptyLeads(): void
     {
         $properties = [
-            'url' => 'https://api.example.com/webhook',
-            'method' => 'POST',
-            'contentType' => 'application/json'
+            'url'         => 'https://api.example.com/webhook',
+            'method'      => 'POST',
+            'contentType' => 'application/json',
         ];
 
         $leads = [];

@@ -8,23 +8,24 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
-
 class ApiCallsService
 {
-
-    private  const MAX_REDIRECTS = 5;
-    public function __construct(private HttpClientInterface       $client,
-                                private LeadModel                 $leadModel,
-                                private HttpRequestBuilderService $httpRequestBuilderService,
-                                private TokenReplacementService   $tokenReplacementService,
-                                private UrlBuilderService         $urlBuilderService,
-                                private PropertySearchService     $propertySearchService)
-    {}
+    private const MAX_REDIRECTS = 5;
 
     /**
-     * @param ApiCallPropertiesDTO $dto
-     * @param LeadEventLog $lead
+     * Maximum number of bytes stored in campaign event metadata for the API response body.
      */
+    public const MAX_METADATA_RESPONSE_BODY_LENGTH = 65536;
+
+    public function __construct(private HttpClientInterface $client,
+        private LeadModel $leadModel,
+        private HttpRequestBuilderService $httpRequestBuilderService,
+        private TokenReplacementService $tokenReplacementService,
+        private UrlBuilderService $urlBuilderService,
+        private PropertySearchService $propertySearchService)
+    {
+    }
+
     public function sendRequest(LeadEventLog $lead, ApiCallPropertiesDTO $dto): void
     {
         $tokenizedValue = $this->tokenReplacementService->getTokenizedValue($lead, $dto);
@@ -32,20 +33,18 @@ class ApiCallsService
         $urlAndOptions = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $tokenizedUrlParams, $dto, $lead);
 
         $currentUrl = $urlAndOptions['url'];
-        $options = $urlAndOptions['options'];
+        $options    = $urlAndOptions['options'];
 
         $response = $this->handleRedirects($dto, $currentUrl, $options, $tokenizedUrlParams);
 
         $this->checkIfResponseValid($response);
 
-        if (!empty($dto->contactField) && $dto->method === 'GET') {
-
+        if (!empty($dto->contactField) && 'GET' === $dto->method) {
             $content = $response->getContent(false);
 
             $decoded = json_decode($content);
 
-            if (json_last_error() === JSON_ERROR_NONE && !empty($dto->valueKey)) {
-
+            if (JSON_ERROR_NONE === json_last_error() && !empty($dto->valueKey)) {
                 $content = $this->propertySearchService->getValue($decoded, $dto->valueKey, $dto->objectKey);
             }
 
@@ -55,17 +54,13 @@ class ApiCallsService
         $this->setMetadata($lead, $response, $dto->method);
     }
 
-    /**
-     * @param ResponseInterface $response
-     */
-    public function checkIfResponseValid(ResponseInterface $response):void
+    public function checkIfResponseValid(ResponseInterface $response): void
     {
         $response->getContent();
     }
 
     public function updateField(LeadEventLog $lead, string $contactField, string $content, string $regex): void
     {
-
         if (!empty($regex)) {
             if (preg_match_all($regex, $content, $matches)) {
                 if (isset($matches[1]) && !empty($matches[1])) {
@@ -77,25 +72,32 @@ class ApiCallsService
         }
 
         if (!empty($content)) {
-            // @phpstan-ignore-next-line
-            $lead->getLead()->addUpdatedField($contactField, $content);
-
-            if($lead->getLead()){
-                $this->leadModel->saveEntity($lead->getLead());
+            $leadEntity = $lead->getLead();
+            if (null !== $leadEntity) {
+                $leadEntity->addUpdatedField($contactField, $content);
+                $this->leadModel->saveEntity($leadEntity);
             }
         }
-
     }
 
-    public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method):void
+    public function setMetadata(LeadEventLog $lead, ResponseInterface $response, string $method): void
     {
-        $lead->setMetadata([
-            'event' => 'api_calls',
+        $responseBody = $response->getContent(false);
+        $metadata     = [
+            'event'              => 'api_calls',
             'object_description' => 'API-Request Response',
-            'response_header' => $response->getHeaders(false),
-            'response_body' => $response->getContent(false),
-            'method' => $method
-        ]);
+            'response_header'    => $response->getHeaders(false),
+            'response_body'      => $responseBody,
+            'method'             => $method,
+        ];
+
+        if (strlen($responseBody) > self::MAX_METADATA_RESPONSE_BODY_LENGTH) {
+            $metadata['response_body']                 = substr($responseBody, 0, self::MAX_METADATA_RESPONSE_BODY_LENGTH);
+            $metadata['response_body_truncated']       = true;
+            $metadata['response_body_original_length'] = strlen($responseBody);
+        }
+
+        $lead->setMetadata($metadata);
     }
 
     /**
@@ -105,10 +107,9 @@ class ApiCallsService
     private function handleRedirects(ApiCallPropertiesDTO $dto, string $currentUrl, array $options, string $tokenizedUrlParams): ResponseInterface
     {
         $redirectCount = 0;
-        $response = null;
+        $response      = null;
 
         while ($redirectCount < self::MAX_REDIRECTS) {
-
             $response = $this->client->request($dto->method, $currentUrl, $options);
 
             if (!$this->isRedirectResponse($response)) {
@@ -123,10 +124,60 @@ class ApiCallsService
 
             $currentUrl = $this->urlBuilderService->appendQueryString($locationHeader, $tokenizedUrlParams);
 
-            $redirectCount++;
+            if (!$this->isSameOrigin($currentUrl, $redirectUrl)) {
+                $options = $this->stripCredentialsFromOptions($options);
+            }
+
+            $currentUrl = $redirectUrl;
+
+            ++$redirectCount;
         }
 
         return $response;
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     *
+     * @return array<string, mixed>
+     */
+    private function stripCredentialsFromOptions(array $options): array
+    {
+        unset($options['auth_basic']);
+
+        if (isset($options['headers']) && is_array($options['headers'])) {
+            foreach (array_keys($options['headers']) as $headerName) {
+                if (0 === strcasecmp($headerName, 'Authorization')) {
+                    unset($options['headers'][$headerName]);
+                }
+            }
+        }
+
+        return $options;
+    }
+
+    private function isSameOrigin(string $fromUrl, string $toUrl): bool
+    {
+        $from = parse_url($fromUrl);
+        $to   = parse_url($toUrl);
+
+        if (!is_array($from) || !is_array($to)) {
+            return false;
+        }
+
+        $fromScheme = strtolower($from['scheme'] ?? '');
+        $toScheme   = strtolower($to['scheme'] ?? '');
+        $fromHost   = strtolower($from['host'] ?? '');
+        $toHost     = strtolower($to['host'] ?? '');
+        $fromPort   = $from['port'] ?? $this->getDefaultPortForScheme($fromScheme);
+        $toPort     = $to['port'] ?? $this->getDefaultPortForScheme($toScheme);
+
+        return $fromScheme === $toScheme && $fromHost === $toHost && $fromPort === $toPort;
+    }
+
+    private function getDefaultPortForScheme(string $scheme): int
+    {
+        return 'https' === $scheme ? 443 : 80;
     }
 
     private function isRedirectResponse(ResponseInterface $response): bool
@@ -138,6 +189,4 @@ class ApiCallsService
     {
         return $response->getHeaders(false)['location'][0] ?? null;
     }
-
-
 }

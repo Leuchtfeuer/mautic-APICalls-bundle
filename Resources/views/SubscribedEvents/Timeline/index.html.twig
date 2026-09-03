@@ -8,5 +8,8 @@
 {% endfor %}
     </pre>
     <h4 class="mb-8">Response Body</h4>
+    {% if properties.response_body_truncated is defined and properties.response_body_truncated %}
+        <p class="text-muted small mb-8">{{ 'leuchtfeuer.mautic-apicalls-bundle.timeline.response_body_truncated'|trans({'%length%': properties.response_body_original_length}) }}</p>
+    {% endif %}
     <pre>{{ properties.response_body }}</pre>
 </div>

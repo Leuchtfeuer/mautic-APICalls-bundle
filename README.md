@@ -6,8 +6,8 @@ This feature introduces a new campaign action in Mautic that allows campaigns to
 ## Requirements for this release
 > [!TIP]
 > Other releases of this plugin may cover different Mautic versions!
-- Mautic 5.x (minimum 5.2)
-- PHP >= 8.0
+- Mautic 6
+- PHP >= 8.1
 
 ### Key Features:
 - **Campaign action**: Send API request with comprehensive configuration options

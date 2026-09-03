@@ -1,8 +1,9 @@
 <?php
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle;
-final class LeuchtfeuerAPICallsEvents {
 
+final class LeuchtfeuerAPICallsEvents
+{
     /** * This event is triggered when a company segment is created.
      *
      * * @var string */
