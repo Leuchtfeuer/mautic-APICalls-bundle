@@ -7,7 +7,7 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 
 class HttpRequestBuilderService
 {
-    public function __construct(private UrlBuilderService $urlBuilderService, private TokenReplacementService $tokenReplacementService)
+    public function __construct(private readonly UrlBuilderService $urlBuilderService, private readonly TokenReplacementService $tokenReplacementService)
     {
     }
 

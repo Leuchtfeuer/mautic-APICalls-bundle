@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\DTO;
 
 use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 use PHPUnit\Framework\TestCase;
 
-class ApiCallPropertiesDTOTest extends TestCase
+final class ApiCallPropertiesDTOTest extends TestCase
 {
     public function testConstructorWithAllParameters(): void
     {
@@ -24,18 +26,18 @@ class ApiCallPropertiesDTOTest extends TestCase
             authorizationHeader: 'Authorization: Bearer token123'
         );
 
-        $this->assertEquals('https://example.com/api', $dto->url);
-        $this->assertEquals('POST', $dto->method);
-        $this->assertEquals('application/json', $dto->contentType);
-        $this->assertEquals('{"test": "data"}', $dto->body);
-        $this->assertEquals('param=value', $dto->urlParameters);
-        $this->assertEquals('user123', $dto->username);
-        $this->assertEquals('pass123', $dto->password);
-        $this->assertEquals('email', $dto->contactField);
-        $this->assertEquals('/test/', $dto->regex);
-        $this->assertEquals('data', $dto->objectKey);
-        $this->assertEquals('user.email', $dto->valueKey);
-        $this->assertEquals('Authorization: Bearer token123', $dto->authorizationHeader);
+        $this->assertSame('https://example.com/api', $dto->url);
+        $this->assertSame('POST', $dto->method);
+        $this->assertSame('application/json', $dto->contentType);
+        $this->assertSame('{"test": "data"}', $dto->body);
+        $this->assertSame('param=value', $dto->urlParameters);
+        $this->assertSame('user123', $dto->username);
+        $this->assertSame('pass123', $dto->password);
+        $this->assertSame('email', $dto->contactField);
+        $this->assertSame('/test/', $dto->regex);
+        $this->assertSame('data', $dto->objectKey);
+        $this->assertSame('user.email', $dto->valueKey);
+        $this->assertSame('Authorization: Bearer token123', $dto->authorizationHeader);
     }
 
     public function testConstructorWithRequiredParametersOnly(): void
@@ -46,9 +48,9 @@ class ApiCallPropertiesDTOTest extends TestCase
             contentType: 'application/xml'
         );
 
-        $this->assertEquals('https://example.com/api', $dto->url);
-        $this->assertEquals('GET', $dto->method);
-        $this->assertEquals('application/xml', $dto->contentType);
+        $this->assertSame('https://example.com/api', $dto->url);
+        $this->assertSame('GET', $dto->method);
+        $this->assertSame('application/xml', $dto->contentType);
         $this->assertEmpty($dto->body);
         $this->assertEmpty($dto->urlParameters);
         $this->assertEmpty($dto->username);
@@ -69,10 +71,10 @@ class ApiCallPropertiesDTOTest extends TestCase
             authorizationHeader: 'X-API-Key: secret123'
         );
 
-        $this->assertEquals('https://api.example.com', $dto->url);
-        $this->assertEquals('POST', $dto->method);
-        $this->assertEquals('application/json', $dto->contentType);
-        $this->assertEquals('X-API-Key: secret123', $dto->authorizationHeader);
+        $this->assertSame('https://api.example.com', $dto->url);
+        $this->assertSame('POST', $dto->method);
+        $this->assertSame('application/json', $dto->contentType);
+        $this->assertSame('X-API-Key: secret123', $dto->authorizationHeader);
         $this->assertEmpty($dto->username);
         $this->assertEmpty($dto->password);
     }
@@ -88,11 +90,11 @@ class ApiCallPropertiesDTOTest extends TestCase
             valueKey: 'email'
         );
 
-        $this->assertEquals('https://api.example.com/user', $dto->url);
-        $this->assertEquals('GET', $dto->method);
-        $this->assertEquals('application/json', $dto->contentType);
-        $this->assertEquals('email', $dto->contactField);
-        $this->assertEquals('user', $dto->objectKey);
-        $this->assertEquals('email', $dto->valueKey);
+        $this->assertSame('https://api.example.com/user', $dto->url);
+        $this->assertSame('GET', $dto->method);
+        $this->assertSame('application/json', $dto->contentType);
+        $this->assertSame('email', $dto->contactField);
+        $this->assertSame('user', $dto->objectKey);
+        $this->assertSame('email', $dto->valueKey);
     }
 }

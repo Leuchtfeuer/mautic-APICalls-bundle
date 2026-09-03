@@ -13,8 +13,8 @@ class CampaignActionSecretMigrator
     private const SECRET_FIELDS = ['password', 'authorization_header'];
 
     public function __construct(
-        private EntityManagerInterface $entityManager,
-        private CampaignActionSecretService $secretService,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly CampaignActionSecretService $secretService,
     ) {
     }
 
