@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 final class ConfigTest extends TestCase
 {
     /** @var IntegrationsHelper&MockObject */
-    private IntegrationsHelper $integrationsHelper;
+    private MockObject $integrationsHelper;
 
     private Config $config;
 
@@ -41,7 +41,7 @@ final class ConfigTest extends TestCase
             ->with(ApiCallsIntegration::INTEGRATION_NAME)
             ->willReturn($integration);
 
-        self::assertTrue($this->config->isPublished());
+        $this->assertTrue($this->config->isPublished());
     }
 
     public function testIsPublishedReturnsFalseWhenIntegrationIsNotFound(): void
@@ -50,7 +50,7 @@ final class ConfigTest extends TestCase
             ->method('getIntegration')
             ->willThrowException(new IntegrationNotFoundException(ApiCallsIntegration::INTEGRATION_NAME));
 
-        self::assertFalse($this->config->isPublished());
+        $this->assertFalse($this->config->isPublished());
     }
 
     public function testIsPublishedReturnsFalseWhenIntegrationConfigurationIsMissing(): void
@@ -62,7 +62,7 @@ final class ConfigTest extends TestCase
             ->method('getIntegration')
             ->willReturn($integration);
 
-        self::assertFalse($this->config->isPublished());
+        $this->assertFalse($this->config->isPublished());
     }
 
     public function testIsPublishedReturnsFalseWhenIntegrationIsUnpublished(): void
@@ -78,6 +78,6 @@ final class ConfigTest extends TestCase
             ->method('getIntegration')
             ->willReturn($integration);
 
-        self::assertFalse($this->config->isPublished());
+        $this->assertFalse($this->config->isPublished());
     }
 }

@@ -16,7 +16,7 @@ use Symfony\Component\Form\FormEvent;
 final class ApiCallsPreSubmitFormListenerTest extends TestCase
 {
     /** @var CampaignActionSecretService&MockObject */
-    private CampaignActionSecretService $secretService;
+    private MockObject $secretService;
 
     private ApiCallsPreSubmitFormListener $listener;
 
@@ -30,11 +30,11 @@ final class ApiCallsPreSubmitFormListenerTest extends TestCase
 
     public function testPreSetDataClearsStoredSecretsFromFormData(): void
     {
-        $this->secretService->expects(self::exactly(2))
+        $this->secretService->expects($this->exactly(2))
             ->method('sanitizeForFormDisplay')
             ->willReturn('');
 
-        $event = new FormEvent($this->createMock(Form::class), [
+        $event = new FormEvent($this->createStub(Form::class), [
             'password'              => 'cipher|vector',
             'authorization_header'  => 'legacy-secret',
             'url'                   => 'https://api.example.com',
@@ -42,9 +42,9 @@ final class ApiCallsPreSubmitFormListenerTest extends TestCase
 
         $this->listener->preSetData($event);
 
-        self::assertSame('', $event->getData()['password']);
-        self::assertSame('', $event->getData()['authorization_header']);
-        self::assertSame('https://api.example.com', $event->getData()['url']);
+        $this->assertSame('', $event->getData()['password']);
+        $this->assertSame('', $event->getData()['authorization_header']);
+        $this->assertSame('https://api.example.com', $event->getData()['url']);
     }
 
     public function testPreservesEncryptedPasswordWhenSubmittedEmpty(): void
@@ -55,7 +55,7 @@ final class ApiCallsPreSubmitFormListenerTest extends TestCase
         $form = $this->createMock(Form::class);
         $form->method('getRoot')->willReturn($rootForm);
 
-        $this->secretService->expects(self::once())
+        $this->secretService->expects($this->once())
             ->method('encryptIfNeeded')
             ->with('cipher|vector')
             ->willReturn('cipher|vector');
@@ -69,8 +69,8 @@ final class ApiCallsPreSubmitFormListenerTest extends TestCase
 
         $this->listener->preSubmitData($event);
 
-        self::assertSame('cipher|vector', $event->getData()['password']);
-        self::assertSame('{"data":"test"}', $event->getData()['body']);
+        $this->assertSame('cipher|vector', $event->getData()['password']);
+        $this->assertSame('{"data":"test"}', $event->getData()['body']);
     }
 
     public function testEncryptsSubmittedPassword(): void
@@ -81,7 +81,7 @@ final class ApiCallsPreSubmitFormListenerTest extends TestCase
         $form = $this->createMock(Form::class);
         $form->method('getRoot')->willReturn($rootForm);
 
-        $this->secretService->expects(self::once())
+        $this->secretService->expects($this->once())
             ->method('encryptIfNeeded')
             ->with('new_password')
             ->willReturn('encrypted|blob');
@@ -93,7 +93,7 @@ final class ApiCallsPreSubmitFormListenerTest extends TestCase
 
         $this->listener->preSubmitData($event);
 
-        self::assertSame('encrypted|blob', $event->getData()['password']);
+        $this->assertSame('encrypted|blob', $event->getData()['password']);
     }
 
     public function testPreservesEncryptedAuthorizationHeaderWhenSubmittedEmpty(): void
@@ -104,7 +104,7 @@ final class ApiCallsPreSubmitFormListenerTest extends TestCase
         $form = $this->createMock(Form::class);
         $form->method('getRoot')->willReturn($rootForm);
 
-        $this->secretService->expects(self::once())
+        $this->secretService->expects($this->once())
             ->method('encryptIfNeeded')
             ->with('cipher|vector')
             ->willReturn('cipher|vector');
@@ -115,7 +115,7 @@ final class ApiCallsPreSubmitFormListenerTest extends TestCase
 
         $this->listener->preSubmitData($event);
 
-        self::assertSame('cipher|vector', $event->getData()['authorization_header']);
+        $this->assertSame('cipher|vector', $event->getData()['authorization_header']);
     }
 
     public function testFormTypeCleanMasksPreserveJsonBodyContent(): void
@@ -133,7 +133,7 @@ final class ApiCallsPreSubmitFormListenerTest extends TestCase
             'properties' => CampaignActionSubscriber::FORM_TYPE_CLEAN_MASKS,
         ]);
 
-        self::assertSame($rawBody, $result['properties']['body']);
+        $this->assertSame($rawBody, $result['properties']['body']);
     }
 
     public function testDefaultCleanMaskStripsHtmlFromBody(): void
@@ -148,6 +148,6 @@ final class ApiCallsPreSubmitFormListenerTest extends TestCase
 
         $result = InputHelper::_($data, ['properties' => 'clean']);
 
-        self::assertNotSame($rawBody, $result['properties']['body']);
+        $this->assertNotSame($rawBody, $result['properties']['body']);
     }
 }

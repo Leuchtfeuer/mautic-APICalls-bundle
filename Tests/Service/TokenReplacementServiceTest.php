@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\Service;
 
 use Mautic\CampaignBundle\Entity\LeadEventLog;
@@ -8,7 +10,7 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\TokenReplacementService;
 use PHPUnit\Framework\TestCase;
 
-class TokenReplacementServiceTest extends TestCase
+final class TokenReplacementServiceTest extends TestCase
 {
     private TokenReplacementService $service;
 
@@ -75,7 +77,7 @@ class TokenReplacementServiceTest extends TestCase
 
         $result = $this->service->getTokenizedValue($lead, $dto);
 
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
     }
 
     public function testGetTokenizedUrlWithTokens(): void
@@ -92,7 +94,7 @@ class TokenReplacementServiceTest extends TestCase
 
         $result = $this->service->getTokenizedUrl($lead, $url);
 
-        $this->assertEquals('https://example.com/api/John/Doe', $result);
+        $this->assertSame('https://example.com/api/John/Doe', $result);
     }
 
     public function testGetTokenizedUrlWithoutTokens(): void
@@ -106,7 +108,7 @@ class TokenReplacementServiceTest extends TestCase
 
         $result = $this->service->getTokenizedUrl($lead, $url);
 
-        $this->assertEquals('https://example.com/api/endpoint', $result);
+        $this->assertSame('https://example.com/api/endpoint', $result);
     }
 
     public function testGetTokenizedUrlWithNoLead(): void
@@ -118,7 +120,7 @@ class TokenReplacementServiceTest extends TestCase
 
         $result = $this->service->getTokenizedUrl($lead, $url);
 
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
     }
 
     public function testGetTokenizedUrlWithEmptyUrl(): void
@@ -132,7 +134,7 @@ class TokenReplacementServiceTest extends TestCase
 
         $result = $this->service->getTokenizedUrl($lead, $url);
 
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
     }
 
     public function testGetTokenizedUrlWithMultipleTokens(): void
@@ -150,6 +152,6 @@ class TokenReplacementServiceTest extends TestCase
 
         $result = $this->service->getTokenizedUrl($lead, $url);
 
-        $this->assertEquals('https://api.example.com/123/profile/john.doe@example.com?name=John', $result);
+        $this->assertSame('https://api.example.com/123/profile/john.doe@example.com?name=John', $result);
     }
 }

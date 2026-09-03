@@ -19,13 +19,13 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class CampaignActionSubscriberTest extends TestCase
 {
     /** @var ContactProcessorService&MockObject */
-    private ContactProcessorService $contactProcessorService;
+    private MockObject $contactProcessorService;
 
     /** @var Config&MockObject */
-    private Config $config;
+    private MockObject $config;
 
     /** @var TranslatorInterface&MockObject */
-    private TranslatorInterface $translator;
+    private MockObject $translator;
 
     private CampaignActionSubscriber $subscriber;
 
@@ -47,10 +47,10 @@ final class CampaignActionSubscriberTest extends TestCase
     {
         $events = CampaignActionSubscriber::getSubscribedEvents();
 
-        self::assertArrayHasKey('mautic.campaign_on_build', $events);
-        self::assertArrayHasKey('api.campaign_action.execute', $events);
-        self::assertSame(['onCampaignBuild', 0], $events['mautic.campaign_on_build']);
-        self::assertSame(['onExecuteApiRequest', 0], $events['api.campaign_action.execute']);
+        $this->assertArrayHasKey('mautic.campaign_on_build', $events);
+        $this->assertArrayHasKey('api.campaign_action.execute', $events);
+        $this->assertSame(['onCampaignBuild', 0], $events['mautic.campaign_on_build']);
+        $this->assertSame(['onExecuteApiRequest', 0], $events['api.campaign_action.execute']);
     }
 
     public function testOnExecuteApiRequestProcessesContactsSuccessfully(): void
@@ -58,31 +58,31 @@ final class CampaignActionSubscriberTest extends TestCase
         $contacts   = [new Lead()];
         $properties = ['url' => 'https://api.example.com', 'method' => 'POST'];
 
-        $this->config->expects(self::once())
+        $this->config->expects($this->once())
             ->method('isPublished')
             ->willReturn(true);
 
         $campaignEvent = $this->createMock(Event::class);
-        $campaignEvent->expects(self::once())
+        $campaignEvent->expects($this->once())
             ->method('getProperties')
             ->willReturn($properties);
 
         $pending = $this->createMock(\Doctrine\Common\Collections\ArrayCollection::class);
-        $pending->expects(self::once())
+        $pending->expects($this->once())
             ->method('toArray')
             ->willReturn($contacts);
 
         $event = $this->createMock(PendingEvent::class);
-        $event->expects(self::once())
+        $event->expects($this->once())
             ->method('getPending')
             ->willReturn($pending);
-        $event->expects(self::once())
+        $event->expects($this->once())
             ->method('getEvent')
             ->willReturn($campaignEvent);
-        $event->expects(self::once())
+        $event->expects($this->once())
             ->method('passAll');
 
-        $this->contactProcessorService->expects(self::once())
+        $this->contactProcessorService->expects($this->once())
             ->method('processContacts')
             ->with($properties, $contacts);
 
@@ -93,25 +93,25 @@ final class CampaignActionSubscriberTest extends TestCase
     {
         $failureMessage = 'The API Calls plugin is not published.';
 
-        $this->config->expects(self::once())
+        $this->config->expects($this->once())
             ->method('isPublished')
             ->willReturn(false);
 
-        $this->translator->expects(self::once())
+        $this->translator->expects($this->once())
             ->method('trans')
             ->with(CampaignActionSubscriber::UNPUBLISHED_FAILURE_REASON)
             ->willReturn($failureMessage);
 
         $event = $this->createMock(PendingEvent::class);
-        $event->expects(self::once())
+        $event->expects($this->once())
             ->method('failAll')
             ->with($failureMessage);
-        $event->expects(self::never())
+        $event->expects($this->never())
             ->method('passAll');
-        $event->expects(self::never())
+        $event->expects($this->never())
             ->method('getPending');
 
-        $this->contactProcessorService->expects(self::never())
+        $this->contactProcessorService->expects($this->never())
             ->method('processContacts');
 
         $this->subscriber->onExecuteApiRequest($event);
@@ -123,34 +123,34 @@ final class CampaignActionSubscriberTest extends TestCase
         $properties   = ['url' => 'https://api.example.com', 'method' => 'POST'];
         $errorMessage = 'API request failed';
 
-        $this->config->expects(self::once())
+        $this->config->expects($this->once())
             ->method('isPublished')
             ->willReturn(true);
 
         $campaignEvent = $this->createMock(Event::class);
-        $campaignEvent->expects(self::once())
+        $campaignEvent->expects($this->once())
             ->method('getProperties')
             ->willReturn($properties);
 
         $pending = $this->createMock(\Doctrine\Common\Collections\ArrayCollection::class);
-        $pending->expects(self::once())
+        $pending->expects($this->once())
             ->method('toArray')
             ->willReturn($contacts);
 
         $event = $this->createMock(PendingEvent::class);
-        $event->expects(self::once())
+        $event->expects($this->once())
             ->method('getPending')
             ->willReturn($pending);
-        $event->expects(self::once())
+        $event->expects($this->once())
             ->method('getEvent')
             ->willReturn($campaignEvent);
-        $event->expects(self::once())
+        $event->expects($this->once())
             ->method('failAll')
             ->with($errorMessage);
-        $event->expects(self::never())
+        $event->expects($this->never())
             ->method('passAll');
 
-        $this->contactProcessorService->expects(self::once())
+        $this->contactProcessorService->expects($this->once())
             ->method('processContacts')
             ->with($properties, $contacts)
             ->willThrowException(new \Exception($errorMessage));
@@ -160,39 +160,36 @@ final class CampaignActionSubscriberTest extends TestCase
 
     public function testOnCampaignBuildAddsActionWhenIntegrationIsPublished(): void
     {
-        $event = $this->createMock(CampaignBuilderEvent::class);
+        $translator = $this->createMock(TranslatorInterface::class);
+        $translator->method('trans')->willReturnArgument(0);
+        $event = new CampaignBuilderEvent($translator);
 
-        $this->config->expects(self::once())
+        $this->config->expects($this->once())
             ->method('isPublished')
             ->willReturn(true);
 
-        $event->expects(self::once())
-            ->method('addAction')
-            ->with(
-                CampaignActionSubscriber::ACTION_TYPE,
-                [
-                    'label'              => 'leuchtfeuer.mautic-apicalls-bundle.action.label',
-                    'description'        => 'leuchtfeuer.mautic-apicalls-bundle.action.description',
-                    'batchEventName'     => 'api.campaign_action.execute',
-                    'formType'           => ApiRequestActionType::class,
-                    'formTypeCleanMasks' => CampaignActionSubscriber::FORM_TYPE_CLEAN_MASKS,
-                ]
-            );
-
         $this->subscriber->onCampaignBuild($event);
+
+        $this->assertSame([
+            'label'              => 'leuchtfeuer.mautic-apicalls-bundle.action.label',
+            'description'        => 'leuchtfeuer.mautic-apicalls-bundle.action.description',
+            'batchEventName'     => 'api.campaign_action.execute',
+            'formType'           => ApiRequestActionType::class,
+            'formTypeCleanMasks' => CampaignActionSubscriber::FORM_TYPE_CLEAN_MASKS,
+        ], $event->getActions()[CampaignActionSubscriber::ACTION_TYPE]);
     }
 
     public function testOnCampaignBuildDoesNotAddActionWhenIntegrationIsNotPublished(): void
     {
-        $event = $this->createMock(CampaignBuilderEvent::class);
+        $translator = $this->createStub(TranslatorInterface::class);
+        $event      = new CampaignBuilderEvent($translator);
 
-        $this->config->expects(self::once())
+        $this->config->expects($this->once())
             ->method('isPublished')
             ->willReturn(false);
 
-        $event->expects(self::never())
-            ->method('addAction');
-
         $this->subscriber->onCampaignBuild($event);
+
+        $this->assertSame([], $event->getActions());
     }
 }

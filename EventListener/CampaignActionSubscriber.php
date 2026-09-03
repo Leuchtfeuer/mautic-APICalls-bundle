@@ -32,9 +32,9 @@ class CampaignActionSubscriber implements EventSubscriberInterface
     ];
 
     public function __construct(
-        private ContactProcessorService $contactProcessorService,
-        private Config $config,
-        private TranslatorInterface $translator,
+        private readonly ContactProcessorService $contactProcessorService,
+        private readonly Config $config,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 

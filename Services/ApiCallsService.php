@@ -17,12 +17,12 @@ class ApiCallsService
      */
     public const MAX_METADATA_RESPONSE_BODY_LENGTH = 65536;
 
-    public function __construct(private HttpClientInterface $client,
-        private LeadModel $leadModel,
-        private HttpRequestBuilderService $httpRequestBuilderService,
-        private TokenReplacementService $tokenReplacementService,
-        private UrlBuilderService $urlBuilderService,
-        private PropertySearchService $propertySearchService)
+    public function __construct(private readonly HttpClientInterface $client,
+        private readonly LeadModel $leadModel,
+        private readonly HttpRequestBuilderService $httpRequestBuilderService,
+        private readonly TokenReplacementService $tokenReplacementService,
+        private readonly UrlBuilderService $urlBuilderService,
+        private readonly PropertySearchService $propertySearchService)
     {
     }
 
