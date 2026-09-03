@@ -29,7 +29,7 @@ class UrlBuilderServiceTest extends TestCase
         $this->assertEquals('https://example.com/api?existing=param&new=param', $result);
     }
 
-    public function testAppendQueryStringForNonGetMethod(): void
+    public function testAppendQueryStringIsMethodAgnostic(): void
     {
         $result = $this->service->appendQueryString('https://example.com/api', 'param1=value1');
 

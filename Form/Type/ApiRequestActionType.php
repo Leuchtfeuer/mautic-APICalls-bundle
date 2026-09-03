@@ -211,10 +211,6 @@ class ApiRequestActionType extends AbstractType
 
     public function validateUrlParameters(?string $parameters, ExecutionContextInterface $context): void
     {
-        // @phpstan-ignore-next-line
-        $data   = $context->getRoot()->getData();
-        $method = $this->getFormPropertyValue($data, 'method');
-
         if (empty($parameters)) {
             return;
         }
