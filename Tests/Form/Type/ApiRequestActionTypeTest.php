@@ -17,7 +17,7 @@ use Symfony\Component\Validator\Violation\ConstraintViolationBuilderInterface;
 final class ApiRequestActionTypeTest extends TestCase
 {
     /** @var ExecutionContextInterface&MockObject */
-    private ExecutionContextInterface $context;
+    private MockObject $context;
 
     private ApiRequestActionType $formType;
 
@@ -27,21 +27,21 @@ final class ApiRequestActionTypeTest extends TestCase
 
         $this->context  = $this->createMock(ExecutionContextInterface::class);
         $this->formType = new ApiRequestActionType(
-            $this->createMock(FieldModel::class),
-            new ApiCallsPreSubmitFormListener($this->createMock(CampaignActionSecretService::class)),
+            $this->createStub(FieldModel::class),
+            new ApiCallsPreSubmitFormListener($this->createStub(CampaignActionSecretService::class)),
         );
     }
 
     public function testValidateRegexAcceptsValidPattern(): void
     {
-        $this->context->expects(self::never())->method('buildViolation');
+        $this->context->expects($this->never())->method('buildViolation');
 
         $this->formType->validateRegex('/[\w\.-]+@[\w\.-]+\.\w+/', $this->context);
     }
 
     public function testValidateRegexAcceptsEmptyValue(): void
     {
-        $this->context->expects(self::never())->method('buildViolation');
+        $this->context->expects($this->never())->method('buildViolation');
 
         $this->formType->validateRegex(null, $this->context);
         $this->formType->validateRegex('', $this->context);
@@ -50,9 +50,9 @@ final class ApiRequestActionTypeTest extends TestCase
     public function testValidateRegexRejectsInvalidPattern(): void
     {
         $violationBuilder = $this->createMock(ConstraintViolationBuilderInterface::class);
-        $violationBuilder->expects(self::once())->method('addViolation');
+        $violationBuilder->expects($this->once())->method('addViolation');
 
-        $this->context->expects(self::once())
+        $this->context->expects($this->once())
             ->method('buildViolation')
             ->with('leuchtfeuer.mautic-apicalls-bundle.regex.invalid')
             ->willReturn($violationBuilder);
@@ -60,24 +60,24 @@ final class ApiRequestActionTypeTest extends TestCase
         $this->formType->validateRegex('[invalid', $this->context);
     }
 
-    public function testValidateUrlParametersUsesFlatFormData(): void
+    public function testValidateByContentTypeUsesFlatFormData(): void
     {
         $this->mockRootFormData([
             'method' => 'POST',
         ]);
 
         $violationBuilder = $this->createMock(ConstraintViolationBuilderInterface::class);
-        $violationBuilder->expects(self::once())->method('addViolation');
+        $violationBuilder->expects($this->once())->method('addViolation');
 
-        $this->context->expects(self::once())
+        $this->context->expects($this->once())
             ->method('buildViolation')
             ->with('leuchtfeuer.mautic-apicalls-bundle.get.method.required')
             ->willReturn($violationBuilder);
 
-        $this->formType->validateUrlParameters('email=test@example.com', $this->context);
+        $this->formType->validateByContentType('user.email', $this->context);
     }
 
-    public function testValidateUrlParametersUsesNestedCampaignFormData(): void
+    public function testValidateByContentTypeUsesNestedCampaignFormData(): void
     {
         $this->mockRootFormData([
             'properties' => [
@@ -86,14 +86,14 @@ final class ApiRequestActionTypeTest extends TestCase
         ]);
 
         $violationBuilder = $this->createMock(ConstraintViolationBuilderInterface::class);
-        $violationBuilder->expects(self::once())->method('addViolation');
+        $violationBuilder->expects($this->once())->method('addViolation');
 
-        $this->context->expects(self::once())
+        $this->context->expects($this->once())
             ->method('buildViolation')
             ->with('leuchtfeuer.mautic-apicalls-bundle.get.method.required')
             ->willReturn($violationBuilder);
 
-        $this->formType->validateUrlParameters('email=test@example.com', $this->context);
+        $this->formType->validateByContentType('user.email', $this->context);
     }
 
     public function testValidateBodyByContentTypeUsesFlatFormData(): void
@@ -104,9 +104,9 @@ final class ApiRequestActionTypeTest extends TestCase
         ]);
 
         $violationBuilder = $this->createMock(ConstraintViolationBuilderInterface::class);
-        $violationBuilder->expects(self::once())->method('addViolation');
+        $violationBuilder->expects($this->once())->method('addViolation');
 
-        $this->context->expects(self::once())
+        $this->context->expects($this->once())
             ->method('buildViolation')
             ->with('leuchtfeuer.mautic-apicalls-bundle.method.body.must.be.empty')
             ->willReturn($violationBuilder);
@@ -120,8 +120,8 @@ final class ApiRequestActionTypeTest extends TestCase
     private function mockRootFormData(array $data): void
     {
         $root = $this->createMock(FormInterface::class);
-        $root->expects(self::once())->method('getData')->willReturn($data);
+        $root->expects($this->once())->method('getData')->willReturn($data);
 
-        $this->context->expects(self::once())->method('getRoot')->willReturn($root);
+        $this->context->expects($this->once())->method('getRoot')->willReturn($root);
     }
 }

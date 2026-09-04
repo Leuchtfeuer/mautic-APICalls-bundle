@@ -14,7 +14,7 @@ class ApiCallsPreSubmitFormListener implements EventSubscriberInterface
     private const SECRET_FIELDS = ['password', 'authorization_header'];
 
     public function __construct(
-        private CampaignActionSecretService $secretService,
+        private readonly CampaignActionSecretService $secretService,
     ) {
     }
 
@@ -65,7 +65,7 @@ class ApiCallsPreSubmitFormListener implements EventSubscriberInterface
         foreach (self::SECRET_FIELDS as $field) {
             $submitted = $data[$field] ?? '';
 
-            if ('' !== $submitted && null !== $submitted) {
+            if ('' !== $submitted) {
                 $data[$field] = $this->secretService->encryptIfNeeded((string) $submitted);
 
                 continue;

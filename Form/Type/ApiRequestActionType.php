@@ -17,8 +17,8 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 class ApiRequestActionType extends AbstractType
 {
     public function __construct(
-        private FieldModel $fieldModel,
-        private ApiCallsPreSubmitFormListener $preSubmitFormListener,
+        private readonly FieldModel $fieldModel,
+        private readonly ApiCallsPreSubmitFormListener $preSubmitFormListener,
     ) {
     }
 
@@ -30,8 +30,8 @@ class ApiRequestActionType extends AbstractType
                 'label_attr'  => ['class' => 'control-label'],
                 'required'    => true,
                 'constraints' => [
-                    new Assert\NotBlank(['message' => 'leuchtfeuer.mautic-apicalls-bundle.url.required']),
-                    new Assert\Callback([$this, 'validateUrlAllowingPlaceholders']),
+                    new Assert\NotBlank(message: 'leuchtfeuer.mautic-apicalls-bundle.url.required'),
+                    new Assert\Callback($this->validateUrlAllowingPlaceholders(...)),
                 ],
                 'attr' => [
                     'class'       => 'form-control',
@@ -63,7 +63,7 @@ class ApiRequestActionType extends AbstractType
                     'tooltip'     => 'leuchtfeuer.mautic-apicalls-bundle.url.parameters.tooltip',
                 ],
                 'constraints' => [
-                    new Assert\Callback([$this, 'validateUrlParameters']),
+                    new Assert\Callback($this->validateUrlParameters(...)),
                 ],
             ])
             ->add('username', TextType::class, [
@@ -117,7 +117,7 @@ class ApiRequestActionType extends AbstractType
                     'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.body.placeholder',
                 ],
                 'constraints' => [
-                    new Assert\Callback([$this, 'validateBodyByContentType']),
+                    new Assert\Callback($this->validateBodyByContentType(...)),
                 ],
             ])
             ->add('object_key', TextType::class, [
@@ -129,7 +129,7 @@ class ApiRequestActionType extends AbstractType
                     'placeholder' => 'leuchtfeuer.mautic-apicalls-bundle.object_key.placeholder',
                 ],
                 'constraints' => [
-                    new Assert\Callback([$this, 'validateByContentType']),
+                    new Assert\Callback($this->validateByContentType(...)),
                 ],
             ])
             ->add('value_key', TextType::class, [
@@ -140,8 +140,8 @@ class ApiRequestActionType extends AbstractType
                     'class' => 'form-control',
                 ],
                 'constraints' => [
-                    new Assert\Callback([$this, 'validateByContentType']),
-                    new Assert\Callback([$this, 'valueKeyValidation']),
+                    new Assert\Callback($this->validateByContentType(...)),
+                    new Assert\Callback($this->valueKeyValidation(...)),
                 ],
             ])
             ->add('contact_field', ChoiceType::class, [
@@ -155,8 +155,8 @@ class ApiRequestActionType extends AbstractType
                     'tooltip' => 'leuchtfeuer.mautic-apicalls-bundle.contactfield.tooltip',
                 ],
                 'constraints' => [
-                    new Assert\Callback([$this, 'validateByContentType']),
-                    new Assert\Callback([$this, 'contactFieldValidation']),
+                    new Assert\Callback($this->validateByContentType(...)),
+                    new Assert\Callback($this->contactFieldValidation(...)),
                 ],
             ])
             ->add('regex', TextType::class, [
@@ -164,8 +164,8 @@ class ApiRequestActionType extends AbstractType
                 'label_attr'  => ['class' => 'control-label'],
                 'required'    => false,
                 'constraints' => [
-                    new Assert\Callback([$this, 'validateByContentType']),
-                    new Assert\Callback([$this, 'validateRegex']),
+                    new Assert\Callback($this->validateByContentType(...)),
+                    new Assert\Callback($this->validateRegex(...)),
                 ],
                 'attr' => [
                     'class'       => 'form-control',
@@ -179,7 +179,6 @@ class ApiRequestActionType extends AbstractType
 
     public function validateBodyByContentType(?string $body, ExecutionContextInterface $context): void
     {
-        // @phpstan-ignore-next-line
         $data        = $context->getRoot()->getData();
         $contentType = $this->getFormPropertyValue($data, 'contentType');
         $method      = $this->getFormPropertyValue($data, 'method');
@@ -200,7 +199,7 @@ class ApiRequestActionType extends AbstractType
 
         if (in_array($contentType, ['application/json', 'application/vnd.api+json'])) {
             $validator  = $context->getValidator();
-            $violations = $validator->validate($body, new Assert\Json(['message' => 'leuchtfeuer.mautic-apicalls-bundle.body.invalid_json']));
+            $violations = $validator->validate($body, new Assert\Json(message: 'leuchtfeuer.mautic-apicalls-bundle.body.invalid_json'));
 
             foreach ($violations as $violation) {
                 $context->buildViolation($violation->getMessage())
@@ -211,18 +210,7 @@ class ApiRequestActionType extends AbstractType
 
     public function validateUrlParameters(?string $parameters, ExecutionContextInterface $context): void
     {
-        // @phpstan-ignore-next-line
-        $data   = $context->getRoot()->getData();
-        $method = $this->getFormPropertyValue($data, 'method');
-
         if (empty($parameters)) {
-            return;
-        }
-
-        if ('GET' !== $method) {
-            $context->buildViolation('leuchtfeuer.mautic-apicalls-bundle.get.method.required')
-                ->addViolation();
-
             return;
         }
 
@@ -247,7 +235,6 @@ class ApiRequestActionType extends AbstractType
 
     public function validateByContentType(?string $parameters, ExecutionContextInterface $context): void
     {
-        // @phpstan-ignore-next-line
         $data   = $context->getRoot()->getData();
         $method = $this->getFormPropertyValue($data, 'method');
 
@@ -297,7 +284,6 @@ class ApiRequestActionType extends AbstractType
 
     public function valueKeyValidation(?string $valueKey, ExecutionContextInterface $context): void
     {
-        // @phpstan-ignore-next-line
         $data      = $context->getRoot()->getData();
         $objectKey = $this->getFormPropertyValue($data, 'object_key');
 
@@ -309,7 +295,6 @@ class ApiRequestActionType extends AbstractType
 
     public function contactFieldValidation(?string $contactField, ExecutionContextInterface $context): void
     {
-        // @phpstan-ignore-next-line
         $data     = $context->getRoot()->getData();
         $regex    = $this->getFormPropertyValue($data, 'regex');
         $valueKey = $this->getFormPropertyValue($data, 'value_key');

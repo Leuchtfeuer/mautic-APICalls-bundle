@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\Events;
 
 use Doctrine\ORM\AbstractQuery;
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\CampaignBundle\Entity\LeadEventLogRepository;
@@ -17,11 +16,8 @@ use PHPUnit\Framework\TestCase;
 
 final class TimelineSubscriberTest extends TestCase
 {
-    /** @var EntityManagerInterface&MockObject */
-    private EntityManagerInterface $entityManager;
-
     /** @var LeadEventLogRepository&MockObject */
-    private LeadEventLogRepository $repository;
+    private MockObject $repository;
 
     private TimelineSubscriber $subscriber;
 
@@ -29,18 +25,13 @@ final class TimelineSubscriberTest extends TestCase
     {
         parent::setUp();
 
-        $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->repository    = $this->createMock(LeadEventLogRepository::class);
-        $this->subscriber    = new TimelineSubscriber($this->entityManager);
-
-        $this->entityManager->method('getRepository')
-            ->with(LeadEventLog::class)
-            ->willReturn($this->repository);
+        $this->repository = $this->createMock(LeadEventLogRepository::class);
+        $this->subscriber = new TimelineSubscriber($this->repository);
     }
 
     public function testOnTimelineGenerateUsesMetadataFilterAndSeparateCountQuery(): void
     {
-        $lead = $this->createMock(Lead::class);
+        $lead = $this->createStub(Lead::class);
 
         $apiLog = $this->createMock(LeadEventLog::class);
         $apiLog->method('getMetadata')->willReturn([
@@ -53,21 +44,21 @@ final class TimelineSubscriberTest extends TestCase
         $apiLog->method('getDateTriggered')->willReturn(new \DateTimeImmutable('2026-01-01 12:00:00'));
 
         $countQuery = $this->createMock(AbstractQuery::class);
-        $countQuery->expects(self::once())->method('getSingleScalarResult')->willReturn('2');
+        $countQuery->expects($this->once())->method('getSingleScalarResult')->willReturn('2');
 
         $resultQuery = $this->createMock(AbstractQuery::class);
-        $resultQuery->expects(self::once())->method('getResult')->willReturn([$apiLog]);
+        $resultQuery->expects($this->once())->method('getResult')->willReturn([$apiLog]);
 
         $countQueryBuilder = $this->createConfiguredQueryBuilder($countQuery);
-        $countQueryBuilder->expects(self::once())->method('select')->with('COUNT(log.id)')->willReturnSelf();
-        $countQueryBuilder->expects(self::never())->method('setMaxResults');
+        $countQueryBuilder->expects($this->once())->method('select')->with('COUNT(log.id)')->willReturnSelf();
+        $countQueryBuilder->expects($this->never())->method('setMaxResults');
 
         $resultQueryBuilder = $this->createConfiguredQueryBuilder($resultQuery);
-        $resultQueryBuilder->expects(self::never())->method('select');
-        $resultQueryBuilder->expects(self::once())->method('setMaxResults')->with(1)->willReturnSelf();
-        $resultQueryBuilder->expects(self::once())->method('setFirstResult')->with(0)->willReturnSelf();
+        $resultQueryBuilder->expects($this->never())->method('select');
+        $resultQueryBuilder->expects($this->once())->method('setMaxResults')->with(1)->willReturnSelf();
+        $resultQueryBuilder->expects($this->once())->method('setFirstResult')->with(0)->willReturnSelf();
 
-        $this->repository->expects(self::exactly(2))
+        $this->repository->expects($this->exactly(2))
             ->method('createQueryBuilder')
             ->with('log')
             ->willReturnOnConsecutiveCalls($countQueryBuilder, $resultQueryBuilder);
@@ -77,21 +68,21 @@ final class TimelineSubscriberTest extends TestCase
 
         $this->subscriber->onTimelineGenerate($event);
 
-        self::assertSame(2, $event->getEventCounter()['total']);
-        self::assertCount(1, $event->getEvents());
+        $this->assertSame(2, $event->getEventCounter()['total']);
+        $this->assertCount(1, $event->getEvents());
     }
 
     public function testOnTimelineGenerateReturnsEarlyForEngagementCount(): void
     {
-        $lead = $this->createMock(Lead::class);
+        $lead = $this->createStub(Lead::class);
 
         $countQuery = $this->createMock(AbstractQuery::class);
-        $countQuery->expects(self::once())->method('getSingleScalarResult')->willReturn('3');
+        $countQuery->expects($this->once())->method('getSingleScalarResult')->willReturn('3');
 
         $countQueryBuilder = $this->createConfiguredQueryBuilder($countQuery);
-        $countQueryBuilder->expects(self::once())->method('select')->with('COUNT(log.id)')->willReturnSelf();
+        $countQueryBuilder->expects($this->once())->method('select')->with('COUNT(log.id)')->willReturnSelf();
 
-        $this->repository->expects(self::once())
+        $this->repository->expects($this->once())
             ->method('createQueryBuilder')
             ->with('log')
             ->willReturn($countQueryBuilder);
@@ -102,8 +93,8 @@ final class TimelineSubscriberTest extends TestCase
 
         $this->subscriber->onTimelineGenerate($event);
 
-        self::assertSame(3, $event->getEventCounter()['total']);
-        self::assertSame([], $event->getEvents());
+        $this->assertSame(3, $event->getEventCounter()['total']);
+        $this->assertSame([], $event->getEvents());
     }
 
     private function createTimelineEvent(Lead $lead, int $limit): LeadTimelineEvent

@@ -6,8 +6,8 @@ This feature introduces a new campaign action in Mautic that allows campaigns to
 ## Requirements for this release
 > [!TIP]
 > Other releases of this plugin may cover different Mautic versions!
-- Mautic 6
-- PHP >= 8.1
+- Mautic 7
+- PHP >= 8.2
 
 ### Key Features:
 - **Campaign action**: Send API request with comprehensive configuration options
@@ -63,8 +63,8 @@ Choose from the following HTTP methods:
 - **PUT**: For updating existing resources
 - **PATCH**: For partial updates
 
-### GET Request Parameters
-When using the GET method, you can define URL parameters in a dedicated field:
+### URL Parameters
+Regardless of the HTTP method, you can define URL parameters in a dedicated field:
 - Format: `email={contactfield=email}&category=7`
 - Use `{contactfield=fieldname}` to insert contact field values
 - The leading `?` is automatically added - do not include it in your parameter string
@@ -148,6 +148,15 @@ For complete version history, see [GitHub](https://github.com/Leuchtfeuer/mautic
 
 ## Sponsoring & Commercial Support
 For support or custom features, contact **mautic-plugins@leuchtfeuer.com**
+
+## Credits
+@Leuchtfeuer
+
+## Author
+Leuchtfeuer Digital Marketing GmbH
+
+Please raise any issues in GitHub.
+For all other things, please email mautic-plugins@Leuchtfeuer.com
 
 ## License
 This plugin is licensed under the GPL v3 License.

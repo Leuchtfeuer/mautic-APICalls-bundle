@@ -16,10 +16,10 @@ use PHPUnit\Framework\TestCase;
 final class CampaignActionSecretMigratorTest extends TestCase
 {
     /** @var EntityManagerInterface&MockObject */
-    private EntityManagerInterface $entityManager;
+    private MockObject $entityManager;
 
     /** @var CampaignActionSecretService&MockObject */
-    private CampaignActionSecretService $secretService;
+    private MockObject $secretService;
 
     private CampaignActionSecretMigrator $migrator;
 
@@ -34,17 +34,17 @@ final class CampaignActionSecretMigratorTest extends TestCase
 
     public function testContainsPlaintextSecretsDetectsLegacyValues(): void
     {
-        self::assertTrue(CampaignActionSecretMigrator::containsPlaintextSecrets([
+        $this->assertTrue(CampaignActionSecretMigrator::containsPlaintextSecrets([
             'password' => 'plain-password',
         ]));
-        self::assertTrue(CampaignActionSecretMigrator::containsPlaintextSecrets([
+        $this->assertTrue(CampaignActionSecretMigrator::containsPlaintextSecrets([
             'authorization_header' => 'Authorization: Bearer token',
         ]));
     }
 
     public function testContainsPlaintextSecretsIgnoresEncryptedAndEmptyValues(): void
     {
-        self::assertFalse(CampaignActionSecretMigrator::containsPlaintextSecrets([
+        $this->assertFalse(CampaignActionSecretMigrator::containsPlaintextSecrets([
             'password'             => 'cipher|vector',
             'authorization_header' => '',
         ]));
@@ -59,11 +59,11 @@ final class CampaignActionSecretMigratorTest extends TestCase
             'authorization_header' => 'Authorization: Bearer token',
         ]);
 
-        $this->entityManager->expects(self::once())
+        $this->entityManager->expects($this->once())
             ->method('createQueryBuilder')
             ->willReturn($this->createQueryBuilderReturning([$event]));
 
-        $this->secretService->expects(self::exactly(2))
+        $this->secretService->expects($this->exactly(2))
             ->method('encryptIfNeeded')
             ->willReturnCallback(static fn (string $value): string => match ($value) {
                 'plain-password'              => 'encrypted-password',
@@ -71,11 +71,11 @@ final class CampaignActionSecretMigratorTest extends TestCase
                 default                       => $value,
             });
 
-        $this->entityManager->expects(self::once())->method('flush');
+        $this->entityManager->expects($this->once())->method('flush');
 
-        self::assertSame(1, $this->migrator->migrate());
-        self::assertSame('encrypted-password', $event->getProperties()['password']);
-        self::assertSame('encrypted-header', $event->getProperties()['authorization_header']);
+        $this->assertSame(1, $this->migrator->migrate());
+        $this->assertSame('encrypted-password', $event->getProperties()['password']);
+        $this->assertSame('encrypted-header', $event->getProperties()['authorization_header']);
     }
 
     public function testMigrateSkipsAlreadyEncryptedSecrets(): void
@@ -86,17 +86,17 @@ final class CampaignActionSecretMigratorTest extends TestCase
             'authorization_header' => 'another|vector',
         ]);
 
-        $this->entityManager->expects(self::once())
+        $this->entityManager->expects($this->once())
             ->method('createQueryBuilder')
             ->willReturn($this->createQueryBuilderReturning([$event]));
 
-        $this->secretService->expects(self::exactly(2))
+        $this->secretService->expects($this->exactly(2))
             ->method('encryptIfNeeded')
             ->willReturnArgument(0);
 
-        $this->entityManager->expects(self::never())->method('flush');
+        $this->entityManager->expects($this->never())->method('flush');
 
-        self::assertSame(0, $this->migrator->migrate());
+        $this->assertSame(0, $this->migrator->migrate());
     }
 
     /**

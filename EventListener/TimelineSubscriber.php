@@ -2,7 +2,6 @@
 
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener;
 
-use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use Mautic\CampaignBundle\Entity\LeadEventLog;
 use Mautic\CampaignBundle\Entity\LeadEventLogRepository;
@@ -11,7 +10,7 @@ use Mautic\LeadBundle\Event\LeadTimelineEvent;
 use Mautic\LeadBundle\LeadEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-final class TimelineSubscriber implements EventSubscriberInterface
+final readonly class TimelineSubscriber implements EventSubscriberInterface
 {
     private const EVENT_TYPE = 'leuchtfeuer.api_call';
 
@@ -21,7 +20,7 @@ final class TimelineSubscriber implements EventSubscriberInterface
     private const METADATA_FILTER = '%s:5:"event";s:9:"api_calls"%';
 
     public function __construct(
-        private EntityManagerInterface $entityManager,
+        private LeadEventLogRepository $leadEventLogRepository,
     ) {
     }
 
@@ -49,11 +48,9 @@ final class TimelineSubscriber implements EventSubscriberInterface
             return;
         }
 
-        /** @var LeadEventLogRepository $repository */
-        $repository = $this->entityManager->getRepository(LeadEventLog::class);
-        $options    = $event->getQueryOptions();
+        $options = $event->getQueryOptions();
 
-        $total = (int) $this->createApiCallLogsQueryBuilder($repository, $lead)
+        $total = (int) $this->createApiCallLogsQueryBuilder($lead)
             ->select('COUNT(log.id)')
             ->getQuery()
             ->getSingleScalarResult();
@@ -64,7 +61,7 @@ final class TimelineSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $queryBuilder = $this->createApiCallLogsQueryBuilder($repository, $lead);
+        $queryBuilder = $this->createApiCallLogsQueryBuilder($lead);
 
         if (isset($options['limit'])) {
             $queryBuilder->setMaxResults($options['limit']);
@@ -109,9 +106,9 @@ final class TimelineSubscriber implements EventSubscriberInterface
         }
     }
 
-    private function createApiCallLogsQueryBuilder(LeadEventLogRepository $repository, Lead $lead): QueryBuilder
+    private function createApiCallLogsQueryBuilder(Lead $lead): QueryBuilder
     {
-        return $repository->createQueryBuilder('log')
+        return $this->leadEventLogRepository->createQueryBuilder('log')
             ->where('log.lead = :lead')
             ->andWhere('log.metadata LIKE :apiCallsMetadata')
             ->setParameter('lead', $lead)

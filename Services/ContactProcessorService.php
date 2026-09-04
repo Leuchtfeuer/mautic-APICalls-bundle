@@ -7,7 +7,7 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\Factory\ApiCallPropertiesDTOFactory;
 
 class ContactProcessorService
 {
-    public function __construct(private ApiCallsService $apiCallsService, private ApiCallPropertiesDTOFactory $dtoFactory)
+    public function __construct(private readonly ApiCallsService $apiCallsService, private readonly ApiCallPropertiesDTOFactory $dtoFactory)
     {
     }
 

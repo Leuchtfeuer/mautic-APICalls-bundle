@@ -7,19 +7,20 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\DTO\ApiCallPropertiesDTO;
 
 class HttpRequestBuilderService
 {
-    public function __construct(private UrlBuilderService $urlBuilderService, private TokenReplacementService $tokenReplacementService)
+    public function __construct(private readonly UrlBuilderService $urlBuilderService, private readonly TokenReplacementService $tokenReplacementService)
     {
     }
 
     /**
      * @return array{url: string, options: array<string, mixed>}
      */
-    public function buildUrlAndOptions(string $value, ApiCallPropertiesDTO $dto, LeadEventLog $lead): array
+    public function buildUrlAndOptions(string $value, string $tokenizedUrlParams, ApiCallPropertiesDTO $dto, LeadEventLog $lead): array
     {
         $url = $this->tokenReplacementService->getTokenizedUrl($lead, $dto->url);
-        // Build url with GET parameters
-        if ('GET' === $dto->method && !empty($value)) {
-            $url = $this->urlBuilderService->appendQueryString($dto, $url, $value);
+
+        // Build URL with parameters (all methods supported)
+        if (!empty($tokenizedUrlParams)) {
+            $url = $this->urlBuilderService->appendQueryString($url, $tokenizedUrlParams);
         }
 
         // Options for sending request
