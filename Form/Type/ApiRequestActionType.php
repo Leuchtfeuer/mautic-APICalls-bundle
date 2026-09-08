@@ -111,6 +111,7 @@ class ApiRequestActionType extends AbstractType
             ->add('body', TextareaType::class, [
                 'label'      => 'leuchtfeuer.mautic-apicalls-bundle.body.label',
                 'label_attr' => ['class' => 'control-label'],
+                'required'   => false,
                 'attr'       => [
                     'class'       => 'form-control',
                     'rows'        => 8,
