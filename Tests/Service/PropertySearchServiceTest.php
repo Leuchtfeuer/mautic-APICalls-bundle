@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\Service;
 
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\PropertySearchService;
 use PHPUnit\Framework\TestCase;
 
-class PropertySearchServiceTest extends TestCase
+final class PropertySearchServiceTest extends TestCase
 {
     private PropertySearchService $service;
 
@@ -20,7 +22,7 @@ class PropertySearchServiceTest extends TestCase
         $data = json_decode('{"orderId": "ORD-1001", "total": 89.48}');
 
         $result = $this->service->getValue($data, 'orderId');
-        $this->assertEquals('ORD-1001', $result);
+        $this->assertSame('ORD-1001', $result);
 
         $result = $this->service->getValue($data, 'total');
         $this->assertEquals('89.48', $result);
@@ -40,7 +42,7 @@ class PropertySearchServiceTest extends TestCase
         $data = json_decode($jsonData);
 
         $result = $this->service->getValue($data, 'name', 'customer');
-        $this->assertEquals('John Doe', $result);
+        $this->assertSame('John Doe', $result);
 
         $result = $this->service->getValue($data, 'id', 'customer');
         $this->assertEquals('501', $result);
@@ -61,7 +63,7 @@ class PropertySearchServiceTest extends TestCase
         $data = json_decode($jsonData);
 
         $result = $this->service->getValue($data, 'city', 'address');
-        $this->assertEquals('New York', $result);
+        $this->assertSame('New York', $result);
 
         $result = $this->service->getValue($data, 'zipCode', 'address');
         $this->assertEquals('10001', $result);
@@ -88,7 +90,7 @@ class PropertySearchServiceTest extends TestCase
 
         // Should return first match
         $result = $this->service->getValue($data, 'sku');
-        $this->assertEquals('ABC123', $result);
+        $this->assertSame('ABC123', $result);
 
         $result = $this->service->getValue($data, 'price');
         $this->assertEquals('19.99', $result);
@@ -170,20 +172,20 @@ class PropertySearchServiceTest extends TestCase
 
         // Test deep nested access
         $result = $this->service->getValue($data, 'email', 'customer');
-        $this->assertEquals('john.doe@example.com', $result);
+        $this->assertSame('john.doe@example.com', $result);
 
         $result = $this->service->getValue($data, 'city', 'address');
-        $this->assertEquals('New York', $result);
+        $this->assertSame('New York', $result);
 
         $result = $this->service->getValue($data, 'name', 'provider');
-        $this->assertEquals('Visa', $result);
+        $this->assertSame('Visa', $result);
 
         $result = $this->service->getValue($data, 'cost', 'shipping');
         $this->assertEquals('9.99', $result);
 
         // Test array nested objects
         $result = $this->service->getValue($data, 'name', 'category');
-        $this->assertEquals('Electronics', $result);
+        $this->assertSame('Electronics', $result);
     }
 
     public function testGetValueReturnsEmptyStringWhenKeyNotFound(): void
@@ -191,7 +193,7 @@ class PropertySearchServiceTest extends TestCase
         $data = json_decode('{"orderId": "ORD-1001"}');
 
         $result = $this->service->getValue($data, 'nonexistent');
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
     }
 
     public function testGetValueReturnsEmptyStringWhenObjectKeyNotFound(): void
@@ -199,7 +201,7 @@ class PropertySearchServiceTest extends TestCase
         $data = json_decode('{"orderId": "ORD-1001"}');
 
         $result = $this->service->getValue($data, 'name', 'nonexistent');
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
     }
 
     public function testGetValueReturnsEmptyStringWhenValueKeyNotFoundInObject(): void
@@ -207,7 +209,7 @@ class PropertySearchServiceTest extends TestCase
         $data = json_decode('{"customer": {"id": 501}}');
 
         $result = $this->service->getValue($data, 'nonexistent', 'customer');
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
     }
 
     public function testHandleArraysWithDirectKey(): void
@@ -285,11 +287,11 @@ class PropertySearchServiceTest extends TestCase
 
         // Boolean false becomes empty string when cast to string
         $result = $this->service->getValue($data, 'inactive');
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
 
         // null values return empty string since they're not scalar
         $result = $this->service->getValue($data, 'empty');
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
     }
 
     public function testGetValueWithNumericValues(): void
@@ -319,7 +321,7 @@ class PropertySearchServiceTest extends TestCase
 
         // When trying to get an object value, should return empty string since objects are not scalar
         $result = $this->service->getValue($data, 'user');
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
     }
 
     public function testGetValueWithEmptyString(): void
@@ -327,22 +329,22 @@ class PropertySearchServiceTest extends TestCase
         $data = json_decode('{"name": "", "title": "Manager"}');
 
         $result = $this->service->getValue($data, 'name');
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
     }
 
     public function testFindByKeyWithPrimitiveTypes(): void
     {
         // Test with string - findByKey returns null for primitives, so result is empty
         $result = $this->service->getValue('simple string', 'any');
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
 
         // Test with integer - findByKey returns null for primitives, so result is empty
         $result = $this->service->getValue(42, 'any');
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
 
         // Test with boolean - findByKey returns null for primitives, so result is empty
         $result = $this->service->getValue(true, 'any');
-        $this->assertEquals('', $result);
+        $this->assertSame('', $result);
     }
 
     public function testGetValueWithDotNotationPath(): void
@@ -361,11 +363,11 @@ class PropertySearchServiceTest extends TestCase
             ]
         }');
 
-        $this->assertEquals('john@example.com', $this->service->getValue($data, 'user.email'));
-        $this->assertEquals('John Doe', $this->service->getValue($data, 'profile.name', 'user'));
+        $this->assertSame('john@example.com', $this->service->getValue($data, 'user.email'));
+        $this->assertSame('John Doe', $this->service->getValue($data, 'profile.name', 'user'));
         $this->assertEquals('30', $this->service->getValue($data, 'profile.age', 'user'));
-        $this->assertEquals('Product A', $this->service->getValue($data, 'items[0].name'));
-        $this->assertEquals('Product B', $this->service->getValue($data, 'items[1].name'));
+        $this->assertSame('Product A', $this->service->getValue($data, 'items[0].name'));
+        $this->assertSame('Product B', $this->service->getValue($data, 'items[1].name'));
         $this->assertEquals('19.99', $this->service->getValue($data, 'items[0].price'));
     }
 
@@ -373,8 +375,8 @@ class PropertySearchServiceTest extends TestCase
     {
         $data = json_decode('{"user": {"email": "john@example.com"}}');
 
-        $this->assertEquals('', $this->service->getValue($data, 'user.missing'));
-        $this->assertEquals('', $this->service->getValue($data, 'items[0].name'));
-        $this->assertEquals('', $this->service->getValue($data, 'profile.name', 'user'));
+        $this->assertSame('', $this->service->getValue($data, 'user.missing'));
+        $this->assertSame('', $this->service->getValue($data, 'items[0].name'));
+        $this->assertSame('', $this->service->getValue($data, 'profile.name', 'user'));
     }
 }

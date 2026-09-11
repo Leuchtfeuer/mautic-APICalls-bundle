@@ -11,30 +11,24 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\HttpRequestBuilderService;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\PropertySearchService;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\TokenReplacementService;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\UrlBuilderService;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class ApiCallsServiceMetadataTest extends TestCase
 {
-    /** @var LeadModel&MockObject */
-    private LeadModel $leadModel;
-
     private ApiCallsService $service;
 
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->leadModel = $this->createMock(LeadModel::class);
         $this->service   = new ApiCallsService(
             new MockHttpClient(),
-            $this->leadModel,
-            $this->createMock(HttpRequestBuilderService::class),
-            $this->createMock(TokenReplacementService::class),
-            $this->createMock(UrlBuilderService::class),
-            $this->createMock(PropertySearchService::class),
+            $this->createStub(LeadModel::class),
+            $this->createStub(HttpRequestBuilderService::class),
+            $this->createStub(TokenReplacementService::class),
+            $this->createStub(UrlBuilderService::class),
+            $this->createStub(PropertySearchService::class),
         );
     }
 
@@ -51,7 +45,7 @@ final class ApiCallsServiceMetadataTest extends TestCase
         ]);
 
         $leadEventLog = $this->createMock(LeadEventLog::class);
-        $leadEventLog->expects(self::once())
+        $leadEventLog->expects($this->once())
             ->method('setMetadata')
             ->with([
                 'event'              => 'api_calls',
@@ -75,16 +69,14 @@ final class ApiCallsServiceMetadataTest extends TestCase
         ]);
 
         $leadEventLog = $this->createMock(LeadEventLog::class);
-        $leadEventLog->expects(self::once())
+        $leadEventLog->expects($this->once())
             ->method('setMetadata')
-            ->with(self::callback(static function (array $metadata) use ($responseBody): bool {
-                return ApiCallsService::MAX_METADATA_RESPONSE_BODY_LENGTH === strlen($metadata['response_body'])
-                    && str_starts_with($responseBody, $metadata['response_body'])
-                    && true === $metadata['response_body_truncated']
-                    && strlen($responseBody) === $metadata['response_body_original_length']
-                    && 'api_calls' === $metadata['event']
-                    && 'POST' === $metadata['method'];
-            }));
+            ->with(self::callback(static fn (array $metadata): bool => ApiCallsService::MAX_METADATA_RESPONSE_BODY_LENGTH === strlen($metadata['response_body'])
+                && str_starts_with($responseBody, $metadata['response_body'])
+                && true === $metadata['response_body_truncated']
+                && strlen($responseBody) === $metadata['response_body_original_length']
+                && 'api_calls' === $metadata['event']
+                && 'POST' === $metadata['method']));
 
         $response = $httpClient->request('GET', 'http://example.com');
         $this->service->setMetadata($leadEventLog, $response, 'POST');

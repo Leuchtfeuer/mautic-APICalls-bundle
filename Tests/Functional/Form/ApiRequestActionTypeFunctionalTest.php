@@ -9,7 +9,6 @@ use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Factory\ApiCallPropertiesDTOFactory;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Form\Type\ApiRequestActionType;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\CampaignActionSecretService;
-use PHPUnit\Framework\Assert;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
@@ -19,7 +18,7 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
     private function createSecretService(): CampaignActionSecretService
     {
         /** @var EncryptionHelper $encryptionHelper */
-        $encryptionHelper = static::getContainer()->get(EncryptionHelper::class);
+        $encryptionHelper = self::getContainer()->get(EncryptionHelper::class);
 
         return new CampaignActionSecretService($encryptionHelper);
     }
@@ -30,7 +29,7 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
     private function createCampaignPropertiesForm(array $properties = []): FormInterface
     {
         /** @var FormFactoryInterface $formFactory */
-        $formFactory = static::getContainer()->get(FormFactoryInterface::class);
+        $formFactory = self::getContainer()->get(FormFactoryInterface::class);
 
         return $formFactory
             ->createBuilder(FormType::class, ['properties' => $properties], ['csrf_protection' => false])
@@ -58,9 +57,9 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
 
         $form->submit(['properties' => $this->getValidGetProperties()]);
 
-        Assert::assertTrue($form->isSubmitted());
-        Assert::assertTrue($form->isValid(), (string) $form->getErrors(true, false));
-        Assert::assertCount(0, $form->get('properties')->get('regex')->getErrors(true));
+        $this->assertTrue($form->isSubmitted());
+        $this->assertTrue($form->isValid(), (string) $form->getErrors(true, false));
+        $this->assertCount(0, $form->get('properties')->get('regex')->getErrors(true));
     }
 
     public function testFormRejectsInvalidRegex(): void
@@ -70,22 +69,19 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
 
         $form->submit(['properties' => $properties]);
 
-        Assert::assertTrue($form->isSubmitted());
-        Assert::assertFalse($form->isValid());
+        $this->assertTrue($form->isSubmitted());
+        $this->assertFalse($form->isValid());
 
         $regexErrors = $form->get('properties')->get('regex')->getErrors(true);
-        Assert::assertGreaterThan(0, $regexErrors->count());
+        $this->assertGreaterThan(0, $regexErrors->count());
 
-        $messages = array_map(static fn ($error) => $error->getMessage(), iterator_to_array($regexErrors));
-        Assert::assertTrue(
-            (bool) array_filter(
-                $messages,
-                static fn (string $message): bool => str_contains($message, 'regex.invalid')
-                    || str_contains($message, 'valid PHP regular expression')
-                    || str_contains($message, 'PHP-Regular-Ausdruck')
-            ),
-            'Expected regex validation message, got: '.implode(', ', $messages)
-        );
+        $messages = array_map(static fn (\Symfony\Component\Form\FormError|\Symfony\Component\Form\FormErrorIterator $error): string => $error->getMessage(), iterator_to_array($regexErrors));
+        $this->assertTrue((bool) array_filter(
+            $messages,
+            static fn (string $message): bool => str_contains($message, 'regex.invalid')
+                || str_contains($message, 'valid PHP regular expression')
+                || str_contains($message, 'PHP-Regular-Ausdruck')
+        ), 'Expected regex validation message, got: '.implode(', ', $messages));
     }
 
     public function testFormAllowsEmptyRegex(): void
@@ -96,8 +92,8 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
         $form = $this->createCampaignPropertiesForm($properties);
         $form->submit(['properties' => $properties]);
 
-        Assert::assertTrue($form->isSubmitted());
-        Assert::assertTrue($form->isValid(), (string) $form->getErrors(true, false));
+        $this->assertTrue($form->isSubmitted());
+        $this->assertTrue($form->isValid(), (string) $form->getErrors(true, false));
     }
 
     /**
@@ -106,29 +102,29 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
     private function createStandaloneForm(array $properties = []): FormInterface
     {
         /** @var FormFactoryInterface $formFactory */
-        $formFactory = static::getContainer()->get(FormFactoryInterface::class);
+        $formFactory = self::getContainer()->get(FormFactoryInterface::class);
 
         return $formFactory
             ->createBuilder(ApiRequestActionType::class, $properties, ['csrf_protection' => false])
             ->getForm();
     }
 
-    public function testStandaloneFormRejectsUrlParametersForNonGetMethod(): void
+    public function testStandaloneFormRejectsRegexForNonGetMethod(): void
     {
         $properties = [
-            'url'            => 'https://api.example.com/contacts',
-            'method'         => 'POST',
-            'contentType'    => 'application/json',
-            'body'           => '{"email":"test@example.com"}',
-            'url_parameters' => 'email=test@example.com',
+            'url'         => 'https://api.example.com/contacts',
+            'method'      => 'POST',
+            'contentType' => 'application/json',
+            'body'        => '{"email":"test@example.com"}',
+            'regex'       => '/"email"\s*:\s*"([^"]+)"/',
         ];
 
         $form = $this->createStandaloneForm($properties);
         $form->submit($properties);
 
-        Assert::assertTrue($form->isSubmitted());
-        Assert::assertFalse($form->isValid());
-        Assert::assertGreaterThan(0, $form->get('url_parameters')->getErrors(true)->count());
+        $this->assertTrue($form->isSubmitted());
+        $this->assertFalse($form->isValid());
+        $this->assertGreaterThan(0, $form->get('regex')->getErrors(true)->count());
     }
 
     public function testStandaloneFormRejectsBodyForGetMethod(): void
@@ -143,9 +139,9 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
         $form = $this->createStandaloneForm($properties);
         $form->submit($properties);
 
-        Assert::assertTrue($form->isSubmitted());
-        Assert::assertFalse($form->isValid());
-        Assert::assertGreaterThan(0, $form->get('body')->getErrors(true)->count());
+        $this->assertTrue($form->isSubmitted());
+        $this->assertFalse($form->isValid());
+        $this->assertGreaterThan(0, $form->get('body')->getErrors(true)->count());
     }
 
     public function testFormEncryptsSecretsOnSubmit(): void
@@ -164,14 +160,14 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
         $form = $this->createCampaignPropertiesForm();
         $form->submit(['properties' => $properties]);
 
-        Assert::assertTrue($form->isSubmitted());
-        Assert::assertTrue($form->isValid(), (string) $form->getErrors(true, false));
+        $this->assertTrue($form->isSubmitted());
+        $this->assertTrue($form->isValid(), (string) $form->getErrors(true, false));
 
         $stored = $form->get('properties')->getNormData();
-        Assert::assertTrue($secretService->isEncrypted($stored['password']));
-        Assert::assertTrue($secretService->isEncrypted($stored['authorization_header']));
-        Assert::assertNotSame('plain-password', $stored['password']);
-        Assert::assertNotSame('Authorization: Bearer token', $stored['authorization_header']);
+        $this->assertTrue($secretService->isEncrypted($stored['password']));
+        $this->assertTrue($secretService->isEncrypted($stored['authorization_header']));
+        $this->assertNotSame('plain-password', $stored['password']);
+        $this->assertNotSame('Authorization: Bearer token', $stored['authorization_header']);
     }
 
     public function testFormDoesNotDisplayStoredSecretsWhenEditing(): void
@@ -190,12 +186,9 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
             'authorization_header' => $encryptedHeader,
         ]);
 
-        Assert::assertSame('', $form->get('properties')->get('password')->getViewData());
-        Assert::assertSame('', $form->get('properties')->get('authorization_header')->getViewData());
-        Assert::assertSame(
-            'leuchtfeuer.mautic-apicalls-bundle.secret.stored.placeholder',
-            $form->get('properties')->get('password')->getConfig()->getOption('attr')['placeholder']
-        );
+        $this->assertSame('', $form->get('properties')->get('password')->getViewData());
+        $this->assertSame('', $form->get('properties')->get('authorization_header')->getViewData());
+        $this->assertSame('leuchtfeuer.mautic-apicalls-bundle.secret.stored.placeholder', $form->get('properties')->get('password')->getConfig()->getOption('attr')['placeholder']);
     }
 
     public function testFormPreservesEncryptedSecretsWhenFieldsLeftEmpty(): void
@@ -226,12 +219,12 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
             ],
         ]);
 
-        Assert::assertTrue($form->isSubmitted());
-        Assert::assertTrue($form->isValid(), (string) $form->getErrors(true, false));
+        $this->assertTrue($form->isSubmitted());
+        $this->assertTrue($form->isValid(), (string) $form->getErrors(true, false));
 
         $stored = $form->get('properties')->getNormData();
-        Assert::assertSame($encryptedPassword, $stored['password']);
-        Assert::assertSame($encryptedHeader, $stored['authorization_header']);
+        $this->assertSame($encryptedPassword, $stored['password']);
+        $this->assertSame($encryptedHeader, $stored['authorization_header']);
     }
 
     public function testFormDoesNotDisplayLegacyPlaintextSecretsWhenEditing(): void
@@ -245,8 +238,8 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
             'authorization_header' => 'Authorization: Bearer legacy-token',
         ]);
 
-        Assert::assertSame('', $form->get('properties')->get('password')->getViewData());
-        Assert::assertSame('', $form->get('properties')->get('authorization_header')->getViewData());
+        $this->assertSame('', $form->get('properties')->get('password')->getViewData());
+        $this->assertSame('', $form->get('properties')->get('authorization_header')->getViewData());
     }
 
     public function testFactoryDecryptsStoredSecretsForRuntime(): void
@@ -262,7 +255,7 @@ final class ApiRequestActionTypeFunctionalTest extends MauticMysqlTestCase
             'authorization_header' => $secretService->encrypt('Authorization: Bearer runtime'),
         ]);
 
-        Assert::assertSame('runtime-password', $dto->password);
-        Assert::assertSame('Authorization: Bearer runtime', $dto->authorizationHeader);
+        $this->assertSame('runtime-password', $dto->password);
+        $this->assertSame('Authorization: Bearer runtime', $dto->authorizationHeader);
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MauticPlugin\LeuchtfeuerAPICallsBundle\Tests\Service;
 
 use Mautic\CampaignBundle\Entity\LeadEventLog;
@@ -9,7 +11,7 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\ApiCallsService;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\ContactProcessorService;
 use PHPUnit\Framework\TestCase;
 
-class ContactProcessorServiceTest extends TestCase
+final class ContactProcessorServiceTest extends TestCase
 {
     public function testProcessContacts(): void
     {
@@ -21,11 +23,11 @@ class ContactProcessorServiceTest extends TestCase
         ];
 
         $leads = [
-            $this->createMock(LeadEventLog::class),
-            $this->createMock(LeadEventLog::class),
+            $this->createStub(LeadEventLog::class),
+            $this->createStub(LeadEventLog::class),
         ];
 
-        $dto = $this->createMock(ApiCallPropertiesDTO::class);
+        $dto = $this->createStub(ApiCallPropertiesDTO::class);
 
         $apiCallsService = $this->createMock(ApiCallsService::class);
         $apiCallsService->expects($this->exactly(2))

@@ -8,7 +8,7 @@ use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\CampaignActionSecretService;
 class ApiCallPropertiesDTOFactory
 {
     public function __construct(
-        private CampaignActionSecretService $secretService,
+        private readonly CampaignActionSecretService $secretService,
     ) {
     }
 

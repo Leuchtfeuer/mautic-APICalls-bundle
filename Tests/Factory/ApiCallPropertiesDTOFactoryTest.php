@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 final class ApiCallPropertiesDTOFactoryTest extends TestCase
 {
     /** @var CampaignActionSecretService&MockObject */
-    private CampaignActionSecretService $secretService;
+    private MockObject $secretService;
 
     private ApiCallPropertiesDTOFactory $factory;
 
@@ -26,7 +26,7 @@ final class ApiCallPropertiesDTOFactoryTest extends TestCase
 
     public function testCreateFromPropertiesDecryptsSecrets(): void
     {
-        $this->secretService->expects(self::exactly(2))
+        $this->secretService->expects($this->exactly(2))
             ->method('decryptIfNeeded')
             ->willReturnCallback(static fn (?string $value): string => match ($value) {
                 'encrypted-password' => 'plain-password',
@@ -42,7 +42,7 @@ final class ApiCallPropertiesDTOFactoryTest extends TestCase
             'authorization_header'  => 'encrypted-header',
         ]);
 
-        self::assertSame('plain-password', $dto->password);
-        self::assertSame('Authorization: Bearer token', $dto->authorizationHeader);
+        $this->assertSame('plain-password', $dto->password);
+        $this->assertSame('Authorization: Bearer token', $dto->authorizationHeader);
     }
 }

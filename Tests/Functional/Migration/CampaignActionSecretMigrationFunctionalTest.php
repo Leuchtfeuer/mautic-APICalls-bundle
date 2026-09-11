@@ -12,16 +12,15 @@ use Mautic\CoreBundle\Test\MauticMysqlTestCase;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\EventListener\CampaignActionSubscriber;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\CampaignActionSecretMigrator;
 use MauticPlugin\LeuchtfeuerAPICallsBundle\Services\CampaignActionSecretService;
-use PHPUnit\Framework\Assert;
 
 final class CampaignActionSecretMigrationFunctionalTest extends MauticMysqlTestCase
 {
     private function createMigrator(): CampaignActionSecretMigrator
     {
         /** @var EntityManagerInterface $entityManager */
-        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         /** @var EncryptionHelper $encryptionHelper */
-        $encryptionHelper = static::getContainer()->get(EncryptionHelper::class);
+        $encryptionHelper = self::getContainer()->get(EncryptionHelper::class);
 
         return new CampaignActionSecretMigrator(
             $entityManager,
@@ -32,7 +31,7 @@ final class CampaignActionSecretMigrationFunctionalTest extends MauticMysqlTestC
     private function createSecretService(): CampaignActionSecretService
     {
         /** @var EncryptionHelper $encryptionHelper */
-        $encryptionHelper = static::getContainer()->get(EncryptionHelper::class);
+        $encryptionHelper = self::getContainer()->get(EncryptionHelper::class);
 
         return new CampaignActionSecretService($encryptionHelper);
     }
@@ -40,7 +39,7 @@ final class CampaignActionSecretMigrationFunctionalTest extends MauticMysqlTestC
     public function testMigratorEncryptsPlaintextCampaignActionSecrets(): void
     {
         /** @var EntityManagerInterface $entityManager */
-        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $entityManager = self::getContainer()->get(EntityManagerInterface::class);
 
         $campaign = new Campaign();
         $campaign->setName('API Calls migration test');
@@ -68,19 +67,19 @@ final class CampaignActionSecretMigrationFunctionalTest extends MauticMysqlTestC
 
         $migrator = $this->createMigrator();
 
-        Assert::assertTrue($migrator->hasPendingSecrets());
-        Assert::assertSame(1, $migrator->migrate());
-        Assert::assertFalse($migrator->hasPendingSecrets());
+        $this->assertTrue($migrator->hasPendingSecrets());
+        $this->assertSame(1, $migrator->migrate());
+        $this->assertFalse($migrator->hasPendingSecrets());
 
         $reloaded = $entityManager->find(Event::class, $eventId);
-        Assert::assertInstanceOf(Event::class, $reloaded);
+        $this->assertInstanceOf(Event::class, $reloaded);
 
         $properties    = $reloaded->getProperties();
         $secretService = $this->createSecretService();
 
-        Assert::assertTrue($secretService->isEncrypted($properties['password']));
-        Assert::assertTrue($secretService->isEncrypted($properties['authorization_header']));
-        Assert::assertSame('legacy-plain-password', $secretService->decryptIfNeeded($properties['password']));
-        Assert::assertSame('Authorization: Bearer legacy-token', $secretService->decryptIfNeeded($properties['authorization_header']));
+        $this->assertTrue($secretService->isEncrypted($properties['password']));
+        $this->assertTrue($secretService->isEncrypted($properties['authorization_header']));
+        $this->assertSame('legacy-plain-password', $secretService->decryptIfNeeded($properties['password']));
+        $this->assertSame('Authorization: Bearer legacy-token', $secretService->decryptIfNeeded($properties['authorization_header']));
     }
 }

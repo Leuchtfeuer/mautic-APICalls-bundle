@@ -17,24 +17,25 @@ class ApiCallsService
      */
     public const MAX_METADATA_RESPONSE_BODY_LENGTH = 65536;
 
-    public function __construct(private HttpClientInterface $client,
-        private LeadModel $leadModel,
-        private HttpRequestBuilderService $httpRequestBuilderService,
-        private TokenReplacementService $tokenReplacementService,
-        private UrlBuilderService $urlBuilderService,
-        private PropertySearchService $propertySearchService)
+    public function __construct(private readonly HttpClientInterface $client,
+        private readonly LeadModel $leadModel,
+        private readonly HttpRequestBuilderService $httpRequestBuilderService,
+        private readonly TokenReplacementService $tokenReplacementService,
+        private readonly UrlBuilderService $urlBuilderService,
+        private readonly PropertySearchService $propertySearchService)
     {
     }
 
     public function sendRequest(LeadEventLog $lead, ApiCallPropertiesDTO $dto): void
     {
-        $tokenizedValue = $this->tokenReplacementService->getTokenizedValue($lead, $dto);
-        $urlAndOptions  = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $dto, $lead);
+        $tokenizedValue     = $this->tokenReplacementService->getTokenizedValue($lead, $dto);
+        $tokenizedUrlParams = $this->tokenReplacementService->getTokenizedUrl($lead, $dto->urlParameters);
+        $urlAndOptions      = $this->httpRequestBuilderService->buildUrlAndOptions($tokenizedValue, $tokenizedUrlParams, $dto, $lead);
 
         $currentUrl = $urlAndOptions['url'];
         $options    = $urlAndOptions['options'];
 
-        $response = $this->handleRedirects($dto, $currentUrl, $options, $tokenizedValue);
+        $response = $this->handleRedirects($dto, $currentUrl, $options, $tokenizedUrlParams);
 
         $this->checkIfResponseValid($response);
 
@@ -102,7 +103,7 @@ class ApiCallsService
     /**
      * @param array<mixed> $options
      */
-    private function handleRedirects(ApiCallPropertiesDTO $dto, string $currentUrl, array $options, string $tokenizedValue): ResponseInterface
+    private function handleRedirects(ApiCallPropertiesDTO $dto, string $currentUrl, array $options, string $tokenizedUrlParams): ResponseInterface
     {
         $redirectCount = 0;
         $response      = null;
@@ -120,7 +121,7 @@ class ApiCallsService
                 break;
             }
 
-            $redirectUrl = $this->urlBuilderService->appendQueryString($dto, $locationHeader, $tokenizedValue);
+            $redirectUrl = $this->urlBuilderService->appendQueryString($locationHeader, $tokenizedUrlParams);
 
             if (!$this->isSameOrigin($currentUrl, $redirectUrl)) {
                 $options = $this->stripCredentialsFromOptions($options);
